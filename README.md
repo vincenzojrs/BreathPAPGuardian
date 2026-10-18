@@ -1,4 +1,4 @@
-# PAP Locale
+# BreathPAPGuardian
 
 A local PAP data explorer with interactive charts, a night journal and exports. Built around **ResMed AirCurve 10 CS PaceWave** recordings.
 
