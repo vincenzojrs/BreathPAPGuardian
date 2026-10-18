@@ -10,6 +10,18 @@ A local PAP data explorer with interactive charts, a night journal and exports. 
 - Export CSV signals and PDF reports.
 - Back up and restore your archive, including attachments.
 
+## Dashboard preview
+
+Screenshots from real-world use of the original Italian interface. The current application is in English.
+
+**Night settings and signal statistics**
+
+![Night overview showing PAP settings and full-night signal statistics](docs/images/night-overview.png)
+
+**Synchronized signal charts**
+
+![Zoomed respiratory flow, pressure with EPAP overlay, leak and flow limitation charts](docs/images/signal-charts.png)
+
 ## Quick start
 
 Download or clone this repository. From its folder, run:
