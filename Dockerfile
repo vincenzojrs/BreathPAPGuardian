@@ -1,0 +1,8 @@
+FROM python:3.12-alpine
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /app
+COPY server.py ./server.py
+COPY web ./web
+USER 10001:10001
+EXPOSE 8765
+CMD ["python", "server.py", "--bind", "0.0.0.0"]

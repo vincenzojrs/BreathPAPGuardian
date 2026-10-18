@@ -1,0 +1,16 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+.env
+.env.*
+*.edf
+*.EDF
+*.tgt
+*.TGT
+*.crc
+*.log
+*.zip
+pap-backup-*.json
+backups/
+DATALOG/
+SETTINGS/
