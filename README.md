@@ -9,6 +9,10 @@ A local PAP data explorer with interactive charts, a night journal and exports. 
 - Add markers with notes, images and videos.
 - Export CSV signals and PDF reports.
 - Back up and restore your archive, including attachments.
+- Calculate the experimental Glasgow Index, nine component fractions, multi-night
+  trends, synchronized component maps, and Glasgow CSV/PDF summaries.
+
+See [Glasgow Index: method and usage](docs/glasgow-index.md).
 
 ## Dashboard preview
 
@@ -81,4 +85,13 @@ See [LEGGIMI.txt](LEGGIMI.txt) for additional startup, transfer and update notes
 
 ## License
 
-No license has been selected yet. The app reads EDF directly in JavaScript and does not bundle or invoke edf2ascii or EDFlib.
+Licensed under **GNU GPL version 3 or, at your option, any later version**
+([LICENSE](LICENSE)). Distributed without warranty.
+
+Glasgow calculations adapt DaveSkvn's code through VibeCoder75321's multi-night
+analyzer. Copyright notices, pinned source revision and modifications are in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+The app reads EDF directly in JavaScript and does not bundle or invoke
+edf2ascii or EDFlib.
+

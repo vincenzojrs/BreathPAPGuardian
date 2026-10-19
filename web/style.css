@@ -2,3 +2,6 @@
 @media(max-width:800px){main{padding:14px}header{display:block}.grid{display:block}.kpis{grid-template-columns:1fr 1fr}.head{display:block}.chart{padding:10px}}
 @media print{body{background:white}main{padding:0;max-width:none}header nav,.no-print,#home,footer,.toolbar,button{display:none!important}#detail{display:block!important}.grid{display:block}.panel,.chart{break-inside:avoid;border:1px solid #ddd}.chart canvas{height:210px}.mark video{display:none}.mark img{max-height:160px}details:not([open]){display:none}h1{font-size:24px}#markers:empty{display:none}}
 .delete-confirm{padding:12px;background:#fff0f2;border:1px solid #e9bac7;border-radius:8px;margin-bottom:10px}.delete-confirm button{font-weight:600}#exportDialog a.button{text-decoration:none}#exportDialog p{overflow-wrap:anywhere}
+
+
+.gi-scroll{overflow:auto}#giTrend{max-height:400px;overflow:auto}#giTable table{min-width:1250px}#giHeatmap{height:320px;cursor:pointer}#giNightStatus,#giStatus{white-space:pre-wrap}
