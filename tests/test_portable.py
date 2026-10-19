@@ -95,6 +95,8 @@ class PortableTests(unittest.TestCase):
             snapshot = root / 'shared' / 'versions' / (version + '.sqlite')
             snapshot.write_bytes(b'incomplete')
             with self.assertRaisesRegex(ValueError, 'incomplete or damaged'):
+                a.open_shared()
+            with self.assertRaisesRegex(ValueError, 'incomplete or damaged'):
                 b.open_shared()
             self.assertEqual(b.status()['base'], '')
 

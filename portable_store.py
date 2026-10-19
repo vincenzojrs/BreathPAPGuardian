@@ -193,9 +193,9 @@ class PortableStore:
                 raise ValueError('No published version in shared folder.')
             if self.meta(db, 'dirty') == '1':
                 raise ValueError('Local changes are unpublished. Publish them before opening shared data.')
+            manifest, snapshot = self._verify(version)
             if version == self.meta(db, 'base'):
                 return self.status()
-            manifest, snapshot = self._verify(version)
             with sqlite3.connect(snapshot) as source:
                 integrity = source.execute('PRAGMA integrity_check').fetchone()[0]
                 if integrity != 'ok':
