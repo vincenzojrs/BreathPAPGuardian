@@ -7,10 +7,10 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent / 'web'
-FILES = {'/', '/index.html', '/app.js', '/core.js', '/style.css', '/pdf-export.js'}
+FILES = {'/', '/index.html', '/app.js', '/core.js', '/style.css', '/pdf-export.js', '/glasgow.js', '/glasgow-ui.js', '/glasgow-worker.js', '/vendor/glasgow-reference.js'}
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
        "img-src 'self' blob: data:; media-src 'self' blob: data:; "
-       "connect-src 'none'; object-src 'none'; base-uri 'none'; "
+       "worker-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; "
        "frame-ancestors 'none'; form-action 'none'")
 
 class Handler(SimpleHTTPRequestHandler):
@@ -52,10 +52,11 @@ if __name__ == '__main__':
         server = ThreadingHTTPServer((args.bind, 8765), partial(Handler, directory=str(ROOT)))
     except OSError as exc:
         raise SystemExit('Port 8765 unavailable. Close any previous PAP instance.\n' + str(exc))
-    print('PAP Locale: http://127.0.0.1:8765\nLeave this window open. Press Ctrl+C to stop.', flush=True)
+    print('BreathPAPGuardian: http://127.0.0.1:8765\nLeave this window open. Press Ctrl+C to stop.', flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print('\nPAP Locale stopped.')
+        print('\nBreathPAPGuardian stopped.')
     finally:
         server.server_close()
+

@@ -9,6 +9,19 @@ A local PAP data explorer with interactive charts, a night journal and exports. 
 - Add markers with notes, images and videos.
 - Export CSV signals and PDF reports.
 - Back up and restore your archive, including attachments.
+- Automatically calculate Glasgow Index and nine component fractions on import.
+- Compare colored, selectable metrics in a multi-night bar chart, including mean GI.
+- View five summary measures: annotated AHI, flow limitation, use and mean GI
+  across the latest seven available nights, plus total nights in the archive.
+- Switch between the classic GI timeline and component curves; reorder visible
+  signals by drag and drop. PDF reports preserve the selected chart and order.
+- Inspect the two key GI statistics alongside signal statistics; expand component
+  fractions if needed. The night list starts collapsed.
+
+See [Glasgow Index: method and usage](docs/glasgow-index.md).
+An offline [interactive preview](docs/glasgow-preview.html) uses synthetic data only;
+download and open the HTML file in your browser. GI remains experimental flow-shape
+analysis, not a diagnostic index or RDI.
 
 ## Dashboard preview
 
@@ -81,4 +94,13 @@ See [LEGGIMI.txt](LEGGIMI.txt) for additional startup, transfer and update notes
 
 ## License
 
-No license has been selected yet. The app reads EDF directly in JavaScript and does not bundle or invoke edf2ascii or EDFlib.
+Licensed under **GNU GPL version 3 or, at your option, any later version**
+([LICENSE](LICENSE)). Distributed without warranty.
+
+Glasgow calculations adapt DaveSkvn's code through VibeCoder75321's multi-night
+analyzer. Copyright notices, pinned source revision and modifications are in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+The app reads EDF directly in JavaScript and does not bundle or invoke
+edf2ascii or EDFlib.
+
