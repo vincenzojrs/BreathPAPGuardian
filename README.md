@@ -10,10 +10,13 @@ A local PAP data explorer with interactive charts, a night journal and exports. 
 - Export CSV signals and PDF reports.
 - Back up and restore your archive, including attachments.
 - Automatically calculate Glasgow Index and nine component fractions on import.
-- Compare colored, selectable series in a multi-night line chart, including mean GI.
+- Compare colored, selectable metrics in a multi-night bar chart, including mean GI.
+- View five summary measures: annotated AHI, flow limitation, use and mean GI
+  across the latest seven available nights, plus total nights in the archive.
 - Switch between the classic GI timeline and component curves; reorder visible
   signals by drag and drop. PDF reports preserve the selected chart and order.
-- Inspect GI statistics alongside signal statistics and collapse the night list.
+- Inspect the two key GI statistics alongside signal statistics; expand component
+  fractions if needed. The night list starts collapsed.
 
 See [Glasgow Index: method and usage](docs/glasgow-index.md).
 An offline [interactive preview](docs/glasgow-preview.html) uses synthetic data only;

@@ -10,15 +10,25 @@ in a local worker. Reopening or changing the archive automatically recalculates
 the in-memory results. No extra click or reimport is needed. Missing or unsupported
 flow is reported as unavailable, never zero. The archive/backup schema is unchanged.
 
-In **Trend over time**, toggle any combination of nightly signals, Mean GI (the
-nightly nine-component total), and its components. Each series has a distinct
-color. To compare unlike units, vertical position is normalized to each series'
-displayed min/max; these raw-value ranges and units appear below the graph.
-Hover shows the values; click opens a night. The curves are not a common-unit
-comparison. Missing dates break lines. Trailing 3/7/14-calendar-day means are
-visualization only. Short nights remain included unless the optional four-hour
-usage filter is selected. CSV exports unsmoothed results for the current selection.
-**Your nights** can be expanded or collapsed.
+The overview shows five values. Annotated AHI counts available apnea and hypopnea
+events divided by device-use hours for qualifying nights; missing event records
+show an unavailable value, not zero. This measure uses usage, not measured sleep
+time, so it is not a clinical AHI. Flow limitation is the mean of available
+nightly FlowLim signal means; nightly use and GI are similarly averaged. These
+four averages use up to the latest seven available nights, with each metric
+excluding nights missing its source. The fifth figure counts every imported
+night. Hover a card for its denominator.
+
+In **Trend over time**, toggle any combination of nightly signals and Mean GI,
+the nightly nine-component total; GI components are available in the night view.
+Usage and Mean GI start selected. The grouped bars have distinct colors. To
+compare unlike units, each metric uses its own range starting at zero where
+possible; these raw ranges and units appear below the chart. Hover shows values;
+click a bar group to open its night. Missing measurements have no bar.
+Trailing 3/7/14-calendar-day means are visualization only. Short nights remain
+included unless the optional four-hour usage filter is selected. **Your nights**
+starts collapsed and can be expanded when needed. Glasgow CSV export is hidden
+for now; per-signal CSV and night PDF exports remain available.
 
 Glasgow is a regular **Visible signals** choice. Drag the dotted handle to reorder
 any signal, including GI; up/down buttons also work with keyboard or touch.
@@ -33,8 +43,9 @@ The PDF includes only visible signal charts, in their selected order, and captur
 the chosen GI view, series, zoom, markers and colored legend. The standalone
 experimental dashboard has been removed; the method remains experimental.
 
-**Signal statistics** includes the nightly total, all nine component fractions,
-and min/median/95th/99.5th percentile/mean of the flag count per inspiration.
+**Signal statistics** shows the nightly total and min/median/95th/99.5th
+percentile/mean of the flag count per inspiration. The nine component fractions
+are in a collapsed subsection.
 These breath-distribution statistics are explicitly separate from the reference
 nightly duration-weighted means; missing results remain unavailable. The same
 statistics and interpretation note are included in the PDF.
@@ -85,8 +96,8 @@ code and are not represented as an independently invented algorithm.
 `node --test tests/glasgow.test.js` checks units, totals, timestamps, unavailable
 inputs, gaps, duration weighting, heatmap bins and date smoothing. Node is only
 needed for development. `node tests/browser-smoke.cjs` starts the local server
-and checks automatic analysis, selections, reordering, chart modes, PDF canvas
-capture, CSV, markers, reopening and deletion. It requires Playwright and Chromium;
+and checks automatic analysis, summary cards, grouped bars, selections, reordering,
+chart modes, PDF canvas capture, markers, reopening and deletion. It requires Playwright and Chromium;
 optionally set `BPG_BROWSER_PATH` to an installed Chromium executable.
 
 `node tests/build-preview.cjs` builds `docs/glasgow-preview.html` from the actual

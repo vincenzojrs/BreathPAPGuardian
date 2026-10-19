@@ -29,14 +29,30 @@ async function giAnalyze(list,epoch){
    });
    if(epoch!==giEpoch)return;giResults.set(n.key,result);
   }catch(e){if(epoch!==giEpoch)return;giResults.set(n.key,{status:'unavailable',reason:e.message});}
-  giRenderHome();giRenderNight();if(night?.key===n.key)renderStats();
+  giRenderHome();renderOverview();giRenderNight();if(night?.key===n.key)renderStats();
  }
  if(epoch===giEpoch){const done=[...giResults.values()].filter(r=>r.status==='ok').length;$('giStatus').textContent=list.length?`Glasgow analysis complete · ${done}/${list.length} nights available. Results recalculate automatically when the archive is reopened.`:'';}
 }
 function giRows(){const min=$('giFrom').value,max=$('giTo').value;return nights.filter(n=>(!min||n.key>=min)&&(!max||n.key<=max)&&(!$('giHideShort').checked||n.usage>=4));}
-function giRenderHome(){renderTrend();$('giCSV').disabled=!giRows().some(n=>giResults.get(n.key)?.status==='ok');}
+function giRenderHome(){renderTrend();}
+function renderOverview(){
+ const last=nights.slice(-7),mean=values=>values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
+ const withEvents=last.map(n=>({usage:n.usage,apnea:count(n,'apnea'),hypopnea:count(n,'hypopnea')})).filter(x=>x.usage>0&&x.apnea!==null&&x.hypopnea!==null);
+ const hours=withEvents.reduce((sum,x)=>sum+x.usage,0),ahi=hours?withEvents.reduce((sum,x)=>sum+x.apnea+x.hypopnea,0)/hours:null;
+ const flow=last.map(n=>stat(n,'FlowLim.2s')?.mean).filter(Number.isFinite);
+ const usage=last.map(n=>n.usage).filter(Number.isFinite);
+ const gi=last.map(n=>giResults.get(n.key)).filter(r=>r?.status==='ok').map(r=>r.overall);
+ const cards=[
+  [fmt(ahi),'Annotated AHI · latest 7',`${withEvents.length}/${last.length} nights with event files and use. Annotated apneas + hypopneas divided by their total hours of device use; this is not a clinical sleep AHI.`],
+  [fmt(mean(flow)),'Mean flow limitation · latest 7',`${flow.length}/${last.length} nights with recorded FlowLim values. Arithmetic mean of available nightly signal means, not GI.`],
+  [fmt(mean(usage)),'Mean use · latest 7',`${usage.length}/${last.length} nights with available use duration; hours per night.`],
+  [fmt(mean(gi)),'Mean GI · latest 7',`${gi.length}/${last.length} nights with analyzable flow. Mean of available nightly GI totals; not RDI.`],
+  [String(nights.length),'Nights available','Total nights in this browser archive.']
+ ];
+ $('kpis').replaceChildren(...cards.map(([value,label,hint])=>{const card=el('div',undefined,'kpi');card.title=hint;card.append(el('strong',value),el('span',label));return card;}));
+}
 function trendDefinitions(){
- const defs=[['usage','Usage','h'],['gi:overall','Mean GI','GI (0–9)'],...Glasgow.COMPONENTS.map(([k,l])=>['gi:'+k,l,'fraction (0–1)']),['apnea','Annotated apneas','count'],['hypopnea','Annotated hypopneas','count'],['snore','Snore episodes','count'],['flowlim','Flow limitation episodes','count'],['snoreMin','Snore above threshold','min'],['flowMin','Flow limitation above threshold','min']];
+ const defs=[['usage','Usage','h'],['gi:overall','Mean GI','GI (0–9)'],['apnea','Annotated apneas','count'],['hypopnea','Annotated hypopneas','count'],['snore','Snore episodes','count'],['flowlim','Flow limitation episodes','count'],['snoreMin','Snore above threshold','min'],['flowMin','Flow limitation above threshold','min']];
  const keys=[...new Set(nights.flatMap(n=>Object.keys(n.channels)))];return [...defs,...keys.map(k=>['mean:'+k,(names[k]||k)+' · mean',displayUnit(nights.find(n=>n.channels[k]).channels[k].unit)])];
 }
 function trendValue(n,key){
@@ -54,25 +70,27 @@ function renderTrend(){
  const list=giRows(),host=$('trend');host.replaceChildren();$('trendReadout').textContent='';if(!list.length){host.append(el('p','Import nights to see your trends.'));return;}
  const active=defs.flatMap(([k,label,unit],i)=>trendSelected.has(k)?[{k,label,unit,color:seriesColor(i),rows:Glasgow.movingMean(list.map(n=>({key:n.key,value:trendValue(n,k)})),'value',Number($('giSmooth').value))}]:[]);
  if(!active.length){host.append(el('p','Select one or more series above.'));return;}
- const canvas=el('canvas');canvas.id='trendCanvas';canvas.setAttribute('aria-label','Multi-series nightly trends');host.append(canvas);
- const w=Math.max(650,host.clientWidth||1000),h=300,dpr=devicePixelRatio||1;canvas.style.width=w+'px';canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
- const start=Date.parse(list[0].key),end=Date.parse(list.at(-1).key),x0=58,pw=w-86,yy=v=>245-v*205,xx=t=>x0+(end===start?.5:(t-start)/(end-start))*pw;
- ctx.font='11px system-ui';ctx.fillStyle='#536875';ctx.fillText('Position within each series’ displayed range (%)',x0,17);
- for(let j=0;j<=4;j++){const y=yy(j/4);ctx.strokeStyle='#e5edef';ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(w-28,y);ctx.stroke();ctx.fillText(String(j*25),15,y+4);}
- for(let i=0;i<Math.min(5,list.length);i++){const n=list[Math.round(i*(list.length-1)/Math.max(1,Math.min(5,list.length)-1))];ctx.fillText(n.key,Math.max(0,Math.min(w-80,xx(Date.parse(n.key))-32)),278);}
+ const canvas=el('canvas');canvas.id='trendCanvas';canvas.setAttribute('aria-label','Grouped bar chart of nightly trends');host.append(canvas);
+ const w=Math.max(650,host.clientWidth||1000,list.length*Math.max(50,active.length*15+20)+90),h=300,dpr=devicePixelRatio||1;canvas.style.width=w+'px';canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+ const x0=58,pw=w-86,group=pw/list.length,base=245,top=40,plotHeight=base-top;
+ ctx.font='11px system-ui';ctx.fillStyle='#536875';ctx.fillText('Bars scaled per metric · exact units below',x0,17);
+ for(let j=0;j<=4;j++){const y=base-j*plotHeight/4;ctx.strokeStyle='#e5edef';ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(w-28,y);ctx.stroke();}
  const scales=el('div',undefined,'trend-scales');
- for(const s of active){
-  const values=s.rows.map(r=>r.smoothed).filter(Number.isFinite);let lo=values.length?Math.min(...values):0,hi=values.length?Math.max(...values):1;if(lo===hi){lo=Math.min(0,lo);hi=Math.max(1,hi);if(lo===hi)hi=lo+1;}
+ active.forEach((s,index)=>{
+  const values=s.rows.map(r=>r.smoothed).filter(Number.isFinite),lo=Math.min(0,...values),hi=Math.max(0,...values),range=hi-lo||1,zeroY=base-(0-lo)/range*plotHeight;
   const note=el('span',`${s.label}: ${values.length?fmt(lo)+'–'+fmt(hi)+' '+s.unit:'unavailable'}`);note.style.color=s.color;scales.append(note);
-  ctx.strokeStyle=s.color;ctx.fillStyle=s.color;ctx.lineWidth=2.2;ctx.beginPath();let last=null;
-  for(const r of s.rows){const t=Date.parse(r.key);if(!Number.isFinite(r.smoothed)){last=null;continue;}const x=xx(t),y=yy((r.smoothed-lo)/(hi-lo));if(last===null||t-last>DAY)ctx.moveTo(x,y);else ctx.lineTo(x,y);last=t;}ctx.stroke();
-  for(const r of s.rows)if(Number.isFinite(r.smoothed)){ctx.beginPath();ctx.arc(xx(Date.parse(r.key)),yy((r.smoothed-lo)/(hi-lo)),3.5,0,Math.PI*2);ctx.fill();}
- }
+  for(let i=0;i<s.rows.length;i++){
+   const value=s.rows[i].smoothed;if(!Number.isFinite(value))continue;
+   const y=base-(value-lo)/range*plotHeight,barWidth=Math.min(19,(group-12)/active.length),x=x0+(i+.5)*group+(index-(active.length-1)/2)*barWidth;
+   ctx.fillStyle=s.color;ctx.fillRect(x-barWidth/2,Math.min(zeroY,y),barWidth,Math.max(2,Math.abs(zeroY-y)));
+  }
+ });
+ for(let i=0;i<list.length;i++){const x=x0+(i+.5)*group;if(group>=75||i%Math.ceil(75/group)===0)ctx.fillText(list[i].key,Math.max(x0,Math.min(w-85,x-30)),278);}
  host.append(scales);
- const nearest=e=>{const r=canvas.getBoundingClientRect(),t=start+Math.max(0,Math.min(1,(e.clientX-r.left-x0)/pw))*(end-start);return list.reduce((a,b)=>Math.abs(Date.parse(a.key)-t)<Math.abs(Date.parse(b.key)-t)?a:b);};
+ const nearest=e=>{const r=canvas.getBoundingClientRect(),index=Math.max(0,Math.min(list.length-1,Math.floor((e.clientX-r.left-x0)/group)));return list[index];};
  canvas.onpointermove=e=>{const n=nearest(e);$('trendReadout').textContent=n.key+' · '+active.map(s=>s.label+': '+fmt(s.rows.find(r=>r.key===n.key)?.smoothed)+' '+s.unit).join(' · ');};canvas.onclick=e=>openNight(nearest(e).key);
 }
-function seriesColor(i){return i===0?'#3f6470':i<=giKeys.length?palette[i-1]:`hsl(${Math.round(i*137.508)%360} 65% 36%)`;}
+function seriesColor(i){return i===0?'#3f6470':i===1?palette[0]:`hsl(${(Math.round(i*137.508)+100)%360} 65% 36%)`;}
 function orderedSignals(){return [...selected].sort((a,b)=>{const ia=signalOrder.indexOf(a),ib=signalOrder.indexOf(b);return (ia<0?999:ia)-(ib<0?999:ib);});}
 function moveSignal(source,target){
  if(source===target)return;const order=[...new Set([...signalOrder,...selected])],from=order.indexOf(source),to=order.indexOf(target);if(from<0||to<0)return;order.splice(from,1);order.splice(to,0,source);signalOrder=order;try{localStorage.setItem('bpg-signal-order',JSON.stringify(order));}catch{}build();giRenderNight();
@@ -95,7 +113,7 @@ function giRenderNight(){
  if(!night||!$('giNightStatus'))return;const r=giResults.get(night.key);$('giNightStatus').textContent=r?.status==='ok'?`Mean GI ${fmt(r.overall)} · ${r.inspirations} inspirations · ${fmt(r.seconds/3600)} h analyzed of ${fmt(night.usage)} h use. ${r.warnings.join(' ')}`:r?.reason||'Analyzing Glasgow Index automatically…';giDrawHeatmap();
 }
 function giStatisticRows(){
- const r=night&&giResults.get(night.key);if(r?.status!=='ok')return [['Glasgow Index','0–9','—','—','—','—','—']];
+ const r=night&&giResults.get(night.key);if(r?.status!=='ok')return [['GI · flags per inspiration','0–9','—','—','—','—','—'],['GI · nightly index','0–9','—','—','—','—','—']];
  const values=Float64Array.from(r.sessions.flatMap(s=>s.breaths.map(b=>b.indices.overall)));
  const s=stats({unit:'',segments:[{dt:1,values}]});
  return [['GI · flags per inspiration','0–9',fmt(s?.min),fmt(s?.med),fmt(s?.p95),fmt(s?.p995),fmt(s?.mean)],['GI · nightly index','0–9','—','—','—','—',fmt(r.overall)],...Glasgow.COMPONENTS.map(([k,label])=>['GI · '+label,'fraction','—','—','—','—',fmt(r.components[k])])];
@@ -116,8 +134,4 @@ function giDrawHeatmap(){
  ctx.fillStyle='#425966';for(let i=0;i<5;i++)ctx.fillText(clock(start+(end-start)*i/4),Math.min(w-62,x0+pw*i/4),305);
  const line=(t,color)=>{if(t<start||t>end)return;const x=x0+(t-start)/(end-start)*pw;ctx.strokeStyle=color;ctx.beginPath();ctx.moveTo(x,8);ctx.lineTo(x,280);ctx.stroke();};for(const m of annotations.filter(m=>m.night===night.key))line(m.time,'#ce4475');if(cursor!==null)line(night.origin+cursor*1000,'#253d4d');
 }
-function giExport(){
- const cols=['night','algorithm','analyzed_hours','inspirations','overall',...Glasgow.COMPONENTS.map(x=>x[0]),'mean_ipap','mean_epap','difference_mean_ipap_epap','warnings'];const rows=giRows().flatMap(n=>{const r=giResults.get(n.key),ipap=stats(n.channels['Press.2s'])?.mean,epap=stats(n.channels['EprPress.2s'])?.mean;return r?.status==='ok'?[[n.key,r.version,r.seconds/3600,r.inspirations,r.overall,...Glasgow.COMPONENTS.map(([k])=>r.components[k]),ipap??'',epap??'',Number.isFinite(ipap)&&Number.isFinite(epap)?ipap-epap:'',r.warnings.join(' ')]]:[];});download(new Blob([[cols,...rows].map(row=>row.map(x=>'"'+String(x).replaceAll('"','""')+'"').join(',')).join('\n')],{type:'text/csv'}),'glasgow-nightly.csv');
-}
 for(const id of ['giFrom','giTo','giHideShort','giSmooth'])$(id).onchange=giRenderHome;
-$('giCSV').onclick=giExport;

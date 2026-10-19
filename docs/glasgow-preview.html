@@ -6,17 +6,21 @@
 
 .gi-scroll{overflow:auto}#giHeatmap{height:320px;cursor:pointer}#giNightStatus,#giStatus{white-space:pre-wrap}
 .series-choices{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}.series-chip{margin:0;padding:6px 10px;border:1px solid #dce4e8;border-radius:20px;font-size:12px;cursor:pointer;background:#f8fafb}.series-chip:has(input:checked){background:#edf6f4;border-color:#7fa9a5}.series-swatch{display:inline-block;width:15px;height:4px;border-radius:2px}.trend-controls{display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid #edf1f3;margin-top:16px;padding-top:12px}.trend-scroll{overflow-x:auto;max-height:none!important}#trendCanvas{height:300px}.trend-scales{display:flex;gap:10px 20px;flex-wrap:wrap;font-size:12px;padding:8px}.drag-handle{cursor:grab;font-size:20px;line-height:20px}.dragging{opacity:.45}.drop-target{outline:2px dashed #087f7a}.chart .head{align-items:center;justify-content:flex-start;margin-bottom:10px}.chart .head .value{margin-left:auto}.chart .head strong{margin-left:6px}#yourNights>summary{font-size:22px;font-weight:700;padding:4px 0}#trendReadout{min-height:24px;font-variant-numeric:tabular-nums}#giChartMode{margin:6px 0 4px}
-</style></head><body><main><p class="preview-notice">INTERACTIVE PREVIEW · Synthetic data only · Changes stay in this preview’s separate browser archive.</p><header><div><div class="eyebrow">PAP / LOCAL JOURNAL</div><h1>BreathPAPGuardian</h1><p>Local version · no account · works offline too.</p></div><nav><button id="homeBtn" class="primary">Trends</button><button id="nightBtn">Explore night</button></nav></header><section class="panel no-print" id="drop"><strong>Import your SD card, including multiple nights</strong><p>Drop files or folders, or select them. Originals and metadata are also stored in your browser.</p><label class="button">Choose files<input id="files" type="file" multiple hidden></label><label class="button">Choose SD folder<input id="folder" type="file" webkitdirectory multiple hidden></label><button id="backup">Download local backup</button><label class="button">Restore backup<input id="restore" type="file" accept="application/json" hidden></label><button id="erase">Delete local archive</button><p class="muted">Data is not sent to the server. It is available in this browser and profile; clearing site data also deletes your history. Keep your SD card and download a backup.</p><div id="status" role="status">Opening local archive…</div></section>
-<section id="home"><div id="kpis" class="kpis"></div><section class="panel"><h2>Trend over time</h2>
-<p class="muted">Select any combination of series. Each curve is scaled to its own displayed range (0–100%); the original ranges and units are listed below. Hover for values; click to open a night.</p>
+#overview{margin:16px 0}#overview h2{margin-bottom:2px}#overview>p{margin-top:0}.kpis{grid-template-columns:repeat(5,minmax(0,1fr))}.kpi{min-height:100px;padding:15px}.kpi span{display:block;line-height:1.3}.import-heading,.import-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.import-heading strong{font-size:16px}.import-actions{margin:7px 0}.import-actions .button,.import-actions button{margin:0}.import-actions label{margin:0}.import-actions input{display:none}#drop{padding:12px 18px}#drop>p{margin:6px 0}#drop #status{font-size:12px;margin-top:4px}#giMore{margin:8px 0}#giMore summary{font-weight:600}#giMore table{margin-top:7px}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:500px){.kpis{grid-template-columns:1fr}.kpi{min-height:0}}
+</style></head><body><main><p class="preview-notice">INTERACTIVE PREVIEW · Synthetic data only · Changes stay in this preview’s separate browser archive.</p><header><div><div class="eyebrow">PAP / LOCAL JOURNAL</div><h1>BreathPAPGuardian</h1><p>Local version · no account · works offline too.</p></div><nav><button id="homeBtn" class="primary">Trends</button><button id="nightBtn">Explore night</button></nav></header>
+<section id="home"><section id="overview"><h2>At a glance</h2><p class="muted">Latest 7 available nights for the averages below; each metric uses only nights with that measurement.</p><div id="kpis" class="kpis"></div></section>
+<section class="panel no-print" id="drop"><div class="import-heading"><strong>Import SD card data</strong><span class="muted">Local to this browser</span></div><div class="import-actions"><label class="button">Choose files<input id="files" type="file" multiple hidden></label><label class="button">Choose SD folder<input id="folder" type="file" webkitdirectory multiple hidden></label><button id="backup">Download local backup</button><label class="button">Restore backup<input id="restore" type="file" accept="application/json" hidden></label><button id="erase">Delete local archive</button></div><p class="muted">You can also drop files or folders here. Originals stay in this browser; clearing site data removes your archive. Keep your SD card and a backup.</p><div id="status" role="status">Opening local archive…</div></section>
+<section class="panel"><h2>Trend over time</h2>
+<p class="muted">Select any combination of metrics. Bars for different units use separate scales; original ranges and units are listed below. Hover for values; click a night to open it.</p>
 <div id="trendChoices" class="series-choices"></div>
 <div class="trend-controls"><label>From <input type="date" id="giFrom"></label><label>To <input type="date" id="giTo"></label><label><input type="checkbox" id="giHideShort">Hide nights under 4 h</label>
 <label>Trailing mean <select id="giSmooth"><option value="1">None</option><option value="3">3 days</option><option value="7">7 days</option><option value="14">14 days</option></select></label>
 <label>Snore threshold <input id="snoreThreshold" type="number" value="0" min="0" step="0.01"></label><label>Flow limitation threshold <input id="flowThreshold" type="number" value="0" min="0" step="0.01"></label></div>
 <div id="trend" class="trend-scroll"></div><p id="trendReadout" aria-live="polite"></p>
-<p id="giStatus" role="status"></p><button id="giCSV">Export Glasgow CSV</button>
-<details><summary>How to read these trends</summary><p>Mean GI is the nightly nine-component Glasgow Index (0–9); component fractions range from 0 to 1. The optional trailing mean uses calendar days and excludes unavailable values. Missing dates break the lines. Calculated snore/flow-limitation episodes are consecutive samples above the chosen threshold, not device-reported clinical events. GI describes flow shape and is not an RDI or a diagnosis.</p></details>
-</section><details class="panel" id="yourNights" open><summary>Your nights</summary><div id="nightList"></div></details></section>
+<p id="giStatus" role="status"></p>
+<details><summary>How to read these trends</summary><p>Mean GI is the nightly nine-component Glasgow Index (0–9). The optional trailing mean uses calendar days and excludes unavailable values. Missing measurements have no bar. Calculated snore/flow-limitation episodes are consecutive samples above the chosen threshold, not device-reported clinical events. GI describes flow shape and is not an RDI or a diagnosis.</p></details>
+</section><details class="panel" id="yourNights"><summary>Your nights</summary><div id="nightList"></div></details></section>
 <section id="detail" hidden><div class="nightnav no-print"><button id="older">← Previous night</button><select id="nightSelect" aria-label="Night"></select><button id="newer">Next night →</button><button id="deleteNight">Delete this night</button><button id="pdf">Download PDF report</button></div><h2 id="nightTitle"></h2><p id="summary"></p><div class="grid"><section class="panel"><h3>Night settings</h3><div id="settings"></div><details><summary>Original STR fields</summary><div id="rawSTR"></div></details></section><section class="panel"><h3>Signal statistics · full night</h3><label class="no-print"><input type="checkbox" id="excludeZeros">Exclude zeros for respiratory rate, volume and ventilation</label><p class="muted">Linearly interpolated percentiles; units L/min and mL. Zeros are included by default. SleepHQ conventions may differ.</p><div id="stats"></div></section></div><section class="panel no-print"><h3>Visible signals</h3><div id="choices"></div><div id="events"></div></section>
 <div class="toolbar no-print"><button id="prev">←</button><select id="window"><option value="all">Full night</option><option value="3600">1 hour</option><option value="600">10 minutes</option><option value="120">2 minutes</option><option value="30">30 seconds</option><option value="10">10 seconds</option><option value="custom" disabled>Manual zoom</option></select><button id="next">→</button><button id="undo">Undo zoom</button><button id="reset">Full night</button><select id="dragMode"><option value="zoom">Drag: zoom</option><option value="pan">Drag: pan</option><option value="marker">Click: marker</option></select><input id="goto" type="time" step="1"><button id="go">Go</button><button id="addMarker">+ Marker</button></div><input id="seek" class="no-print" type="range" min="0" step="0.1" aria-label="Pan through the night"><div id="range"></div><p class="muted">Double-click or Esc: full night. ← / →: pan. Shift + drag: pan. Click in marker mode: annotate a time across all signals.</p><div id="charts"></div><section class="panel"><h3>Shared markers</h3><div id="markers"></div></section>
 </section>
@@ -175,7 +179,7 @@ function table(headers,rows){const t=el('table'),head=el('tr');headers.forEach(x
 function stat(n,key){const id=n.key+'|'+key+'|'+$('excludeZeros').checked;if(!cache.has(id))cache.set(id,stats(n.channels[key],$('excludeZeros').checked&&/^(RespRate|TidVol|MinVent)/.test(key)));return cache.get(id);}
 function count(n,type){if(n.events.length)return n.events.filter(e=>type==='apnea'?/apnea/i.test(e.text)&&!/hypopnea/i.test(e.text):/hypopnea/i.test(e.text)).length;const hasEve=files.some(f=>f.parsed&&!f.parsed.summary&&/EVE/i.test(f.name)&&nightKey(f.parsed.start)===n.key);return hasEve?0:null;}
 function home(){
- $('kpis').replaceChildren();const hours=nights.reduce((a,n)=>a+n.usage,0);for(const [a,b] of [[nights.length,'nights available'],[fmt(hours),'hours of use'],[fmt(nights.length?hours/nights.length:0),'average hours per night'],[annotations.length,'markers']]){const d=el('div',undefined,'kpi');d.append(el('strong',String(a)),el('span',b));$('kpis').append(d);}
+ renderOverview();
  const rows=[...nights].reverse().map(n=>[button(n.key,()=>openNight(n.key)),fmt(n.usage)+' h',n.intervals.length?Object.keys(n.channels).length+' signals':'STR summary only',fmt(count(n,'apnea')),fmt(count(n,'hypopnea')),button('Delete',()=>askDeleteNight(n.key))]);$('nightList').replaceChildren(table(['Night','Usage','Data','Apneas','Hypopneas','Actions'],rows));if(!nights.length)$('nightList').append(el('p','Import your SD card to get started.'));$('nightSelect').replaceChildren(...nights.map(n=>{const o=el('option',n.key);o.value=n.key;return o;}));trend();if(typeof giRenderHome==='function')giRenderHome();}
 function trend(){if(typeof renderTrend==='function')renderTrend();}
 $('snoreThreshold').onchange=trend;$('flowThreshold').onchange=trend;
@@ -183,7 +187,7 @@ function showHome(){$('home').hidden=false;$('detail').hidden=true;trend();}$('h
 function openNight(key){night=nights.find(n=>n.key===key);if(!night)return;$('home').hidden=true;$('detail').hidden=false;$('nightSelect').value=key;channels={...night.channels};for(const e of external.filter(e=>e.night===key))channels['external:'+e.id]=alignChannel(e.channel,e.offset,e.ppm);total=Math.max(.5,(night.end-night.origin)/1000);left=0;span=total;cursor=null;history=[];selected=new Set(Object.keys(channels).filter(k=>['Flow.40ms','Press.2s','Leak.2s','FlowLim.2s'].includes(k)||k.startsWith('external:')));$('nightTitle').textContent=night.key+' · '+night.device;$('summary').textContent=`${fmt(night.usage)} hours of use · ${night.intervals.length} recording segments · ${clock(night.origin)}–${clock(night.end)} · PAP clock`;$('window').value='all';selected.add('glasgow');renderSettings();renderStats();renderChoices();renderEvents();renderMarkers();build();if(typeof giRenderNight==='function')giRenderNight();}
 $('nightSelect').onchange=e=>openNight(e.target.value);function stepNight(d){if(!night)return;const i=nights.indexOf(night);if(nights[i+d])openNight(nights[i+d].key);}$('older').onclick=()=>stepNight(-1);$('newer').onclick=()=>stepNight(1);
 function renderSettings(){const s=night.settings,rows=[],add=(key,label,convert=v=>fmt(v),unit='')=>{if(Number.isFinite(s[key]))rows.push([label,convert(s[key])+(unit?' '+unit:''),key]);};add('Mode','Mode',v=>({7:'ASV',8:'ASVAuto'}[v]||'Code '+v));const prefix=s.Mode===8?'S.AA.':'S.AV.';add(prefix+'EPAP','EPAP',fmt,'cmH₂O');add(prefix+'MinEPAP','EPAP min',fmt,'cmH₂O');add(prefix+'MaxEPAP','EPAP max',fmt,'cmH₂O');add(prefix+'MinPS','PS min',fmt,'cmH₂O');add(prefix+'MaxPS','PS max',fmt,'cmH₂O');if(s.Mode===7&&Number.isFinite(s['S.AV.EPAP'])&&Number.isFinite(s['S.AV.MaxPS']))rows.push(['Max IPAP (calculated)',fmt(s['S.AV.EPAP']+s['S.AV.MaxPS'])+' cmH₂O','EPAP + PS max']);add('S.Mask','Mask',v=>v===1?'Full face':'Code '+v);const toggle=v=>v===0?'Off':v===1?'On':'Code '+v;add('S.RampEnable','Ramp',toggle);add('S.RampTime','Ramp time',fmt,'min');add('S.HumLevel','Humidity');add('S.HumEnable','Humidifier',toggle);add('S.SmartStart','Smart start',toggle);add('S.ABFilter','Antibacterial filter',toggle);add('S.Temp','Temperature',v=>fmt(v)+' °C / '+fmt(v*9/5+32)+' °F');add('S.ClimateControl','Climate control',v=>v===0?'Auto':'Code '+v);add('S.PtAccess','Essentials',v=>v===0?'Plus':'Code '+v);add('S.TempEnable','Temperature enabled',v=>v===2?'Auto':toggle(v));$('settings').replaceChildren(rows.length?table(['Parameter','Value','STR source'],rows):el('p','STR summary unavailable for this night.'));$('settings').append(el('p','PaceWave code names compared with the supplied SleepHQ values; other codes remain explicit.','muted'));$('rawSTR').replaceChildren(table(['Field','Value'],Object.entries(night.summary).map(([k,v])=>[k,Array.isArray(v)?v.map(fmt).join(', '):fmt(v)])));}
-function renderStats(){const rows=Object.entries(night.channels).map(([k,ch])=>{const s=stat(night,k);return [names[k]||k,displayUnit(ch.unit),fmt(s?.min),fmt(s?.med),fmt(s?.p95),fmt(s?.p995),fmt(s?.mean)];});rows.push(...giStatisticRows());$('stats').replaceChildren(table(['Signal','Unit','Min','Med','95%','99.5%','Mean'],rows),el('p',giStatisticsNote(),'muted'));}$('excludeZeros').onchange=()=>{cache.clear();home();if(night)renderStats();};
+function renderStats(){const rows=Object.entries(night.channels).map(([k,ch])=>{const s=stat(night,k);return [names[k]||k,displayUnit(ch.unit),fmt(s?.min),fmt(s?.med),fmt(s?.p95),fmt(s?.p995),fmt(s?.mean)];});const gi=giStatisticRows(),expanded=$('giMore')?.open||false,more=el('details');more.id='giMore';more.open=expanded;more.append(el('summary','Glasgow component fractions (9)'),table(['Component','Unit','Min','Med','95%','99.5%','Mean'],gi.slice(2)));$('stats').replaceChildren(table(['Signal','Unit','Min','Med','95%','99.5%','Mean'],[...rows,...gi.slice(0,2)]),more,el('p',giStatisticsNote(),'muted'));}$('excludeZeros').onchange=()=>{cache.clear();home();if(night)renderStats();};
 
 function renderChoices(){$('choices').replaceChildren();for(const [k,ch] of [...Object.entries(channels),['glasgow',{label:'Glasgow Index'}]]){const l=el('label'),c=el('input');c.type='checkbox';c.checked=selected.has(k);c.onchange=()=>{c.checked?selected.add(k):selected.delete(k);build();};l.append(c,document.createTextNode(names[k]||ch.label));$('choices').append(l);}}
 function jump(t){pushZoom();span=Math.min(120,total);left=(t-night.origin)/1000-span/2;$('window').value='120';render();}
@@ -297,14 +301,30 @@ async function giAnalyze(list,epoch){
    });
    if(epoch!==giEpoch)return;giResults.set(n.key,result);
   }catch(e){if(epoch!==giEpoch)return;giResults.set(n.key,{status:'unavailable',reason:e.message});}
-  giRenderHome();giRenderNight();if(night?.key===n.key)renderStats();
+  giRenderHome();renderOverview();giRenderNight();if(night?.key===n.key)renderStats();
  }
  if(epoch===giEpoch){const done=[...giResults.values()].filter(r=>r.status==='ok').length;$('giStatus').textContent=list.length?`Glasgow analysis complete · ${done}/${list.length} nights available. Results recalculate automatically when the archive is reopened.`:'';}
 }
 function giRows(){const min=$('giFrom').value,max=$('giTo').value;return nights.filter(n=>(!min||n.key>=min)&&(!max||n.key<=max)&&(!$('giHideShort').checked||n.usage>=4));}
-function giRenderHome(){renderTrend();$('giCSV').disabled=!giRows().some(n=>giResults.get(n.key)?.status==='ok');}
+function giRenderHome(){renderTrend();}
+function renderOverview(){
+ const last=nights.slice(-7),mean=values=>values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
+ const withEvents=last.map(n=>({usage:n.usage,apnea:count(n,'apnea'),hypopnea:count(n,'hypopnea')})).filter(x=>x.usage>0&&x.apnea!==null&&x.hypopnea!==null);
+ const hours=withEvents.reduce((sum,x)=>sum+x.usage,0),ahi=hours?withEvents.reduce((sum,x)=>sum+x.apnea+x.hypopnea,0)/hours:null;
+ const flow=last.map(n=>stat(n,'FlowLim.2s')?.mean).filter(Number.isFinite);
+ const usage=last.map(n=>n.usage).filter(Number.isFinite);
+ const gi=last.map(n=>giResults.get(n.key)).filter(r=>r?.status==='ok').map(r=>r.overall);
+ const cards=[
+  [fmt(ahi),'Annotated AHI · latest 7',`${withEvents.length}/${last.length} nights with event files and use. Annotated apneas + hypopneas divided by their total hours of device use; this is not a clinical sleep AHI.`],
+  [fmt(mean(flow)),'Mean flow limitation · latest 7',`${flow.length}/${last.length} nights with recorded FlowLim values. Arithmetic mean of available nightly signal means, not GI.`],
+  [fmt(mean(usage)),'Mean use · latest 7',`${usage.length}/${last.length} nights with available use duration; hours per night.`],
+  [fmt(mean(gi)),'Mean GI · latest 7',`${gi.length}/${last.length} nights with analyzable flow. Mean of available nightly GI totals; not RDI.`],
+  [String(nights.length),'Nights available','Total nights in this browser archive.']
+ ];
+ $('kpis').replaceChildren(...cards.map(([value,label,hint])=>{const card=el('div',undefined,'kpi');card.title=hint;card.append(el('strong',value),el('span',label));return card;}));
+}
 function trendDefinitions(){
- const defs=[['usage','Usage','h'],['gi:overall','Mean GI','GI (0–9)'],...Glasgow.COMPONENTS.map(([k,l])=>['gi:'+k,l,'fraction (0–1)']),['apnea','Annotated apneas','count'],['hypopnea','Annotated hypopneas','count'],['snore','Snore episodes','count'],['flowlim','Flow limitation episodes','count'],['snoreMin','Snore above threshold','min'],['flowMin','Flow limitation above threshold','min']];
+ const defs=[['usage','Usage','h'],['gi:overall','Mean GI','GI (0–9)'],['apnea','Annotated apneas','count'],['hypopnea','Annotated hypopneas','count'],['snore','Snore episodes','count'],['flowlim','Flow limitation episodes','count'],['snoreMin','Snore above threshold','min'],['flowMin','Flow limitation above threshold','min']];
  const keys=[...new Set(nights.flatMap(n=>Object.keys(n.channels)))];return [...defs,...keys.map(k=>['mean:'+k,(names[k]||k)+' · mean',displayUnit(nights.find(n=>n.channels[k]).channels[k].unit)])];
 }
 function trendValue(n,key){
@@ -322,25 +342,27 @@ function renderTrend(){
  const list=giRows(),host=$('trend');host.replaceChildren();$('trendReadout').textContent='';if(!list.length){host.append(el('p','Import nights to see your trends.'));return;}
  const active=defs.flatMap(([k,label,unit],i)=>trendSelected.has(k)?[{k,label,unit,color:seriesColor(i),rows:Glasgow.movingMean(list.map(n=>({key:n.key,value:trendValue(n,k)})),'value',Number($('giSmooth').value))}]:[]);
  if(!active.length){host.append(el('p','Select one or more series above.'));return;}
- const canvas=el('canvas');canvas.id='trendCanvas';canvas.setAttribute('aria-label','Multi-series nightly trends');host.append(canvas);
- const w=Math.max(650,host.clientWidth||1000),h=300,dpr=devicePixelRatio||1;canvas.style.width=w+'px';canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
- const start=Date.parse(list[0].key),end=Date.parse(list.at(-1).key),x0=58,pw=w-86,yy=v=>245-v*205,xx=t=>x0+(end===start?.5:(t-start)/(end-start))*pw;
- ctx.font='11px system-ui';ctx.fillStyle='#536875';ctx.fillText('Position within each series’ displayed range (%)',x0,17);
- for(let j=0;j<=4;j++){const y=yy(j/4);ctx.strokeStyle='#e5edef';ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(w-28,y);ctx.stroke();ctx.fillText(String(j*25),15,y+4);}
- for(let i=0;i<Math.min(5,list.length);i++){const n=list[Math.round(i*(list.length-1)/Math.max(1,Math.min(5,list.length)-1))];ctx.fillText(n.key,Math.max(0,Math.min(w-80,xx(Date.parse(n.key))-32)),278);}
+ const canvas=el('canvas');canvas.id='trendCanvas';canvas.setAttribute('aria-label','Grouped bar chart of nightly trends');host.append(canvas);
+ const w=Math.max(650,host.clientWidth||1000,list.length*Math.max(50,active.length*15+20)+90),h=300,dpr=devicePixelRatio||1;canvas.style.width=w+'px';canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+ const x0=58,pw=w-86,group=pw/list.length,base=245,top=40,plotHeight=base-top;
+ ctx.font='11px system-ui';ctx.fillStyle='#536875';ctx.fillText('Bars scaled per metric · exact units below',x0,17);
+ for(let j=0;j<=4;j++){const y=base-j*plotHeight/4;ctx.strokeStyle='#e5edef';ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(w-28,y);ctx.stroke();}
  const scales=el('div',undefined,'trend-scales');
- for(const s of active){
-  const values=s.rows.map(r=>r.smoothed).filter(Number.isFinite);let lo=values.length?Math.min(...values):0,hi=values.length?Math.max(...values):1;if(lo===hi){lo=Math.min(0,lo);hi=Math.max(1,hi);if(lo===hi)hi=lo+1;}
+ active.forEach((s,index)=>{
+  const values=s.rows.map(r=>r.smoothed).filter(Number.isFinite),lo=Math.min(0,...values),hi=Math.max(0,...values),range=hi-lo||1,zeroY=base-(0-lo)/range*plotHeight;
   const note=el('span',`${s.label}: ${values.length?fmt(lo)+'–'+fmt(hi)+' '+s.unit:'unavailable'}`);note.style.color=s.color;scales.append(note);
-  ctx.strokeStyle=s.color;ctx.fillStyle=s.color;ctx.lineWidth=2.2;ctx.beginPath();let last=null;
-  for(const r of s.rows){const t=Date.parse(r.key);if(!Number.isFinite(r.smoothed)){last=null;continue;}const x=xx(t),y=yy((r.smoothed-lo)/(hi-lo));if(last===null||t-last>DAY)ctx.moveTo(x,y);else ctx.lineTo(x,y);last=t;}ctx.stroke();
-  for(const r of s.rows)if(Number.isFinite(r.smoothed)){ctx.beginPath();ctx.arc(xx(Date.parse(r.key)),yy((r.smoothed-lo)/(hi-lo)),3.5,0,Math.PI*2);ctx.fill();}
- }
+  for(let i=0;i<s.rows.length;i++){
+   const value=s.rows[i].smoothed;if(!Number.isFinite(value))continue;
+   const y=base-(value-lo)/range*plotHeight,barWidth=Math.min(19,(group-12)/active.length),x=x0+(i+.5)*group+(index-(active.length-1)/2)*barWidth;
+   ctx.fillStyle=s.color;ctx.fillRect(x-barWidth/2,Math.min(zeroY,y),barWidth,Math.max(2,Math.abs(zeroY-y)));
+  }
+ });
+ for(let i=0;i<list.length;i++){const x=x0+(i+.5)*group;if(group>=75||i%Math.ceil(75/group)===0)ctx.fillText(list[i].key,Math.max(x0,Math.min(w-85,x-30)),278);}
  host.append(scales);
- const nearest=e=>{const r=canvas.getBoundingClientRect(),t=start+Math.max(0,Math.min(1,(e.clientX-r.left-x0)/pw))*(end-start);return list.reduce((a,b)=>Math.abs(Date.parse(a.key)-t)<Math.abs(Date.parse(b.key)-t)?a:b);};
+ const nearest=e=>{const r=canvas.getBoundingClientRect(),index=Math.max(0,Math.min(list.length-1,Math.floor((e.clientX-r.left-x0)/group)));return list[index];};
  canvas.onpointermove=e=>{const n=nearest(e);$('trendReadout').textContent=n.key+' · '+active.map(s=>s.label+': '+fmt(s.rows.find(r=>r.key===n.key)?.smoothed)+' '+s.unit).join(' · ');};canvas.onclick=e=>openNight(nearest(e).key);
 }
-function seriesColor(i){return i===0?'#3f6470':i<=giKeys.length?palette[i-1]:`hsl(${Math.round(i*137.508)%360} 65% 36%)`;}
+function seriesColor(i){return i===0?'#3f6470':i===1?palette[0]:`hsl(${(Math.round(i*137.508)+100)%360} 65% 36%)`;}
 function orderedSignals(){return [...selected].sort((a,b)=>{const ia=signalOrder.indexOf(a),ib=signalOrder.indexOf(b);return (ia<0?999:ia)-(ib<0?999:ib);});}
 function moveSignal(source,target){
  if(source===target)return;const order=[...new Set([...signalOrder,...selected])],from=order.indexOf(source),to=order.indexOf(target);if(from<0||to<0)return;order.splice(from,1);order.splice(to,0,source);signalOrder=order;try{localStorage.setItem('bpg-signal-order',JSON.stringify(order));}catch{}build();giRenderNight();
@@ -363,7 +385,7 @@ function giRenderNight(){
  if(!night||!$('giNightStatus'))return;const r=giResults.get(night.key);$('giNightStatus').textContent=r?.status==='ok'?`Mean GI ${fmt(r.overall)} · ${r.inspirations} inspirations · ${fmt(r.seconds/3600)} h analyzed of ${fmt(night.usage)} h use. ${r.warnings.join(' ')}`:r?.reason||'Analyzing Glasgow Index automatically…';giDrawHeatmap();
 }
 function giStatisticRows(){
- const r=night&&giResults.get(night.key);if(r?.status!=='ok')return [['Glasgow Index','0–9','—','—','—','—','—']];
+ const r=night&&giResults.get(night.key);if(r?.status!=='ok')return [['GI · flags per inspiration','0–9','—','—','—','—','—'],['GI · nightly index','0–9','—','—','—','—','—']];
  const values=Float64Array.from(r.sessions.flatMap(s=>s.breaths.map(b=>b.indices.overall)));
  const s=stats({unit:'',segments:[{dt:1,values}]});
  return [['GI · flags per inspiration','0–9',fmt(s?.min),fmt(s?.med),fmt(s?.p95),fmt(s?.p995),fmt(s?.mean)],['GI · nightly index','0–9','—','—','—','—',fmt(r.overall)],...Glasgow.COMPONENTS.map(([k,label])=>['GI · '+label,'fraction','—','—','—','—',fmt(r.components[k])])];
@@ -384,11 +406,7 @@ function giDrawHeatmap(){
  ctx.fillStyle='#425966';for(let i=0;i<5;i++)ctx.fillText(clock(start+(end-start)*i/4),Math.min(w-62,x0+pw*i/4),305);
  const line=(t,color)=>{if(t<start||t>end)return;const x=x0+(t-start)/(end-start)*pw;ctx.strokeStyle=color;ctx.beginPath();ctx.moveTo(x,8);ctx.lineTo(x,280);ctx.stroke();};for(const m of annotations.filter(m=>m.night===night.key))line(m.time,'#ce4475');if(cursor!==null)line(night.origin+cursor*1000,'#253d4d');
 }
-function giExport(){
- const cols=['night','algorithm','analyzed_hours','inspirations','overall',...Glasgow.COMPONENTS.map(x=>x[0]),'mean_ipap','mean_epap','difference_mean_ipap_epap','warnings'];const rows=giRows().flatMap(n=>{const r=giResults.get(n.key),ipap=stats(n.channels['Press.2s'])?.mean,epap=stats(n.channels['EprPress.2s'])?.mean;return r?.status==='ok'?[[n.key,r.version,r.seconds/3600,r.inspirations,r.overall,...Glasgow.COMPONENTS.map(([k])=>r.components[k]),ipap??'',epap??'',Number.isFinite(ipap)&&Number.isFinite(epap)?ipap-epap:'',r.warnings.join(' ')]]:[];});download(new Blob([[cols,...rows].map(row=>row.map(x=>'"'+String(x).replaceAll('"','""')+'"').join(',')).join('\n')],{type:'text/csv'}),'glasgow-nightly.csv');
-}
 for(const id of ['giFrom','giTo','giHideShort','giSmooth'])$(id).onchange=giRenderHome;
-$('giCSV').onclick=giExport;
 </script><script>
 async function loadPreview(){
  while(!db)await new Promise(r=>setTimeout(r,25));
