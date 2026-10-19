@@ -52,11 +52,11 @@ if __name__ == '__main__':
         server = ThreadingHTTPServer((args.bind, 8765), partial(Handler, directory=str(ROOT)))
     except OSError as exc:
         raise SystemExit('Port 8765 unavailable. Close any previous PAP instance.\n' + str(exc))
-    print('PAP Locale: http://127.0.0.1:8765\nLeave this window open. Press Ctrl+C to stop.', flush=True)
+    print('BreathPAPGuardian: http://127.0.0.1:8765\nLeave this window open. Press Ctrl+C to stop.', flush=True)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print('\nPAP Locale stopped.')
+        print('\nBreathPAPGuardian stopped.')
     finally:
         server.server_close()
 
