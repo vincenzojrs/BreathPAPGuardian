@@ -24,6 +24,21 @@ local version and visible shared version appear in the permanent archive panel.
 `/api/mode` reports `{"portable":true}`. Patient records come from local SQLite,
 never browser IndexedDB in portable mode.
 
+## Double-click launcher on macOS
+
+After pulling this branch, double-click **Avvia-BreathPAPGuardian.command** inside
+the repository folder. Finder opens Terminal and starts the server. Leave the
+launcher beside `server.py`; create a Finder alias if you want it elsewhere.
+
+The launcher reuses `~/Library/Application Support/BreathPAPGuardian/reali-verifica-01`
+and discovers `PAPDatiReali` under Proton Drive in `~/Library/CloudStorage`. If
+there is no unique match, it asks you to select the real archive folder.
+Open http://127.0.0.1:8765 when the server is ready. Keep Terminal open and use
+Ctrl+C to stop after Save and close. It does not update the repository automatically.
+
+Advanced users may override the paths through `BPG_WORK_DIR` and `BPG_SHARED_DIR`.
+Use separate working directories when selecting different shared archives.
+
 ## Daily use
 
 1. Wait for Proton Drive synchronization. The app automatically loads the newest
