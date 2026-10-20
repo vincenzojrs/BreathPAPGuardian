@@ -1,4 +1,6 @@
-# BreathPAPGuardian
+# BreathPAPGuardian · portable branch
+
+This branch uses a Proton Drive archive with automatic loading, incremental publications and full independent backups. `main` retains browser IndexedDB. See the [complete portable archive guide](docs/portable-archive.md).
 
 A local PAP data explorer with interactive charts, a night journal and exports. Built around **ResMed AirCurve 10 CS PaceWave** recordings.
 
@@ -37,34 +39,22 @@ Screenshots from real-world use of the original Italian interface. The current a
 
 ## Quick start
 
-Download or clone this repository. From its folder, run:
+Requires Python 3.9+ and a modern browser; no pip/npm install or build is needed.
+Make the Proton Drive archive folder available offline, wait for synchronization,
+then run from the repository folder:
 
 ```sh
-python3 server.py
+python3 server.py \
+  --data-dir "$HOME/Library/Application Support/BreathPAPGuardian/portable" \
+  --shared-dir "/actual/Finder/path/to/your/Proton/archive"
 ```
 
-Open **[http://127.0.0.1:8765](http://127.0.0.1:8765)**. Keep the terminal open; press **Ctrl+C** to stop.
+Open [http://127.0.0.1:8765](http://127.0.0.1:8765). Keep the terminal open.
+Confirm Proton Drive synchronization before editing. Use **Save and close**
+before switching devices, and wait for Proton Drive to finish uploading.
 
-Requires Python 3 and a modern browser. No pip/npm dependencies or build step.
-
-**macOS launchers:**
-
-```sh
-bash Avvia-PAP.command
-# Or, with Docker Desktop running:
-bash Avvia-con-Docker.command
-```
-
-**Docker on other platforms:**
-
-```sh
-docker build -t pap-locale:1 .
-docker run --rm --init -it --read-only --cap-drop ALL \
-  --security-opt no-new-privileges=true \
-  -p 127.0.0.1:8765:8765 pap-locale:1
-```
-
-The initial Docker build needs Internet access; subsequent use works offline.
+See the [portable guide](docs/portable-archive.md) for setup on the second Mac,
+Docker mounts, migration, interrupted imports, conflict recovery and cleanup.
 
 ## Usage
 
@@ -72,11 +62,22 @@ Choose **Choose SD folder** or **Choose files**, then select a night. Drag on ch
 
 ## Privacy and storage
 
-Processing happens in your browser, with no accounts, analytics or external application services. Data stays in **IndexedDB**, not in the program folder or Docker container.
+Processing happens on the device. A local SQLite working archive is published
+to the selected Proton Drive folder as immutable record objects and blobs.
+Unchanged content is reused; no live database is synchronized. Local work is
+saved immediately and complete operations publish automatically.
 
-Always use the same browser, profile and URL: `localhost` and `127.0.0.1` have separate archives. Clearing browser data can erase your history.
+The archive panel identifies the folders, archive and versions in use.
+Consultation starts read only; editing requires synchronization confirmation.
+The app can verify file integrity but cannot determine whether Proton has
+delivered the newest cloud publication. Use one editing computer at a time.
 
-**Download backups regularly.** Backup JSON includes recordings and attachments and is not encrypted by the app. Keep it private and out of GitHub. Transfer between devices uses manual backup/restore.
+Backups are complete and self-contained, including recordings, notes and media.
+They are not encrypted by the app. Keep an independent backup on encrypted
+storage and all patient data outside GitHub. Restores build an empty preview
+archive before replacing the active copy.
+
+[Read the complete storage and recovery documentation](docs/portable-archive.md).
 
 ## Limitations
 
@@ -85,6 +86,8 @@ Always use the same browser, profile and URL: `localhost` and `127.0.0.1` have s
 - Nights run noon to noon using the device clock, without time zone conversion.
 - Calculated episodes and statistics may differ from SleepHQ.
 - Attachments are limited to 30 MB each; PDFs list media without embedding it.
+- Portable mode requires the local Python server and configured local/shared folders.
+- The standalone HTML preview uses a separate synthetic browser archive.
 
 ## Support and contributions
 
