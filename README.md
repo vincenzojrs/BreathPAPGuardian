@@ -1,4 +1,6 @@
-# BreathPAPGuardian
+# BreathPAPGuardian · portable branch
+
+This branch uses a Proton Drive archive with automatic loading, incremental publications and full independent backups. `main` retains browser IndexedDB. See the [complete portable archive guide](docs/portable-archive.md).
 
 A local PAP data explorer with interactive charts, a night journal and exports. Built around **ResMed AirCurve 10 CS PaceWave** recordings.
 
@@ -37,34 +39,22 @@ Screenshots from real-world use of the original Italian interface. The current a
 
 ## Quick start
 
-Download or clone this repository. From its folder, run:
+Requires Python 3.9+ and a modern browser; no pip/npm install or build is needed.
+Make the Proton Drive archive folder available offline, wait for synchronization,
+then run from the repository folder:
 
 ```sh
-python3 server.py
+python3 server.py \
+  --data-dir "$HOME/Library/Application Support/BreathPAPGuardian/portable" \
+  --shared-dir "/actual/Finder/path/to/your/Proton/archive"
 ```
 
-Open **[http://127.0.0.1:8765](http://127.0.0.1:8765)**. Keep the terminal open; press **Ctrl+C** to stop.
+Open [http://127.0.0.1:8765](http://127.0.0.1:8765). Keep the terminal open.
+Confirm Proton Drive synchronization before editing. Use **Save and close**
+before switching devices, and wait for Proton Drive to finish uploading.
 
-Requires Python 3 and a modern browser. No pip/npm dependencies or build step.
-
-**macOS launchers:**
-
-```sh
-bash Avvia-PAP.command
-# Or, with Docker Desktop running:
-bash Avvia-con-Docker.command
-```
-
-**Docker on other platforms:**
-
-```sh
-docker build -t pap-locale:1 .
-docker run --rm --init -it --read-only --cap-drop ALL \
-  --security-opt no-new-privileges=true \
-  -p 127.0.0.1:8765:8765 pap-locale:1
-```
-
-The initial Docker build needs Internet access; subsequent use works offline.
+See the [portable guide](docs/portable-archive.md) for setup on the second Mac,
+Docker mounts, migration, interrupted imports, conflict recovery and cleanup.
 
 ## Usage
 
@@ -72,52 +62,22 @@ Choose **Choose SD folder** or **Choose files**, then select a night. Drag on ch
 
 ## Privacy and storage
 
-Processing happens in your browser, with no accounts, analytics or external application services. Data stays in **IndexedDB**, not in the program folder or Docker container.
+Processing happens on the device. A local SQLite working archive is published
+to the selected Proton Drive folder as immutable record objects and blobs.
+Unchanged content is reused; no live database is synchronized. Local work is
+saved immediately and complete operations publish automatically.
 
-Always use the same browser, profile and URL: `localhost` and `127.0.0.1` have separate archives. Clearing browser data can erase your history.
+The archive panel identifies the folders, archive and versions in use.
+Consultation starts read only; editing requires synchronization confirmation.
+The app can verify file integrity but cannot determine whether Proton has
+delivered the newest cloud publication. Use one editing computer at a time.
 
-**Download backups regularly.** Backup JSON includes recordings and attachments and is not encrypted by the app. Keep it private and out of GitHub. Transfer between devices uses manual backup/restore.
+Backups are complete and self-contained, including recordings, notes and media.
+They are not encrypted by the app. Keep an independent backup on encrypted
+storage and all patient data outside GitHub. Restores build an empty preview
+archive before replacing the active copy.
 
-### Portable archive with Proton Drive (preview)
-
-This is an opt-in alternative to browser storage. Each Mac keeps a local SQLite
-working archive; **Publish to shared folder** creates a versioned copy of the
-database and content-addressed EDF/media attachments in a Proton Drive folder.
-The shared folder never contains a live SQLite database. Only one computer
-should work on the archive at a time.
-
-1. In Finder, create a private folder in Proton Drive for this archive and make
-   it **Available offline**. Wait for the initial sync to complete.
-2. From the repository folder, start the app on the first Mac (adjust the shared
-   path to the actual Finder folder):
-
-   ```sh
-   python3 server.py --data-dir "$HOME/Library/Application Support/BreathPAPGuardian/portable" --shared-dir "$HOME/Proton Drive/BreathPAPGuardian"
-   ```
-
-3. Open `http://127.0.0.1:8765` in your usual browser. If you have an existing
-   browser archive at this exact URL, use **Copy browser archive here** once.
-   The browser source is preserved. Otherwise import your SD card. Click
-   **Publish to shared folder** after every session, then wait for Proton Drive
-   to finish uploading all files before closing the first Mac.
-4. On the second Mac, install Proton Drive, make the same shared folder
-   **Available offline**, wait for download, and start the app with its own
-   local `--data-dir` and that Mac's actual `--shared-dir` path. Click
-   **Open shared version** before editing. Publish changes and wait for sync
-   before returning to the first Mac; click **Open shared version** there.
-
-The app checks the SHA-256 digest of the database and every attachment before
-opening a shared version. If files have not finished syncing, wait and retry.
-It blocks edits when it can see a newer shared version, and refuses to discard
-unpublished local changes. This does not provide simultaneous multi-computer
-editing or detect another computer's uploads before Proton Drive delivers them.
-Keep backups: published versions are retained, and opening a newer version
-keeps `previous.sqlite` in the local working folder. The local working folder
-and browser backups contain unencrypted health data; protect your Mac account
-and disk. Never put either working folder or patient data in the Git repository.
-
-To return to the original IndexedDB mode, launch `python3 server.py` without
-the two archive options. These are separate archives.
+[Read the complete storage and recovery documentation](docs/portable-archive.md).
 
 ## Limitations
 
@@ -126,8 +86,8 @@ the two archive options. These are separate archives.
 - Nights run noon to noon using the device clock, without time zone conversion.
 - Calculated episodes and statistics may differ from SleepHQ.
 - Attachments are limited to 30 MB each; PDFs list media without embedding it.
-- Portable mode requires the local Python server; the standalone HTML preview
-  and default launchers continue to use browser IndexedDB.
+- Portable mode requires the local Python server and configured local/shared folders.
+- The standalone HTML preview uses a separate synthetic browser archive.
 
 ## Support and contributions
 

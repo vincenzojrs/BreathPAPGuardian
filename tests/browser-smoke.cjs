@@ -6,7 +6,7 @@ const fs=require('fs'),assert=require('assert/strict'),path=require('path'),{spa
 const scratch=fs.mkdtempSync(path.join(require('os').tmpdir(),'bpg-ui-'));
 const root=path.resolve(__dirname,'..');
 (async()=>{
- const server=spawn('python3',['server.py'],{cwd:root,stdio:'ignore'});let browser;
+ const server=spawn('python3',['server.py','--browser-storage'],{cwd:root,stdio:'ignore'});let browser;
  try{
   browser=await chromium.launch({headless:true,executablePath:process.env.BPG_BROWSER_PATH||undefined,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage']});
   const page=await browser.newPage({viewport:{width:1400,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));

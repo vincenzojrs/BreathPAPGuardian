@@ -1,6 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 'use strict';
-const giResults=new Map();
+const giResults=new Map(),giMemoryCache=new Map();
+const GI_METHOD='glasgow-reference-nine-components-v1';
+async function giSignature(n){const ch=n.channels['Flow.40ms'];if(!ch)return GI_METHOD+'|no-flow|'+n.key;const parts=[];for(const s of ch.segments){const bytes=await crypto.subtle.digest('SHA-256',s.values);parts.push([s.start,s.dt,s.values.length,Array.from(new Uint8Array(bytes),v=>v.toString(16).padStart(2,'0')).join('')]);}return Portable.hash(JSON.stringify([GI_METHOD,ch.unit,parts]));}
+function applyPortablePreferences(rows){const p=rows.find(x=>x.id==='view');if(!p)return;if(Array.isArray(p.signalOrder))signalOrder=p.signalOrder;if(['classic','custom'].includes(p.giChartMode))giChartMode=p.giChartMode;for(const [set,values] of [[giSelected,p.giSelected],[trendSelected,p.trendSelected]])if(Array.isArray(values)){set.clear();values.forEach(x=>set.add(x));}}
+function savePortablePreferences(){if(!portable||!Portable.writable||Portable.state?.preview)return;put('preferences',{id:'view',signalOrder,giChartMode,giSelected:[...giSelected],trendSelected:[...trendSelected]}).catch(e=>Portable.error(e));}
 let giEpoch=0,giWorker=null,giReject=null,giScheduled=null;
 const giKeys=[['overall','Mean GI'],...Glasgow.COMPONENTS];
 const palette=['#087f7a','#8b4ac2','#d06024','#2274be','#bf3965','#658115','#6356cb','#a46528','#00839b','#536875'];
@@ -12,13 +16,14 @@ function giGetNight(key){return giResults.get(key);}
 function giReset(){
  giEpoch++;giResults.clear();clearTimeout(giScheduled);
  if(giWorker){giWorker.terminate();giWorker=null;giReject?.(Error('Archive changed'));giReject=null;}
- const epoch=giEpoch;giScheduled=setTimeout(()=>giAnalyze([...nights],epoch),0);
+ if(portable)Portable.analysisBusy=true;const epoch=giEpoch;giScheduled=setTimeout(()=>giAnalyze([...nights],epoch),0);
 }
 async function giAnalyze(list,epoch){
  for(let i=0;i<list.length&&epoch===giEpoch;i++){
   const n=list[i];$('giStatus').textContent=`Analyzing Glasgow Index · ${i+1}/${list.length} · ${n.key}`;
   try{
-   const result=await new Promise((resolve,reject)=>{
+   const signature=portable?await giSignature(n):null,cached=portable?(giCacheRecords.find(x=>x.id===n.key&&x.signature===signature&&x.method===GI_METHOD)||giMemoryCache.get(signature)):null;
+   const result=cached?.result||await new Promise((resolve,reject)=>{
     const worker=new Worker('glasgow-worker.js');giWorker=worker;giReject=reject;
     const finish=()=>{worker.terminate();if(giWorker===worker){giWorker=null;giReject=null;}};
     worker.onmessage=e=>{finish();e.data.error?reject(Error(e.data.error)):resolve(e.data.result);};
@@ -28,10 +33,11 @@ async function giAnalyze(list,epoch){
     worker.postMessage({channel},channel?channel.segments.map(s=>s.values.buffer):[]);
    });
    if(epoch!==giEpoch)return;giResults.set(n.key,result);
+   if(portable){const entry={id:n.key,signature,method:GI_METHOD,result};giMemoryCache.set(signature,entry);if(Portable.writable&&!Portable.state?.preview&&!Portable.state?.pending&&!giCacheRecords.some(x=>x.id===n.key&&x.signature===signature&&x.method===GI_METHOD)){try{await put('analysis',entry);giCacheRecords=giCacheRecords.filter(x=>x.id!==n.key);giCacheRecords.push(entry);}catch(e){Portable.error(e);}}}
   }catch(e){if(epoch!==giEpoch)return;giResults.set(n.key,{status:'unavailable',reason:e.message});}
   giRenderHome();renderOverview();giRenderNight();if(night?.key===n.key)renderStats();
  }
- if(epoch===giEpoch){const done=[...giResults.values()].filter(r=>r.status==='ok').length;$('giStatus').textContent=list.length?`Glasgow analysis complete · ${done}/${list.length} nights available. Results recalculate automatically when the archive is reopened.`:'';}
+ if(epoch===giEpoch){if(portable){Portable.analysisBusy=false;Portable.changed();}const done=[...giResults.values()].filter(r=>r.status==='ok').length;$('giStatus').textContent=list.length?`Glasgow analysis complete · ${done}/${list.length} nights available. Cached results are reused when flow and algorithm are unchanged.`:'';}
 }
 function giRows(){const min=$('giFrom').value,max=$('giTo').value;return nights.filter(n=>(!min||n.key>=min)&&(!max||n.key<=max)&&(!$('giHideShort').checked||n.usage>=4));}
 function giRenderHome(){renderTrend();}
@@ -47,7 +53,7 @@ function renderOverview(){
   [fmt(mean(flow)),'Mean flow limitation · latest 7',`${flow.length}/${last.length} nights with recorded FlowLim values. Arithmetic mean of available nightly signal means, not GI.`],
   [fmt(mean(usage)),'Mean use · latest 7',`${usage.length}/${last.length} nights with available use duration; hours per night.`],
   [fmt(mean(gi)),'Mean GI · latest 7',`${gi.length}/${last.length} nights with analyzable flow. Mean of available nightly GI totals; not RDI.`],
-  [String(nights.length),'Nights available','Total nights in this browser archive.']
+  [String(nights.length),'Nights available','Total visible nights in this archive.']
  ];
  $('kpis').replaceChildren(...cards.map(([value,label,hint])=>{const card=el('div',undefined,'kpi');card.title=hint;card.append(el('strong',value),el('span',label));return card;}));
 }
@@ -66,7 +72,7 @@ function seriesToggle(key,label,color,checked,onchange){
  const l=el('label',undefined,'series-chip'),input=el('input'),swatch=el('span',undefined,'series-swatch');input.type='checkbox';input.checked=checked;input.dataset.series=key;input.onchange=()=>onchange(input.checked);swatch.style.background=color;l.append(input,swatch,document.createTextNode(label));return l;
 }
 function renderTrend(){
- const defs=trendDefinitions(),choices=$('trendChoices');choices.replaceChildren();defs.forEach(([k,label,unit],i)=>choices.append(seriesToggle(k,label,seriesColor(i),trendSelected.has(k),v=>{v?trendSelected.add(k):trendSelected.delete(k);renderTrend();})));
+ const defs=trendDefinitions(),choices=$('trendChoices');choices.replaceChildren();defs.forEach(([k,label,unit],i)=>choices.append(seriesToggle(k,label,seriesColor(i),trendSelected.has(k),v=>{v?trendSelected.add(k):trendSelected.delete(k);savePortablePreferences();renderTrend();})));
  const list=giRows(),host=$('trend');host.replaceChildren();$('trendReadout').textContent='';if(!list.length){host.append(el('p','Import nights to see your trends.'));return;}
  const active=defs.flatMap(([k,label,unit],i)=>trendSelected.has(k)?[{k,label,unit,color:seriesColor(i),rows:Glasgow.movingMean(list.map(n=>({key:n.key,value:trendValue(n,k)})),'value',Number($('giSmooth').value))}]:[]);
  if(!active.length){host.append(el('p','Select one or more series above.'));return;}
@@ -93,7 +99,7 @@ function renderTrend(){
 function seriesColor(i){return i===0?'#3f6470':i===1?palette[0]:`hsl(${(Math.round(i*137.508)+100)%360} 65% 36%)`;}
 function orderedSignals(){return [...selected].sort((a,b)=>{const ia=signalOrder.indexOf(a),ib=signalOrder.indexOf(b);return (ia<0?999:ia)-(ib<0?999:ib);});}
 function moveSignal(source,target){
- if(source===target)return;const order=[...new Set([...signalOrder,...selected])],from=order.indexOf(source),to=order.indexOf(target);if(from<0||to<0)return;order.splice(from,1);order.splice(to,0,source);signalOrder=order;try{localStorage.setItem('bpg-signal-order',JSON.stringify(order));}catch{}build();giRenderNight();
+ if(source===target)return;const order=[...new Set([...signalOrder,...selected])],from=order.indexOf(source),to=order.indexOf(target);if(from<0||to<0)return;order.splice(from,1);order.splice(to,0,source);signalOrder=order;try{localStorage.setItem('bpg-signal-order',JSON.stringify(order));}catch{}savePortablePreferences();build();giRenderNight();
 }
 function setupSignalCard(box,head,key){
  box.dataset.signal=key;const handle=el('span','⠿');handle.className='drag-handle no-print';handle.draggable=true;handle.title='Drag to reorder '+(names[key]||key);handle.setAttribute('aria-label',handle.title);
@@ -103,9 +109,9 @@ function setupSignalCard(box,head,key){
 }
 function giCreateCard(){
  const box=el('section',undefined,'chart'),head=el('div',undefined,'head');box.id='giNightPanel';setupSignalCard(box,head,'glasgow');head.append(el('strong','Glasgow Index'));
- const selector=el('select');selector.id='giChartMode';selector.setAttribute('aria-label','Glasgow chart type');for(const [value,label] of [['classic','GI · Classic timeline'],['custom','GI · Component curves']]){const o=el('option',label);o.value=value;selector.append(o);}selector.value=giChartMode;selector.onchange=()=>{giChartMode=selector.value;build();giRenderNight();};
+ const selector=el('select');selector.id='giChartMode';selector.setAttribute('aria-label','Glasgow chart type');for(const [value,label] of [['classic','GI · Classic timeline'],['custom','GI · Component curves']]){const o=el('option',label);o.value=value;selector.append(o);}selector.value=giChartMode;selector.onchange=()=>{giChartMode=selector.value;savePortablePreferences();build();giRenderNight();};
  const controls=el('div',undefined,'no-print');controls.append(selector);
- if(giChartMode==='custom'){const choices=el('div',undefined,'series-choices');giKeys.forEach(([k,l],i)=>choices.append(seriesToggle(k,l,palette[i],giSelected.has(k),v=>{v?giSelected.add(k):giSelected.delete(k);giDrawHeatmap();})));controls.append(choices);}
+ if(giChartMode==='custom'){const choices=el('div',undefined,'series-choices');giKeys.forEach(([k,l],i)=>choices.append(seriesToggle(k,l,palette[i],giSelected.has(k),v=>{v?giSelected.add(k):giSelected.delete(k);savePortablePreferences();giDrawHeatmap();})));controls.append(choices);}
  const info=el('p');info.id='giNightStatus';info.setAttribute('role','status');const hint=el('p',giChartMode==='classic'?'Darker marks indicate more flagged inspirations. Gray means no analyzed inspiration starts in that column. Click to inspect the flow.':'Each point averages inspirations starting in a time bin (at least 30 seconds, unless the visible range is shorter). GI uses the left scale (0–9); components use the right scale (0–1). Gaps remain empty. Click to inspect the flow.','muted');
  const canvas=el('canvas');canvas.id='giHeatmap';canvas.setAttribute('aria-label','Glasgow component timeline');canvas.onclick=e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,x0=giChartMode==='classic'?120:65;if(x<x0)return;jump(night.origin+(left+Math.max(0,Math.min(1,(x-x0)/(r.width-x0-50)))*span)*1000);};box.append(head,controls,info,hint,canvas);cards.push({key:'glasgow',canvas});return box;
 }
