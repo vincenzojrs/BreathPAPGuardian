@@ -25,6 +25,8 @@ async function release(page){await saved(page);await page.evaluate(async()=>{awa
   await a.locator('#files').setInputFiles(path.join(root,'examples/PAP_SYNTHETIC_DEMO.edf'));
   await a.waitForFunction(()=>document.getElementById('status').textContent.includes('1 unchanged'));await saved(a);
   assert.equal(await a.evaluate(()=>files.length),1);assert.deepEqual(fs.readdirSync(path.join(tmp,'shared','objects')),objectNames);
+  const fullEDF=fs.readFileSync(path.join(root,'examples/PAP_SYNTHETIC_DEMO.edf')),headerLength=Number(fullEDF.subarray(184,192).toString()),emptyEDF=Buffer.from(fullEDF.subarray(0,headerLength));emptyEDF.fill(32,236,244);emptyEDF.write('-1',236,'ascii');
+  await a.locator('#files').setInputFiles({name:'EMPTY_HEADER.edf',mimeType:'application/octet-stream',buffer:emptyEDF});await a.waitForFunction(()=>document.getElementById('status').textContent.includes('1 empty EDF skipped'));await saved(a);assert.equal(await a.evaluate(()=>files.length),1);assert.equal(await a.evaluate(()=>!!Portable.state.pending),false);
   await a.locator('#yourNights summary').click();await a.locator('#nightList button').first().click();
   await a.locator('#addMarker').click();await a.locator('#markerTitle').fill('Synthetic observation');await a.locator('#markerNote').fill('First Mac');
   await a.locator('#markerMedia').setInputFiles({name:'synthetic.png',mimeType:'image/png',buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aSFEAAAAASUVORK5CYII=','base64')});

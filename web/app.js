@@ -32,7 +32,7 @@ async function ingest(input){
  if(busy||!db)return;busy=true;let started=false;
  try{
   if(portable){await Portable.begin('import');started=true;files=await getAll('files');}
-  let saved=0,updated=0,duplicates=0;const errors=[],serials=new Set(files.filter(f=>f.tags?.SRN).map(f=>f.tags.SRN));
+  let saved=0,updated=0,duplicates=0,empty=0;const errors=[],serials=new Set(files.filter(f=>f.tags?.SRN).map(f=>f.tags.SRN));
   for(const f of input.filter(f=>/\.tgt$/i.test(f.name))){const match=(await f.text()).match(/#SRN\s+(\S+)/);if(match)serials.add(match[1]);}
   if(serials.size>1)throw Error('One PAP device per archive. A second device was not imported.');
   for(let i=0;i<input.length;i++){
@@ -48,11 +48,11 @@ async function ingest(input){
     if(portable){await api('batch',{delete:delta.remove.map(id=>['files',id]),put:[['files',await portableEncode(record)]]});files=files.filter(x=>!delta.remove.includes(x.id));}
     else await put('files',record);
     files.push(record);delta.remove.length?updated++:saved++;
-   }catch(e){errors.push(f.name+': '+e.message);}
+   }catch(e){if(e.code==='EDF_NO_DATA'){empty++;continue;}errors.push(f.name+': '+e.message);}
   }
   if(errors.length)throw Error(errors.join('\n')+'\nImport paused. Choose the same folder to resume; completed files are preserved locally.');
   if(portable){await Portable.finish();started=false;}
-  await refresh();showHome();status(`${saved} new · ${updated} updated · ${duplicates} unchanged · ${nights.length} visible nights.`);
+  await refresh();showHome();status(`${saved} new · ${updated} updated · ${duplicates} unchanged · ${nights.length} visible nights.`+(empty?`\n${empty} empty EDF skipped: header only, no samples. Reimport after the recordings are finalized.`:''));
  }catch(e){if(portable&&started)await Portable.pause().catch(()=>{});await refresh().catch(()=>{});status(e.message);}
  finally{busy=false;$('files').value='';$('folder').value='';if(portable)Portable.render();}
 }

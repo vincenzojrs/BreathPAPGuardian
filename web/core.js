@@ -5,11 +5,12 @@ function readEDF(buffer,name){
  const bytes=new Uint8Array(buffer),dv=new DataView(buffer),dec=new TextDecoder('utf-8'),txt=(p,n)=>dec.decode(bytes.subarray(p,p+n)).trim();
  if(bytes.length<256)throw Error('Incomplete EDF header');
  const ns=Number(txt(252,4)),nr=Number(txt(236,8)),duration=Number(txt(244,8)),header=Number(txt(184,8));
- if(!Number.isInteger(ns)||ns<1||ns>1000||!Number.isInteger(nr)||nr<0||header!==256+256*ns)throw Error('Unsupported EDF structure');
+ if(!Number.isInteger(ns)||ns<1||ns>1000||!Number.isInteger(nr)||(nr<0&&!(nr===-1&&bytes.length===header))||header!==256+256*ns)throw Error('Unsupported EDF structure');
  const date=txt(168,8).split('.').map(Number),time=txt(176,8).split('.').map(Number),year=date[2]>=85?1900+date[2]:2000+date[2],start=Date.UTC(year,date[1]-1,date[0],...time);
  if(!Number.isFinite(start)||duration<0)throw Error('Invalid EDF times');let pos=256;const fields=[];
  for(const width of [16,80,8,8,8,8,8,80,8,32]){fields.push(Array.from({length:ns},(_,i)=>txt(pos+i*width,width)));pos+=ns*width;}
  const counts=fields[8].map(Number);if(counts.some(n=>!Number.isInteger(n)||n<0))throw Error('Invalid sample count');const stride=counts.reduce((a,b)=>a+b,0)*2;
+ if(bytes.length===header&&(nr===-1||nr===0)){const error=Error('EDF contains only its header: no recorded samples yet. Reimport after the recording is finalized.');error.code='EDF_NO_DATA';throw error;}
  if(header+nr*stride!==bytes.length)throw Error('Inconsistent EDF size');const signals=[],events=[];let offset=0;
  const summary=/^STR(?:\(|\.|$)/i.test(name);
  for(let c=0;c<ns;c++){const label=fields[0][c],n=counts[c];

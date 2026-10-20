@@ -38,6 +38,11 @@ never browser IndexedDB in portable mode.
    staged progressively in a separate SQLite database and published only after
    the entire import succeeds. An error pauses the import without publishing it;
    select the same SD folder to resume, or preview/discard the pending copy.
+   Header-only EDF files whose record count is `-1` or `0` contain no recorded
+   samples. They are counted as **empty EDF skipped**, are not stored, and do not
+   pause the import. Reimport them once the recorder has finalized real samples.
+   A truncated file declaring actual records, or an unknown-count file containing
+   a payload, remains an error and is not silently discarded.
 5. Click **Save and close** to finish outstanding work. If the browser prevents
    script closing, the app confirms you may close the tab. The browser's own
    generic exit warning is requested when work, a marker form, or publication is
