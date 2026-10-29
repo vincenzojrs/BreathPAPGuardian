@@ -22,11 +22,11 @@ function shiftInfo(session){
  if(source+offset!==target||parseNs(session.start_unix_ns)!==target)throw Error('Inconsistent shift metadata');
  return {applied:true,offsetNs:offset.toString(),originalStartNs:source.toString()};
 }
-function checkSession(session){
+function checkSession(session, deviceZone){
  if(!session||session.schema_version!==1)throw Error('Unsupported PolarPAP session schema');
  parseNs(session.start_unix_ns);parseNs(session.end_unix_ns);
  if(parseNs(session.end_unix_ns)<=parseNs(session.start_unix_ns))throw Error('Invalid recording interval');
- const zone=session.time_zone;if(typeof zone!=='string'||!zone)throw Error('PolarPAP time zone missing');
+ const zone=deviceZone||session.time_zone;if(typeof zone!=='string'||!zone)throw Error('PAP time zone missing');
  localWallMilliseconds(session.start_unix_ns,zone);
  return {zone,shift:shiftInfo(session),start:localWallMilliseconds(session.start_unix_ns,zone),end:localWallMilliseconds(session.end_unix_ns,zone)};
 }

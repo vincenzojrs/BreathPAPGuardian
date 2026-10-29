@@ -1,8 +1,8 @@
 const test=require('node:test'),assert=require('node:assert/strict'),P=require('../web/polar-time.js');
 const ns=s=>String(BigInt(Date.parse(s))*1000000n);
 test('maps UTC instants to CPAP wall clock in winter and summer',()=>{
- assert.equal(P.localWallMilliseconds(ns('2026-10-29T21:32:12Z'),'Europe/Rome'),Date.UTC(2026,9,29,22,32,12));
- assert.equal(P.localWallMilliseconds(ns('2026-07-01T21:32:12Z'),'Europe/Rome'),Date.UTC(2026,6,1,23,32,12));
+ assert.equal(P.localWallMilliseconds(ns('2024-12-03T11:08:00Z'),'Europe/Rome'),Date.UTC(2024,11,3,12,8,0));
+ assert.equal(P.localWallMilliseconds(ns('2024-07-03T11:08:00Z'),'Europe/Rome'),Date.UTC(2024,6,3,13,8,0));
 });
 test('preserves sub-millisecond precision and uses the shift only once',()=>{
  const source=ns('2024-01-02T12:00:00Z'), offset='-19160356814', start=String(BigInt(source)+BigInt(offset));
