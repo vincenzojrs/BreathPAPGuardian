@@ -29,7 +29,7 @@ async function ingest(input){
   const {plan,ignoredCount}=await PAPImport.prepare(input,files);
   let saved=0,duplicates=0;const errors=[],known=new Map(files.map(f=>[f.id,f]));
   for(let i=0;i<plan.length;i++){
-   const {file:f,path,device}=plan[i];status(`Local import ${i+1}/${plan.length}: ${f.name}`);
+   const {file:f,path,device,decode:decodePhilips}=plan[i];status(`Local import ${i+1}/${plan.length}: ${f.name}`);
    try{
     const buffer=await f.arrayBuffer(),digest=await crypto.subtle.digest('SHA-256',buffer);
     const id=Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join('')+':'+f.name.replace(/\(\d+\)(?=\.)/,'');
@@ -39,7 +39,7 @@ async function ingest(input){
     if(device)record.device=device;if(Philips.isData(f.name))record.parserVersion=Philips.VERSION;
     if(Philips.isProperties(f.name))record.tags=device.tags;
     if(/\.edf$/i.test(f.name)||Philips.isData(f.name)){
-     try{record.parsed=Philips.isData(f.name)?Philips.parse(buffer,f.name):readEDF(buffer,f.name);}
+     try{record.parsed=Philips.isData(f.name)?Philips.parse(decodePhilips?await decodePhilips(buffer):buffer,f.name):readEDF(buffer,f.name);}
      catch(e){record.error=e.message;errors.push(f.name+': '+e.message);}
     }
     if(/\.tgt$/i.test(f.name)){record.tags={};const text=new TextDecoder().decode(buffer);for(const m of text.matchAll(/#(\w+)\s+([^\r\n]+)/g))record.tags[m[1]]=m[2].trim();}

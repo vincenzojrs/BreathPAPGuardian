@@ -7,7 +7,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parent / 'web'
-FILES = {'/', '/index.html', '/app.js', '/core.js', '/philips.js', '/import-files.js', '/style.css', '/pdf-export.js', '/glasgow.js', '/glasgow-ui.js', '/glasgow-worker.js', '/vendor/glasgow-reference.js'}
+FILES = {'/', '/index.html', '/app.js', '/core.js', '/philips.js', '/import-files.js', '/dreamstation2.js', '/style.css', '/pdf-export.js', '/glasgow.js', '/glasgow-ui.js', '/glasgow-worker.js', '/vendor/glasgow-reference.js'}
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
        "img-src 'self' blob: data:; media-src 'self' blob: data:; "
        "worker-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; "

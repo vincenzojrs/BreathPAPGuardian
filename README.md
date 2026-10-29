@@ -1,6 +1,6 @@
 # BreathPAPGuardian
 
-A local PAP data explorer with interactive charts, a night journal and exports. Supports **ResMed EDF** recordings and unencrypted **Philips DreamStation PRS1 family 0/version 6** recordings.
+A local PAP data explorer with interactive charts, a night journal and exports. Supports **ResMed EDF** recordings and **Philips DreamStation and DreamStation 2 PRS1 family 0/version 6** recordings.
 
 ## Features
 
@@ -83,7 +83,7 @@ Always use the same browser, profile and URL: `localhost` and `127.0.0.1` have s
 
 - Intended for data exploration, **not diagnosis**.
 - One PAP device per archive. Use separate browser profiles for Philips and ResMed.
-- Philips support is validated on a 500X150 in CPAP mode; encrypted DreamStation 2 and other PRS1 families are unsupported.
+- DreamStation support is validated on a 500X150 in CPAP mode. DreamStation 2 decryption/import is tested with independently encrypted synthetic fixtures; real DS2 card validation is pending. Other PRS1 families are unsupported.
 - Nights run noon to noon using the device clock, without time zone conversion.
 - Calculated episodes and statistics may differ from SleepHQ.
 - Attachments are limited to 30 MB each; PDFs list media without embedding it.

@@ -19,8 +19,8 @@ test('ZIP rejects traversal, truncated directory, bad CRC, unsupported compressi
  await assert.rejects(()=>I.zipEntries(file('SD.zip',zip('PROP.TXT',props,99))),/unsupported compression/);
  const large=Buffer.from(b),central=large.indexOf(Buffer.from([0x50,0x4b,0x01,0x02]));large.writeUInt32LE(129*1024**2,central+24);await assert.rejects(()=>I.zipEntries(file('SD.zip',large)),/limit/);
 });
-test('ZIP ignores macOS resource forks and rejects encrypted DreamStation 2',async()=>{
+test('ZIP ignores macOS resource forks and retains DreamStation 2 entries',async()=>{
  assert.equal((await I.zipEntries(file('SD.zip',zip('__MACOSX/._PROP.TXT','metadata')))).length,0);
- await assert.rejects(()=>I.zipEntries(file('SD.zip',zip('P-SERIES/DEVICE/PROP.BIN','encrypted'))),/DreamStation 2/);
+ assert.equal((await I.zipEntries(file('SD.zip',zip('P-SERIES/DEVICE/PROP.BIN','encrypted')))).length,1);
 });
 module.exports={zip};

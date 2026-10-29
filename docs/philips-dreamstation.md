@@ -1,15 +1,19 @@
 # Philips DreamStation import
 
 Import a **P-SERIES ZIP** with **Choose files**, or select the extracted SD-card
-folder with **Choose SD folder**. Include the device's `PROP.TXT`; loose session
+folder with **Choose SD folder**. Include the device's `PROP.TXT` (DreamStation)
+or encrypted `PROP.BIN` (DreamStation 2); loose session
 files alone cannot establish which device produced them. Import and decoding
 remain local to the browser, including ZIP extraction. There is no server upload.
 
-The supported scope is **unencrypted PRS1 family 0, family version 6, data file
-version 3**. Real-card validation used DreamStation Auto CPAP **500X150** in CPAP
+The supported scope is **PRS1 family 0, family version 6, data file version 3**,
+including the DreamStation 2 encrypted envelope. ResMed EDF, DreamStation and
+DreamStation 2 are selected automatically from the imported file format and
+device properties; there is no manual decoder switch. Real-card validation used DreamStation Auto CPAP **500X150** in CPAP
 mode. Other F0V6 models/modes have not been validated on real cards. ASV family 5,
-ventilator family 3, older System One formats and encrypted DreamStation 2 files
-are not supported by this reader.
+ventilator family 3 and older System One formats are not supported by this reader.
+DreamStation 2 is tested with independently encrypted synthetic fixtures, not yet
+with a real DS2 card. Its decrypted content uses the same F0V6 parser.
 
 Use a separate browser profile for Philips if your current archive contains
 ResMed recordings. The existing one-device-per-archive constraint is checked
@@ -19,10 +23,10 @@ before any import writes and before restoring a backup.
 
 | Source | Result |
 | --- | --- |
-| `PROP.TXT` | Model, serial for local identity checks, firmware and family |
-| `.001` | Session settings and mask-on/off intervals; duration uses actual mask-on time |
-| `.002` | Pressure settings, total leak, snore count and Flex/average pressure intervals; OA, clear-airway apnea, hypopnea, RERA, flow limitation, snore and breathing/leak flags when present |
-| `.005` | Signed respiratory flow in L/min at the rate encoded in the header; optional second pressure waveform channel |
+| `PROP.TXT` / encrypted `PROP.BIN` | Model, serial for local identity checks, firmware and family |
+| `.001` / `.B01` | Session settings and mask-on/off intervals; duration uses actual mask-on time |
+| `.002` / `.B02` | Pressure settings, total leak, snore count and Flex/average pressure intervals; OA, clear-airway apnea, hypopnea, RERA, flow limitation, snore and breathing/leak flags when present |
+| `.005` / `.B05` | Signed respiratory flow in L/min at the rate encoded in the header; optional second pressure waveform channel |
 | `D/*.003`, `E/*.004`, `LOG.SEQ` | Ignored system/daily logs; no invented therapy metrics |
 | macOS metadata | Ignored, including `__MACOSX`, AppleDouble files and `.DS_Store` |
 
@@ -46,13 +50,27 @@ duration when exporting a visible range.
 Glasgow Index is explicitly unavailable for Philips in this release: the current
 implementation is validated for 25 Hz input. No synthetic upsampling is applied.
 
+## DreamStation 2 encryption
+
+The browser unwraps OSCAR's published DS2 envelope using PBKDF2-HMAC-SHA256
+(10,000 iterations) and AES-256-GCM, through native Web Crypto on localhost.
+The export key and payload authentication tags are both verified. Only then is
+the plaintext passed to the existing CRC-checked Philips parser. The archive
+keeps the original encrypted blob and the parsed data; no keys are persisted.
+Key derivations are cached only for the current import, with a bounded cache.
+
+Unlike OSCAR's recovery path, files with zero/missing authentication tags are
+rejected. Incomplete DS2 exports may therefore require a fresh SD copy. Device
+properties are authenticated before any file is saved. Payload errors on an
+individual session are reported while other valid files remain importable.
+
 ## Incomplete data and integrity
 
 Headers, block boundaries, the 8-bit header checksum and the Philips data CRC
 are checked before decoding. An invalid or unknown record makes that file
 unavailable; its raw bytes and error remain in the local archive. Other valid
 files can still be imported. ZIP entries also have their standard ZIP CRC checked;
-unsupported encryption/compression and unsafe paths fail explicitly. If native
+unsupported ZIP encryption/compression and unsafe paths fail explicitly. If native
 ZIP decompression is unavailable in your browser, extract the ZIP and choose the
 folder instead. ZIP64 and split ZIPs are unsupported.
 
@@ -106,6 +124,7 @@ npm install --no-save playwright
 npx playwright install chromium
 node tests/browser-smoke.cjs
 node tests/philips-browser.cjs
+node tests/philips-browser.cjs --ds2
 ```
 
 Set `BPG_BROWSER_PATH` if using an existing Chromium executable. All fixtures

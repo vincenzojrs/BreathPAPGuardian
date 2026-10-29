@@ -6,10 +6,10 @@ const P=require('../web/philips.js'),I=require('../web/import-files.js'),C=requi
  const path=process.argv[2];if(!path)throw Error('Provide a private ZIP path');
  const zip=new Blob([fs.readFileSync(path)]);zip.name='P-SERIES.zip';
  const {plan}=await I.prepare([zip]),files=[],errors=[],counts={};let samples=0,sessions=0;
- for(const {file,device} of plan){
+ for(const {file,device,decode} of plan){
   try{
    if(P.isData(file.name)){
-    const parsed=P.parse(await file.arrayBuffer(),file.name);counts[file.name.split('.').at(-1)]=(counts[file.name.split('.').at(-1)]||0)+1;
+    const parsed=P.parse(decode?await decode(await file.arrayBuffer()):await file.arrayBuffer(),file.name);counts[file.name.split('.').at(-1)]=(counts[file.name.split('.').at(-1)]||0)+1;
     sessions+=parsed.sessions.length;samples+=parsed.signals.filter(s=>s.label==='PRS1.Flow').reduce((a,s)=>a+s.values.length,0);
     files.push({name:file.name,parsed,imported:0});
    }else files.push({tags:device.tags,imported:0});

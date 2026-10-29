@@ -55,3 +55,18 @@ and mask-on use; compact signed waveform storage; unsupported records rejected
 rather than guessed. No OSCAR executable, Qt dependency, sample recordings or
 patient identifiers are bundled. `web/import-files.js` is a separate local ZIP
 reader using native `DecompressionStream` and does not bundle a ZIP library.
+
+## DreamStation 2 encrypted envelope
+
+`web/dreamstation2.js` adapts `PRDS2File::parseDS2Header`, `initializeKey` and
+`decryptData` from the same pinned OSCAR revision above, plus algorithm parameters
+from `oscar/SleepLib/crypto.cpp`. Copyright (c) 2021–2024 The OSCAR Team.
+Distributed under GPL-3.0-only, with the full license in `LICENSE`.
+
+Modifications dated 2026-10-29: strict JavaScript header bounds; native Web Crypto
+PBKDF2-SHA256/AES-256-GCM; per-import bounded key cache; explicit authentication
+failures. The common format constant is the result of AES-256-ECB decryption of
+OSCAR's published COMMON_KEY using its published OSCAR_KEY. No Botan/Qt code or
+binary is bundled. OSCAR's zero-tag recovery mode is deliberately omitted.
+Synthetic test envelopes use independent Node/OpenSSL encryption and the original
+published constants rather than the browser decoder to generate test inputs.

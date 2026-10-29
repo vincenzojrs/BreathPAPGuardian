@@ -6,12 +6,13 @@ const {chromium}=require('playwright');
 const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),assert=require('node:assert/strict');
 const {spawn,spawnSync}=require('node:child_process');
 const {chunk,summary,eventFile,props}=require('./philips-fixtures.js');
+const ds2=process.argv.includes('--ds2'),wrap=ds2?require('./dreamstation2-fixtures.js').envelope:x=>x,ext=n=>ds2?'B'+n.slice(1):n;
 const root=path.resolve(__dirname,'..'),tmp=fs.mkdtempSync(path.join(os.tmpdir(),'bpg-philips-'));
 const fixture=path.join(tmp,'card'),device=path.join(fixture,'P-SERIES','SYNTHETIC');fs.mkdirSync(path.join(device,'P0'),{recursive:true});
-fs.writeFileSync(path.join(device,'PROP.TXT'),props);
-fs.writeFileSync(path.join(device,'P0','0000002A.001'),summary({on:0,use:120}));
-fs.writeFileSync(path.join(device,'P0','0000002A.002'),eventFile());
-fs.writeFileSync(path.join(device,'P0','0000002A.005'),chunk(5,[],{samples:Array.from({length:600},(_,i)=>Math.round(35*Math.sin(i*Math.PI/10)))}));
+fs.writeFileSync(path.join(device,ds2?'PROP.BIN':'PROP.TXT'),wrap(ds2?props.replace('500X150','520X150C'):props));
+fs.writeFileSync(path.join(device,'P0','0000002A.'+ext('001')),wrap(summary({on:0,use:120})));
+fs.writeFileSync(path.join(device,'P0','0000002A.'+ext('002')),wrap(eventFile()));
+fs.writeFileSync(path.join(device,'P0','0000002A.'+ext('005')),wrap(chunk(5,[],{samples:Array.from({length:600},(_,i)=>Math.round(35*Math.sin(i*Math.PI/10)))})));
 const zip=path.join(tmp,'card.zip');
 const zipped=spawnSync('python3',['-c',"import pathlib,zipfile,sys\nr=pathlib.Path(sys.argv[1])\nwith zipfile.ZipFile(sys.argv[2],'w',zipfile.ZIP_DEFLATED) as z:\n for p in r.rglob('*'):\n  if p.is_file():z.write(p,p.relative_to(r).as_posix())",fixture,zip]);assert.equal(zipped.status,0,zipped.stderr.toString());
 async function ready(page){await page.waitForFunction(()=>typeof db!=='undefined'&&!!db&&!busy);}
@@ -29,7 +30,7 @@ async function erase(page){await page.locator('#homeBtn').click();await page.loc
   assert.deepEqual(await page.evaluate(()=>({nights:nights.length,use:nights[0].usage,apnea:count(nights[0],'apnea'),hypopnea:count(nights[0],'hypopnea')})),{nights:1,use:120/3600,apnea:2,hypopnea:1});
   await page.locator('#nightBtn').click();await page.waitForFunction(()=>document.querySelector('#stats').textContent.includes('unavailable for Philips'));
   assert.equal(await page.locator('#giNightPanel').count(),0);assert.equal(await page.getByLabel('Glasgow Index',{exact:true}).isDisabled(),true);
-  assert.match(await page.locator('#nightTitle').textContent(),/Philips DreamStation 500X150/);
+  assert.match(await page.locator('#nightTitle').textContent(),ds2?/Philips DreamStation 2 520X150C/:/Philips DreamStation 500X150/);
   assert.match(await page.locator('#settings').textContent(),/CPAP/);assert.match(await page.locator('#settings').textContent(),/9 cmH₂O/);
   assert.equal(await page.locator('[data-signal="PRS1.Flow"] canvas').count(),1);
   // An interval must still be drawn when the viewport starts after its stored onset.
@@ -59,9 +60,9 @@ async function erase(page){await page.locator('#homeBtn').click();await page.loc
   // Reimport from a folder restores the deleted night; ZIP is not required.
   await page.locator('#folder').setInputFiles(fixture);await imported(page);assert.equal(await page.evaluate(()=>nights.length),1);
   // A bad events file leaves summary/flow usable, but AHI unavailable.
-  await erase(page);const invalid=Buffer.from(eventFile());invalid[invalid.length-5]^=1;fs.writeFileSync(path.join(device,'P0','0000002A.002'),invalid);
+  await erase(page);const invalid=Buffer.from(eventFile());invalid[invalid.length-5]^=1;fs.writeFileSync(path.join(device,'P0','0000002A.'+ext('002')),wrap(invalid));
   await page.locator('#folder').setInputFiles(fixture);await imported(page);assert.match(await page.locator('#status').textContent(),/CRC mismatch/);assert.equal(await page.evaluate(()=>count(nights[0],'apnea')),null);
   await page.locator('#nightBtn').click();assert.match(await page.locator('#summary').textContent(),/AHI unavailable/);
-  assert.deepEqual(errors,[]);console.log('PASS: Philips ZIP/folder import, charts, CSV/PDF, duplicate and legacy reimport, device isolation, backup/restore/reload, deletion, corrupt data and missing AHI.');
+  assert.deepEqual(errors,[]);console.log((ds2?'DreamStation 2 ':'DreamStation 1 ')+'PASS: Philips ZIP/folder import, charts, CSV/PDF, duplicate and legacy reimport, device isolation, backup/restore/reload, deletion, corrupt data and missing AHI.');
  }finally{await browser?.close();server.kill();fs.rmSync(tmp,{recursive:true,force:true});}
 })().catch(e=>{console.error(e);process.exitCode=1;});

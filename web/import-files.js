@@ -3,6 +3,7 @@
 (function(root){
 'use strict';
 const P=typeof module!=='undefined'&&module.exports?require('./philips.js'):root.Philips;
+const DS2=typeof module!=='undefined'&&module.exports?require('./dreamstation2.js'):root.DreamStation2;
 const pathOf=f=>(f.webkitRelativePath||f._path||f.name).replaceAll('\\','/');
 const table=Uint32Array.from({length:256},(_,i)=>{let c=i;for(let j=0;j<8;j++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0;});
 function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=table[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0;}
@@ -24,7 +25,6 @@ async function zipEntries(file){
   const path=dec.decode(b.subarray(p+46,p+46+n)).replaceAll('\\','/');p+=46+n+extra+comment;
   if(path.startsWith('/')||/^[a-z]:/i.test(path)||path.split('/').includes('..')||path.includes('\0'))throw Error('Unsafe ZIP path');
   if(path.endsWith('/')||P.ignored(path))continue;
-  if(/(?:prop\.bin|\.b0[1256])$/i.test(path))throw Error('Encrypted DreamStation 2 data is not supported.');
   if(!supported(path))continue;
   total+=length;if(total>2*1024**3||length>128*1024**2)throw Error('ZIP expansion limit exceeded');
   if(flags&1||![0,8].includes(method))throw Error('Encrypted ZIP or unsupported compression. Extract the SD folder first.');
@@ -55,17 +55,16 @@ function validateArchive(records){
  if(serials.size>1||philips&&resmed)throw Error('This archive supports one PAP device. Use a separate browser profile for Philips and ResMed.');
 }
 async function prepare(input,stored=[]){
- const entries=[];let ignoredCount=0;
+ const entries=[],decoder=DS2.createDecoder();let ignoredCount=0;
  for(const f of input){if(P.ignored(pathOf(f))){ignoredCount++;continue;}if(/\.zip$/i.test(f.name)){const zipped=await zipEntries(f);entries.push(...zipped);ignoredCount+=zipped.ignoredCount;}else entries.push(f);}
  const devices=new Map(),serials=new Set(stored.map(f=>f.tags?.SRN||f.device?.serial).filter(Boolean));
  let hasPhilips=stored.some(f=>f.device?.vendor==='Philips'||f.parsed?.vendor==='Philips'),hasEDF=stored.some(f=>f.parsed&&!f.parsed.vendor||/\.edf$/i.test(f.name));
  const selected=[];
  for(const f of entries){
   const path=pathOf(f);if(P.ignored(path)){ignoredCount++;continue;}
-  if(/(?:prop\.bin|\.b0[1256])$/i.test(path))throw Error('Encrypted DreamStation 2 data is not supported.');
   if(!supported(f.name)){ignoredCount++;continue;}
   selected.push(f);
-  if(P.isProperties(f.name)){const device=P.properties(await f.text());serials.add(device.serial);devices.set(path.slice(0,path.lastIndexOf('/')+1),device);hasPhilips=true;}
+  if(P.isProperties(f.name)){const encrypted=/\.bin$/i.test(f.name),text=encrypted?new TextDecoder().decode(await decoder.decrypt(await f.arrayBuffer())):await f.text(),device=P.properties(text);device.generation=encrypted?2:1;if(encrypted)device.tags.PNA='Philips DreamStation 2 '+device.model;serials.add(device.serial);devices.set(path.slice(0,path.lastIndexOf('/')+1),device);hasPhilips=true;}
   if(P.isData(f.name))hasPhilips=true;
   if(/\.edf$/i.test(f.name))hasEDF=true;
   if(/\.tgt$/i.test(f.name)){hasEDF=true;const m=(await f.text()).match(/#SRN\s+(\S+)/);if(m)serials.add(m[1]);}
@@ -77,9 +76,10 @@ async function prepare(input,stored=[]){
   if(P.isProperties(f.name)||P.isData(f.name)){
    const path=pathOf(f),matches=[...devices].filter(([dir])=>dir?path.startsWith(dir):!path.includes('/')).sort((a,b)=>b[0].length-a[0].length);
    device=matches[0]?.[1];
-   if(!device)throw Error('Select the complete Philips device folder, or PROP.TXT together with its session files. Device identity is required.');
+   if(!device)throw Error('Select the complete Philips device folder, or PROP.TXT / PROP.BIN together with its session files. Device identity is required.');
   }
-  plan.push({file:f,path:pathOf(f),device});
+  if(P.isData(f.name)&&(/\.b0[125]$/i.test(f.name)!==(device.generation===2)))throw Error('Philips session format does not match its device properties.');
+  plan.push({file:f,path:pathOf(f),device,decode:device?.generation===2?decoder.decrypt:null});
  }
  return {plan,ignoredCount};
 }

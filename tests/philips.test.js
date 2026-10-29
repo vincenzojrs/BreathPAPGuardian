@@ -57,7 +57,7 @@ test('device preflight accepts folder and loose files, filters macOS metadata, r
  await assert.rejects(()=>I.prepare([list[1]]),/PROP.TXT/);
  await assert.rejects(()=>I.prepare(list,[{tags:{SRN:'OTHER'}}]),/one PAP device/);
  await assert.rejects(()=>I.prepare([...list,file('BRP.edf','dummy')]),/one PAP device/);
- await assert.rejects(()=>I.prepare([file('PROP.BIN','dummy')]),/Encrypted DreamStation 2/);
+ await assert.rejects(()=>I.prepare([file('PROP.BIN','dummy')]),/DreamStation 2 encryption header/);
 });
 test('backup preflight prevents restoring a second vendor or serial into the archive',()=>{
  assert.throws(()=>I.validateArchive([{device:{vendor:'Philips',serial:'A'}},{name:'BRP.edf'}]),/one PAP device/);

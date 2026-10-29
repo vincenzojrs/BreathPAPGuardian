@@ -3,19 +3,19 @@
 // Copyright (c) 2019-2024 The OSCAR Team; 2011-2018 Mark Watkins.
 (function(root){
 'use strict';
-const VERSION='prs1-f0v6-v1';
+const VERSION='prs1-f0v6-v2';
 const u16=(b,p)=>b[p]+256*b[p+1];
 const u32=(b,p)=>(b[p]+256*b[p+1]+65536*b[p+2]+16777216*b[p+3])>>>0;
 const crcTable=Uint32Array.from({length:256},(_,i)=>{let c=i<<24;for(let j=0;j<8;j++)c=c&0x80000000?(c<<1)^0x04c11db7:c<<1;return c>>>0;});
 function crc32wchar(bytes){let c=0xffffffff;for(const b of bytes){for(let i=0;i<3;i++)c=(c<<8)^crcTable[c>>>24];c=(c<<8)^crcTable[(c>>>24)^b];}return c>>>0;}
 function ignored(path){return path.replaceAll('\\','/').split('/').some(p=>p.startsWith('.')||p==='__MACOSX');}
-function isData(name){return /\.(001|002|005)$/i.test(name);}
-function isProperties(name){return /^prop(?:erties|\d*)\.txt$/i.test(name.split('/').at(-1));}
+function isData(name){return /\.(001|002|005|b01|b02|b05)$/i.test(name);}
+function isProperties(name){return /^prop(?:(?:erties|\d*)\.txt|\.bin)$/i.test(name.split('/').at(-1));}
 function properties(text){
  const props=Object.create(null),aliases={CF:'CardFormat',SN:'SerialNumber',MN:'ModelNumber',DFV:'DataFormatVersion',F:'Family',FV:'FamilyVersion',SV:'SoftwareVersion'};
  for(const line of text.split(/\r?\n/)){const at=line.indexOf('=');if(at>0){const k=line.slice(0,at).trim();props[aliases[k]||k]=line.slice(at+1).trim();}}
  if(props.Family==='xPAP')props.Family='0';
- if(props.Family!=='0'||props.FamilyVersion!=='6'||props.DataFormatVersion!=='3')throw Error('Unsupported Philips format: only unencrypted PRS1 family 0 / version 6 / data version 3 is supported.');
+ if(props.Family!=='0'||props.FamilyVersion!=='6'||props.DataFormatVersion!=='3')throw Error('Unsupported Philips format: only PRS1 family 0 / version 6 / data version 3 is supported.');
  if(!props.SerialNumber||!props.ModelNumber)throw Error('Philips properties lack device identity.');
  return {vendor:'Philips',family:0,familyVersion:6,serial:props.SerialNumber,model:props.ModelNumber,software:props.SoftwareVersion||'',tags:{SRN:props.SerialNumber,PNA:'Philips DreamStation '+props.ModelNumber,Manufacturer:'Philips Respironics',Model:props.ModelNumber}};
 }
@@ -139,7 +139,7 @@ function mergeWaveforms(signals){
  return out;
 }
 function parse(buffer,name){
- const ext=Number(name.split('.').at(-1));if(!isData(name))throw Error('Unsupported Philips file extension');
+ const ext=Number(name.split('.').at(-1).replace(/^b/i,''));if(!isData(name))throw Error('Unsupported Philips file extension');
  const list=chunks(buffer,ext),p={name,vendor:'Philips',parserVersion:VERSION,start:Infinity,duration:0,summary:false,signals:[],events:[],sessions:[],eventCoverage:[]};let finish=0;
  for(const c of list){p.start=Math.min(p.start,c.start);let duration=c.duration;
   if(ext===1){const s=summary(c);p.sessions.push(s);duration=(s.end-c.start)/1000;}
