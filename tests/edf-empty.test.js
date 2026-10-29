@@ -34,7 +34,7 @@ async function importFixture(buffers){
  const start=source.indexOf('async function ingest('),end=source.indexOf('\nasync function walk',start);
  assert(start>=0&&end>start);
  const context={
-  busy:false,db:{},portable:true,files:[],nights:[],ImportDelta,readEDF,
+  busy:false,db:{},portable:true,files:[],nights:[],ImportDelta,readEDF,Philips:require('../web/philips.js'),PAPImport:require('../web/import-files.js'),
   Portable:{begin:async()=>operations.push('begin'),finish:async()=>operations.push('finish'),pause:async()=>operations.push('pause'),render(){}},
   getAll:async()=>[],api:async(path,body)=>{assert.equal(path,'batch');batches.push(body);},
   portableEncode:async x=>x,put:async()=>{throw Error('Unexpected browser write');},

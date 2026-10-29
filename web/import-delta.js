@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 (function(root){
 'use strict';
-function logicalPath(path,name){const parts=String(path||name).replaceAll('\\','/').split('/').filter(Boolean),anchor=parts.findIndex(p=>/^(DATALOG|SETTINGS)$/i.test(p));return (anchor>=0?parts.slice(anchor).join('/'):parts.at(-1)||name).toUpperCase();}
+function logicalPath(path,name){const parts=String(path||name).replaceAll('\\','/').split('/').filter(Boolean),anchor=parts.findIndex(p=>/^(DATALOG|SETTINGS|P-SERIES)$/i.test(p));return (anchor>=0?parts.slice(anchor).join('/'):parts.at(-1)||name).toUpperCase();}
 function plan(existing,record){
  const logical=record.logicalPath||logicalPath(record.path,record.name);
  const matching=existing.filter(f=>(f.logicalPath||logicalPath(f.path,f.name))===logical);

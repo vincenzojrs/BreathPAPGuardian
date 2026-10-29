@@ -14,3 +14,16 @@ pap-backup-*.json
 backups/
 DATALOG/
 SETTINGS/
+
+# Private Philips SD-card recordings
+P-SERIES/
+*.001
+*.002
+*.003
+*.004
+*.005
+*.006
+PROP.TXT
+PROP.BIN
+
+*.[bB]0[1-6]

@@ -22,6 +22,7 @@ async function giAnalyze(list,epoch){
  for(let i=0;i<list.length&&epoch===giEpoch;i++){
   const n=list[i];$('giStatus').textContent=`Analyzing Glasgow Index · ${i+1}/${list.length} · ${n.key}`;
   try{
+   if(n.vendor==='Philips'){giResults.set(n.key,{status:'unavailable',reason:'Glasgow Index unavailable for Philips flow: the current algorithm requires validated 25 Hz input. No resampling is applied.'});continue;}
    const signature=portable?await giSignature(n):null,cached=portable?(giCacheRecords.find(x=>x.id===n.key&&x.signature===signature&&x.method===GI_METHOD)||giMemoryCache.get(signature)):null;
    const result=cached?.result||await new Promise((resolve,reject)=>{
     const worker=new Worker('glasgow-worker.js');giWorker=worker;giReject=reject;
@@ -37,7 +38,7 @@ async function giAnalyze(list,epoch){
   }catch(e){if(epoch!==giEpoch)return;giResults.set(n.key,{status:'unavailable',reason:e.message});}
   giRenderHome();renderOverview();giRenderNight();if(night?.key===n.key)renderStats();
  }
- if(epoch===giEpoch){if(portable){Portable.analysisBusy=false;Portable.changed();}const done=[...giResults.values()].filter(r=>r.status==='ok').length;$('giStatus').textContent=list.length?`Glasgow analysis complete · ${done}/${list.length} nights available. Cached results are reused when flow and algorithm are unchanged.`:'';}
+ if(epoch===giEpoch){giRenderHome();renderOverview();giRenderNight();if(night)renderStats();if(portable){Portable.analysisBusy=false;Portable.changed();}const done=[...giResults.values()].filter(r=>r.status==='ok').length;$('giStatus').textContent=list.length?`Glasgow analysis complete · ${done}/${list.length} nights available. Cached results are reused when flow and algorithm are unchanged.`:'';}
 }
 function giRows(){const min=$('giFrom').value,max=$('giTo').value;return nights.filter(n=>(!min||n.key>=min)&&(!max||n.key<=max)&&(!$('giHideShort').checked||n.usage>=4));}
 function giRenderHome(){renderTrend();}

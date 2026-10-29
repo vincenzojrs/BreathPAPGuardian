@@ -26,7 +26,7 @@
 <p>Deleted nights remain blocked until reimport is allowed. Historical versions and backups may contain them. Cleanup preserves referenced content and applies a seven-day grace period to unused content.</p>
 </details></section>
 <section id="home"><section id="overview"><h2>At a glance</h2><p class="muted">Latest 7 available nights for the averages below; each metric uses only nights with that measurement.</p><div id="kpis" class="kpis"></div></section>
-<section class="panel no-print" id="drop"><div class="import-heading"><strong>Import SD card data</strong><span class="muted" id="storageLabel">Local to this browser</span></div><div class="import-actions"><label class="button">Choose files<input id="files" type="file" multiple hidden></label><label class="button">Choose SD folder<input id="folder" type="file" webkitdirectory multiple hidden></label><button id="backup">Download local backup</button><label class="button">Restore backup<input id="restore" type="file" accept="application/json" hidden></label><button id="erase">Delete local archive</button></div><p class="muted" id="storageHint">You can also drop files or folders here. Originals stay in this browser; clearing site data removes your archive. Keep your SD card and a backup.</p><div id="portableControls" hidden><p><strong>Portable archive</strong> · use one computer at a time. Wait for Proton Drive to finish syncing before switching computers.</p><div class="import-actions"><button id="publishPortable">Publish to shared folder</button><button id="openPortable">Open shared version</button><button id="migratePortable">Copy browser archive here</button></div><p id="portableStatus" role="status"></p></div><div id="status" role="status">Opening local archive…</div></section>
+<section class="panel no-print" id="drop"><div class="import-heading"><strong>Import SD card data</strong><span class="muted" id="storageLabel">Local to this browser</span></div><div class="import-actions"><label class="button">Choose files<input id="files" type="file" multiple hidden></label><label class="button">Choose SD folder<input id="folder" type="file" webkitdirectory multiple hidden></label><button id="backup">Download local backup</button><label class="button">Restore backup<input id="restore" type="file" accept="application/json" hidden></label><button id="erase">Delete local archive</button></div><p class="muted" id="storageHint">ResMed EDF and Philips DreamStation / DreamStation 2: choose an SD folder or ZIP, including PROP.TXT or PROP.BIN. One device per archive. You can also drop files or folders here. Originals stay in this browser; clearing site data removes your archive. Keep your SD card and a backup.</p><div id="portableControls" hidden><p><strong>Portable archive</strong> · use one computer at a time. Wait for Proton Drive to finish syncing before switching computers.</p><div class="import-actions"><button id="publishPortable">Publish to shared folder</button><button id="openPortable">Open shared version</button><button id="migratePortable">Copy browser archive here</button></div><p id="portableStatus" role="status"></p></div><div id="status" role="status">Opening local archive…</div></section>
 <section class="panel"><h2>Trend over time</h2>
 <p class="muted">Select any combination of metrics. Bars for different units use separate scales; original ranges and units are listed below. Hover for values; click a night to open it.</p>
 <div id="trendChoices" class="series-choices"></div>
@@ -37,7 +37,7 @@
 <p id="giStatus" role="status"></p>
 <details><summary>How to read these trends</summary><p>Mean GI is the nightly nine-component Glasgow Index (0–9). The optional trailing mean uses calendar days and excludes unavailable values. Missing measurements have no bar. Calculated snore/flow-limitation episodes are consecutive samples above the chosen threshold, not device-reported clinical events. GI describes flow shape and is not an RDI or a diagnosis.</p></details>
 </section><details class="panel" id="yourNights"><summary>Your nights</summary><div id="nightList"></div></details></section>
-<section id="detail" hidden><div class="nightnav no-print"><button id="older">← Previous night</button><select id="nightSelect" aria-label="Night"></select><button id="newer">Next night →</button><button id="deleteNight">Delete this night</button><button id="pdf">Download PDF report</button></div><h2 id="nightTitle"></h2><p id="summary"></p><div class="grid"><section class="panel"><h3>Night settings</h3><div id="settings"></div><details><summary>Original STR fields</summary><div id="rawSTR"></div></details></section><section class="panel"><h3>Signal statistics · full night</h3><label class="no-print"><input type="checkbox" id="excludeZeros">Exclude zeros for respiratory rate, volume and ventilation</label><p class="muted">Linearly interpolated percentiles; units L/min and mL. Zeros are included by default. SleepHQ conventions may differ.</p><div id="stats"></div></section></div><section class="panel no-print"><h3>Visible signals</h3><div id="choices"></div><div id="events"></div></section>
+<section id="detail" hidden><div class="nightnav no-print"><button id="older">← Previous night</button><select id="nightSelect" aria-label="Night"></select><button id="newer">Next night →</button><button id="deleteNight">Delete this night</button><button id="pdf">Download PDF report</button></div><h2 id="nightTitle"></h2><p id="summary"></p><div class="grid"><section class="panel"><h3>Night settings</h3><div id="settings"></div><details><summary>Original device fields</summary><div id="rawSTR"></div></details></section><section class="panel"><h3>Signal statistics · full night</h3><label class="no-print"><input type="checkbox" id="excludeZeros">Exclude zeros for respiratory rate, volume and ventilation</label><p class="muted">Sample percentiles for EDF; duration-weighted percentiles for Philips interval statistics. Units L/min and mL. Zeros are included by default. SleepHQ conventions may differ.</p><div id="stats"></div></section></div><section class="panel no-print"><h3>Visible signals</h3><div id="choices"></div><div id="events"></div></section>
 <div class="toolbar no-print"><button id="prev">←</button><select id="window"><option value="all">Full night</option><option value="3600">1 hour</option><option value="600">10 minutes</option><option value="120">2 minutes</option><option value="30">30 seconds</option><option value="10">10 seconds</option><option value="custom" disabled>Manual zoom</option></select><button id="next">→</button><button id="undo">Undo zoom</button><button id="reset">Full night</button><select id="dragMode"><option value="zoom">Drag: zoom</option><option value="pan">Drag: pan</option><option value="marker">Click: marker</option></select><input id="goto" type="time" step="1"><button id="go">Go</button><button id="addMarker">+ Marker</button></div><input id="seek" class="no-print" type="range" min="0" step="0.1" aria-label="Pan through the night"><div id="range"></div><p class="muted">Double-click or Esc: full night. ← / →: pan. Shift + drag: pan. Click in marker mode: annotate a time across all signals.</p><div id="charts"></div><section class="panel"><h3>Shared markers</h3><div id="markers"></div></section>
 </section>
 <footer>PAP days run from noon to noon, using the device clock. No automatic time zone conversion. Press and EprPress retain their source labels. Charts do not constitute a diagnosis.</footer></main><dialog id="deleteNightDialog"><h2 id="deleteNightTitle">Delete night</h2><p id="deleteNightMessage"></p><p id="deleteNightError" role="status"></p><button id="deleteNightConfirm">Confirm deletion</button><button id="deleteNightCancel">Cancel</button></dialog><dialog id="exportDialog"><h2>File ready</h2><p id="exportName"></p><p><a id="exportSave" class="button primary">Download file</a> <a id="exportOpen" class="button" target="_blank" rel="noopener">Open file</a> <button id="exportPicker" hidden>Save as</button> <button id="exportShare" hidden>Share / Save to Files</button></p><p id="exportMessage" role="status"></p><p class="muted">Use “Download file” or “Open file” and save from your browser. Files are generated on your computer.</p><button id="exportClose">Close</button></dialog><dialog id="markerDialog"><form id="markerForm"><h2>An observation during the night</h2><input id="markerId" type="hidden"><label>Time <input id="markerTime" type="datetime-local" step="0.001" required></label><label>Title <input id="markerTitle" maxlength="100" required></label><label>Note <textarea id="markerNote" rows="4" maxlength="4000"></textarea></label><label>Images or short videos <input id="markerMedia" type="file" accept="image/*,video/*" multiple></label><p>Maximum 30 MB per attachment. Attachments stay in your browser and backup.</p><button type="submit" class="primary">Save</button><button type="button" id="cancelMarker">Cancel</button></form></dialog><script>// Self-contained PDF serializer. All pages are rendered locally; no upload or print dialog.
@@ -52,7 +52,6 @@ function pdfFromJpegs(pages){
 }
 async function pdfFromCanvases(canvases){const pages=[];for(const c of canvases){const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(Error('Unable to convert PDF page')),'image/jpeg',.94));pages.push({width:c.width,height:c.height,bytes:new Uint8Array(await blob.arrayBuffer())});}return pdfFromJpegs(pages);}
 if(typeof module!=='undefined')module.exports={pdfFromJpegs};
-
 </script><script>'use strict';
 const DAY=86400000;
 function nightKey(t){return new Date(t-12*3600000).toISOString().slice(0,10);}
@@ -73,33 +72,425 @@ function readEDF(buffer,name){
  else if(label!=='Crc16'&&duration>0&&n>0){const [pmin,pmax,dmin,dmax]=[3,4,5,6].map(j=>Number(fields[j][c]));if(dmin===dmax)throw Error('Invalid EDF scale');const values=new Float64Array(n*nr);for(let r=0;r<nr;r++)for(let j=0;j<n;j++){const raw=dv.getInt16(header+r*stride+offset+j*2,true);values[r*n+j]=summary&&raw===-1?NaN:pmin+(raw-dmin)*(pmax-pmin)/(dmax-dmin);}signals.push({label,unit:fields[2][c],dt:duration/n,start,values,name,samplesPerRecord:n});}offset+=n*2;}
  return {name,start,duration:nr*duration,recordDuration:duration,records:nr,summary,signals,events};
 }
-function buildNights(files){const nights=new Map(),get=k=>{if(!nights.has(k))nights.set(k,{key:k,channels:{},events:[],settings:{},summary:{},intervals:[]});return nights.get(k);};let device='PAP',identity={},rawSettings=[];
- const sorted=[...files].sort((a,b)=>a.imported-b.imported);
- for(const f of sorted){if(f.tags){if(f.tags.PNA){device=f.tags.PNA.replaceAll('_',' ');identity={...identity,...f.tags};}rawSettings.push({path:f.path,tags:f.tags});}const p=f.parsed;if(!p)continue;
- if(p.summary){for(let r=0;r<p.records;r++){const t=p.start+r*p.recordDuration*1000,k=nightKey(t);const vals={};for(const s of p.signals){const v=Array.from(s.values.slice(r*s.samplesPerRecord,(r+1)*s.samplesPerRecord));vals[s.label]=v.length===1?v[0]:v;}if(!Number.isFinite(vals.Duration))continue;const night=get(k);night.summary=vals;night.settings=Object.fromEntries(Object.entries(vals).filter(([key])=>key.startsWith('S.')||key==='Mode'));}continue;}
- for(const s of p.signals){if(s.values.every(v=>!Number.isFinite(v))||/^(Pulse|SpO2)/.test(s.label)&&s.values.every(v=>v===-1))continue;let i=0;while(i<s.values.length){const t=s.start+i*s.dt*1000,k=nightKey(t),boundary=Date.parse(k+'T12:00:00Z')+DAY,j=Math.min(s.values.length,Math.max(i+1,Math.ceil((boundary-s.start)/(s.dt*1000))));const night=get(k),part={...s,start:t,values:s.values.slice(i,j)};delete part.samplesPerRecord;const ch=night.channels[s.label]||(night.channels[s.label]={label:s.label,unit:s.unit,segments:[]});const duplicate=ch.segments.findIndex(q=>q.start===part.start);if(duplicate>=0)ch.segments[duplicate]=part;else ch.segments.push(part);i=j;}}
- for(const e of p.events){if(e.text==='Recording starts')continue;const n=get(nightKey(e.time));if(!n.events.some(x=>x.time===e.time&&x.text===e.text&&x.duration===e.duration))n.events.push(e);}}
- for(const n of nights.values()){n.device=device;for(const ch of Object.values(n.channels)){ch.segments.sort((a,b)=>a.start-b.start);let end=-Infinity;ch.segments=ch.segments.flatMap(s=>{const cut=Math.max(0,Math.ceil((end-s.start)/(s.dt*1000)));if(cut>=s.values.length)return [];const p=cut?{...s,start:s.start+cut*s.dt*1000,values:s.values.slice(cut)}:s;end=p.start+p.values.length*p.dt*1000;return [p];});}
- const primary=n.channels['Flow.40ms']||n.channels['Press.2s']||Object.values(n.channels)[0];n.intervals=primary?primary.segments.map(s=>[s.start,s.start+s.dt*s.values.length*1000]):[];n.usage=n.intervals.reduce((a,[x,y])=>a+(y-x)/3600000,0);if(!primary&&Number.isFinite(n.summary.Duration))n.usage=n.summary.Duration/60;n.origin=n.intervals[0]?.[0]||Date.parse(n.key+'T12:00:00Z');n.end=n.intervals.at(-1)?.[1]||n.origin+DAY;n.events.sort((a,b)=>a.time-b.time);}
- return {nights:[...nights.values()].sort((a,b)=>a.key.localeCompare(b.key)),device,identity,rawSettings};}
+function unionIntervals(intervals){
+ const result=[];
+ for(const [a,b] of intervals.filter(([a,b])=>Number.isFinite(a)&&b>a).sort((a,b)=>a[0]-b[0])){
+  const prev=result.at(-1);if(prev&&a<=prev[1])prev[1]=Math.max(prev[1],b);else result.push([a,b]);
+ }
+ return result;
+}
+function splitInterval(a,b,visit){
+ while(a<b){const key=nightKey(a),end=Math.min(b,Date.parse(key+'T12:00:00Z')+DAY);visit(key,a,end);a=end;}
+}
+function coverageSeconds(intervals,coverage){
+ const covered=unionIntervals(coverage);let ms=0;
+ for(const [a,b] of unionIntervals(intervals))for(const [c,d] of covered)ms+=Math.max(0,Math.min(b,d)-Math.max(a,c));
+ return ms/1000;
+}
+function buildNights(files){
+ const nights=new Map(),get=k=>{
+  if(!nights.has(k))nights.set(k,{key:k,channels:{},events:[],settings:{},summary:{},intervals:[],sessionSettings:[],eventCoverage:[]});
+  return nights.get(k);
+ };
+ let device='PAP',identity={},rawSettings=[];
+ const sorted=[...files].sort((a,b)=>a.imported-b.imported),sessions=new Map();
+ for(const f of sorted){
+  if(f.tags){if(f.tags.PNA){device=f.tags.PNA.replaceAll('_',' ');identity={...identity,...f.tags};}rawSettings.push({path:f.path,tags:f.tags});}
+  const p=f.parsed;if(!p)continue;
+  if(p.vendor==='Philips'){
+   for(const session of p.sessions||[]){const key=session.id+':'+session.start,previous=sessions.get(key);sessions.set(key,previous?{...session,intervals:unionIntervals([...previous.intervals,...session.intervals])}:session);}
+   for(const [a,b] of p.eventCoverage||[])splitInterval(a,b,(k,x,y)=>{const n=get(k);n.vendor='Philips';n.eventCoverage.push([x,y]);});
+  }
+  if(p.summary){
+   for(let r=0;r<p.records;r++){
+    const t=p.start+r*p.recordDuration*1000,k=nightKey(t),vals={};
+    for(const s of p.signals){const v=Array.from(s.values.slice(r*s.samplesPerRecord,(r+1)*s.samplesPerRecord));vals[s.label]=v.length===1?v[0]:v;}
+    if(!Number.isFinite(vals.Duration))continue;
+    const n=get(k);n.summary=vals;n.settings=Object.fromEntries(Object.entries(vals).filter(([key])=>key.startsWith('S.')||key==='Mode'));
+   }
+   continue;
+  }
+  for(const s of p.signals){
+   if(s.values.every(v=>!Number.isFinite(v))||/^(Pulse|SpO2)/.test(s.label)&&s.values.every(v=>v===-1))continue;
+   let i=0;
+   while(i<s.values.length){
+    const t=s.start+i*s.dt*1000,k=nightKey(t),boundary=Date.parse(k+'T12:00:00Z')+DAY;
+    // Interval statistics use their actual duration, including when crossing noon.
+    if(s.step){
+     let j=i+1;while(j<s.values.length&&s.start+(j+1)*s.dt*1000<=boundary)j++;
+     const end=s.start+j*s.dt*1000;
+     if(end>boundary){
+      splitInterval(t,end,(key,a,b)=>{const n=get(key);if(p.vendor)n.vendor=p.vendor;const ch=n.channels[s.label]||(n.channels[s.label]={label:s.label,unit:s.unit,segments:[]});ch.segments.push({...s,start:a,dt:(b-a)/1000,values:s.values.slice(i,i+1)});});i++;continue;
+     }
+     const n=get(k);if(p.vendor)n.vendor=p.vendor;const ch=n.channels[s.label]||(n.channels[s.label]={label:s.label,unit:s.unit,segments:[]});
+     ch.segments.push({...s,start:t,values:i===0&&j===s.values.length?s.values:s.values.slice(i,j)});i=j;continue;
+    }
+    const j=Math.min(s.values.length,Math.max(i+1,Math.ceil((boundary-s.start)/(s.dt*1000))));
+    const n=get(k);if(p.vendor)n.vendor=p.vendor;
+    const part={...s,start:t,values:i===0&&j===s.values.length?s.values:s.values.slice(i,j)};delete part.samplesPerRecord;
+    const ch=n.channels[s.label]||(n.channels[s.label]={label:s.label,unit:s.unit,segments:[]});
+    const duplicate=ch.segments.findIndex(q=>q.start===part.start);if(duplicate>=0)ch.segments[duplicate]=part;else ch.segments.push(part);i=j;
+   }
+  }
+  for(const e of p.events){if(e.text==='Recording starts')continue;const n=get(nightKey(e.time));if(p.vendor)n.vendor=p.vendor;if(!n.events.some(x=>x.time===e.time&&x.text===e.text&&x.duration===e.duration))n.events.push(e);}
+ }
+ for(const s of sessions.values()){
+  const keys=new Set();
+  for(const [a,b] of s.intervals)splitInterval(a,b,(k,x,y)=>{get(k).intervals.push([x,y]);keys.add(k);});
+  if(!keys.size)keys.add(nightKey(s.start));
+  for(const k of keys){const n=get(k);n.vendor='Philips';n.hasTherapySummary=true;n.sessionSettings.push(s);}
+ }
+ for(const n of nights.values()){
+  n.device=device;
+  for(const ch of Object.values(n.channels)){
+   ch.segments.sort((a,b)=>a.start-b.start);let end=-Infinity;
+   ch.segments=ch.segments.flatMap(s=>{const cut=Math.max(0,Math.ceil((end-s.start)/(s.dt*1000)));if(cut>=s.values.length)return [];const p=cut?{...s,start:s.start+cut*s.dt*1000,values:s.values.slice(cut)}:s;end=p.start+p.values.length*p.dt*1000;return [p];});
+  }
+  const primary=n.channels['Flow.40ms']||n.channels['PRS1.Flow']||n.channels['Press.2s']||Object.values(n.channels)[0];
+  if(!n.hasTherapySummary)n.intervals=primary?primary.segments.map(s=>[s.start,s.start+s.dt*s.values.length*1000]):[];
+  n.intervals=unionIntervals(n.intervals);n.usage=n.intervals.reduce((a,[x,y])=>a+(y-x)/3600000,0);
+  if(!primary&&!n.hasTherapySummary&&Number.isFinite(n.summary.Duration))n.usage=n.summary.Duration/60;
+  n.origin=n.intervals[0]?.[0]||Date.parse(n.key+'T12:00:00Z');n.end=n.intervals.at(-1)?.[1]||n.origin+DAY;
+  if(n.vendor==='Philips'){
+   n.sessionSettings.sort((a,b)=>a.start-b.start);n.settings=n.sessionSettings.at(-1)?.settings||{};
+   n.summary={SessionCount:n.sessionSettings.length,MaskOnMinutes:n.usage*60};
+   n.eventCoverage=unionIntervals(n.eventCoverage);n.eventCoverageSeconds=coverageSeconds(n.intervals,n.eventCoverage);
+   n.eventsComplete=!!n.hasTherapySummary&&n.usage>0&&n.usage*3600-n.eventCoverageSeconds<=1;
+  }
+  n.events.sort((a,b)=>a.time-b.time);
+ }
+ return {nights:[...nights.values()].sort((a,b)=>a.key.localeCompare(b.key)),device,identity,rawSettings};
+}
 function factor(unit){return unit==='L/s'?60:unit==='L'?1000:1;}
 function displayUnit(unit){return unit==='L/s'?'L/min':unit==='L'?'mL':unit||'index';}
-function stats(ch,excludeZeros=false){if(!ch)return null;const values=[];let sum=0,weight=0;for(const s of ch.segments)for(const v of s.values){if(!Number.isFinite(v)||excludeZeros&&v===0)continue;values.push(v);sum+=v*s.dt;weight+=s.dt;}if(!values.length)return null;values.sort((a,b)=>a-b);const q=p=>{const x=(values.length-1)*p,a=Math.floor(x);return values[a]+(values[Math.ceil(x)]-values[a])*(x-a);};const m=factor(ch.unit);return {min:values[0]*m,med:q(.5)*m,p95:q(.95)*m,p995:q(.995)*m,mean:sum/weight*m,count:values.length};}
+function stats(ch,excludeZeros=false){
+ if(!ch)return null;const values=[];let sum=0,weight=0;const intervalData=ch.segments.some(s=>s.step);
+ for(const s of ch.segments)for(const v of s.values){if(!Number.isFinite(v)||excludeZeros&&v===0)continue;values.push(intervalData?{v,w:s.dt}:v);sum+=v*s.dt;weight+=s.dt;}
+ if(!values.length)return null;values.sort(intervalData?(a,b)=>a.v-b.v:(a,b)=>a-b);
+ const q=p=>{if(intervalData){let cumulative=0;for(const x of values){cumulative+=x.w;if(cumulative>=p*weight)return x.v;}return values.at(-1).v;}const x=(values.length-1)*p,a=Math.floor(x);return values[a]+(values[Math.ceil(x)]-values[a])*(x-a);};
+ const m=factor(ch.unit);return {min:(intervalData?values[0].v:values[0])*m,med:q(.5)*m,p95:q(.95)*m,p995:q(.995)*m,mean:sum/weight*m,count:values.length};
+}
 function episodes(ch,threshold=0){if(!ch)return null;let count=0,seconds=0,on=false,lastEnd=null;for(const s of ch.segments){if(lastEnd===null||Math.abs(s.start-lastEnd)>1)on=false;for(const v of s.values){const yes=Number.isFinite(v)&&v>threshold;if(yes&&!on)count++;if(yes)seconds+=s.dt;on=yes;}lastEnd=s.start+s.values.length*s.dt*1000;}return {count,minutes:seconds/60};}
-function sample(ch,t){if(!ch)return null;for(const s of ch.segments){if(t>=s.start&&t<s.start+s.values.length*s.dt*1000){const i=Math.min(s.values.length-1,Math.round((t-s.start)/1000/s.dt));return {t:s.start+i*s.dt*1000,v:s.values[i]*factor(ch.unit)};}}return null;}
+function sample(ch,t){if(!ch)return null;for(const s of ch.segments){if(t>=s.start&&t<s.start+s.values.length*s.dt*1000){const i=Math.min(s.values.length-1,(s.step?Math.floor:Math.round)((t-s.start)/1000/s.dt));return {t:s.start+i*s.dt*1000,v:s.values[i]*factor(ch.unit)};}}return null;}
 function alignChannel(ch,offset,ppm){const base=ch.segments[0].start,scale=1+ppm/1e6;if(scale<=0)throw Error('Invalid drift');return {...ch,segments:ch.segments.map(s=>({...s,start:base+offset*1000+(s.start-base)*scale,dt:s.dt*scale}))};}
 if(typeof module!=='undefined')module.exports={readEDF,buildNights,nightKey,stats,episodes,sample,alignChannel};
 // Purge a PAP noon-to-noon day while preserving records from other days.
 function removeNightFromParsed(p,key){
  if(p.summary){const removed=[];for(let r=0;r<p.records;r++)if(nightKey(p.start+r*p.recordDuration*1000)===key)removed.push(r);if(!removed.length)return {affected:false,parts:[p]};const parts=[];for(let r=0;r<p.records;r++){if(removed.includes(r))continue;parts.push({...p,start:p.start+r*p.recordDuration*1000,records:1,duration:p.recordDuration,signals:p.signals.map(s=>({...s,start:p.start+r*p.recordDuration*1000,values:s.values.slice(r*s.samplesPerRecord,(r+1)*s.samplesPerRecord)}))});}return {affected:true,parts};}
  const begin=Date.parse(key+'T12:00:00Z'),end=begin+DAY;
- const affected=p.events.some(e=>e.time>=begin&&e.time<end)||p.signals.some(s=>s.start<end&&s.start+s.values.length*s.dt*1000>begin)||(!p.signals.length&&!p.events.length&&nightKey(p.start)===key);
+ const metadataHit=(p.sessions||[]).some(s=>s.intervals.some(([a,b])=>a<end&&b>begin)||nightKey(s.start)===key)||(p.eventCoverage||[]).some(([a,b])=>a<end&&b>begin);
+ const affected=metadataHit||p.events.some(e=>e.time>=begin&&e.time<end)||p.signals.some(s=>s.start<end&&s.start+s.values.length*s.dt*1000>begin)||(!p.signals.length&&!p.events.length&&nightKey(p.start)===key);
  if(!affected)return {affected:false,parts:[p]};const parts=[];
- for(const [lo,hi]of [[-Infinity,begin],[end,Infinity]]){const signals=[];for(const s of p.signals){const a=Math.max(0,Math.ceil((lo-s.start)/(s.dt*1000))),b=Math.min(s.values.length,Math.ceil((hi-s.start)/(s.dt*1000)));if(b>a)signals.push({...s,start:s.start+a*s.dt*1000,values:s.values.slice(a,b)});}const events=p.events.filter(e=>e.time>=lo&&e.time<hi);if(!signals.length&&!events.length)continue;const start=Math.min(...signals.map(s=>s.start),...events.map(e=>e.time)),finish=Math.max(start,...signals.map(s=>s.start+s.values.length*s.dt*1000),...events.map(e=>e.time));parts.push({...p,start,duration:(finish-start)/1000,signals,events});}
+ for(const [lo,hi]of [[-Infinity,begin],[end,Infinity]]){
+  const signals=[];
+  for(const s of p.signals){
+   if(s.step){
+    for(let i=0;i<s.values.length;i++){const a=Math.max(lo,s.start+i*s.dt*1000),b=Math.min(hi,s.start+(i+1)*s.dt*1000);if(b>a)signals.push({...s,start:a,dt:(b-a)/1000,values:s.values.slice(i,i+1)});}
+   }else{const a=Math.max(0,Math.ceil((lo-s.start)/(s.dt*1000))),b=Math.min(s.values.length,Math.ceil((hi-s.start)/(s.dt*1000)));if(b>a)signals.push({...s,start:s.start+a*s.dt*1000,values:s.values.slice(a,b)});}
+  }
+  const events=p.events.filter(e=>e.time>=lo&&e.time<hi);
+  const clip=intervals=>(intervals||[]).map(([a,b])=>[Math.max(a,lo),Math.min(b,hi)]).filter(([a,b])=>b>a);
+  const sessions=(p.sessions||[]).flatMap(s=>{const intervals=clip(s.intervals);return intervals.length||!s.intervals.length&&s.start>=lo&&s.start<hi?[{...s,intervals}]:[];});
+  const eventCoverage=clip(p.eventCoverage);
+  if(!signals.length&&!events.length&&!sessions.length&&!eventCoverage.length)continue;
+  const starts=[...signals.map(s=>s.start),...events.map(e=>e.time),...sessions.flatMap(s=>s.intervals.length?s.intervals.map(x=>x[0]):[s.start]),...eventCoverage.map(x=>x[0])];
+  const start=Math.min(...starts),finish=Math.max(start,...signals.map(s=>s.start+s.values.length*s.dt*1000),...events.map(e=>e.time),...sessions.flatMap(s=>s.intervals.map(x=>x[1])),...eventCoverage.map(x=>x[1]));
+  parts.push({...p,start,duration:(finish-start)/1000,signals,events,sessions,eventCoverage});
+ }
  return {affected:true,parts};
 }
 if(typeof module!=='undefined')module.exports.removeNightFromParsed=removeNightFromParsed;
 
+if(typeof module!=='undefined')Object.assign(module.exports,{unionIntervals,coverageSeconds});
+</script><script>// SPDX-License-Identifier: GPL-3.0-only
+// PRS1 F0V6 decoding adapted from OSCAR. See THIRD_PARTY_NOTICES.md.
+// Copyright (c) 2019-2024 The OSCAR Team; 2011-2018 Mark Watkins.
+(function(root){
+'use strict';
+const VERSION='prs1-f0v6-v2';
+const u16=(b,p)=>b[p]+256*b[p+1];
+const u32=(b,p)=>(b[p]+256*b[p+1]+65536*b[p+2]+16777216*b[p+3])>>>0;
+const crcTable=Uint32Array.from({length:256},(_,i)=>{let c=i<<24;for(let j=0;j<8;j++)c=c&0x80000000?(c<<1)^0x04c11db7:c<<1;return c>>>0;});
+function crc32wchar(bytes){let c=0xffffffff;for(const b of bytes){for(let i=0;i<3;i++)c=(c<<8)^crcTable[c>>>24];c=(c<<8)^crcTable[(c>>>24)^b];}return c>>>0;}
+function ignored(path){return path.replaceAll('\\','/').split('/').some(p=>p.startsWith('.')||p==='__MACOSX');}
+function isData(name){return /\.(001|002|005|b01|b02|b05)$/i.test(name);}
+function isProperties(name){return /^prop(?:(?:erties|\d*)\.txt|\.bin)$/i.test(name.split('/').at(-1));}
+function properties(text){
+ const props=Object.create(null),aliases={CF:'CardFormat',SN:'SerialNumber',MN:'ModelNumber',DFV:'DataFormatVersion',F:'Family',FV:'FamilyVersion',SV:'SoftwareVersion'};
+ for(const line of text.split(/\r?\n/)){const at=line.indexOf('=');if(at>0){const k=line.slice(0,at).trim();props[aliases[k]||k]=line.slice(at+1).trim();}}
+ if(props.Family==='xPAP')props.Family='0';
+ if(props.Family!=='0'||props.FamilyVersion!=='6'||props.DataFormatVersion!=='3')throw Error('Unsupported Philips format: only PRS1 family 0 / version 6 / data version 3 is supported.');
+ if(!props.SerialNumber||!props.ModelNumber)throw Error('Philips properties lack device identity.');
+ return {vendor:'Philips',family:0,familyVersion:6,serial:props.SerialNumber,model:props.ModelNumber,software:props.SoftwareVersion||'',tags:{SRN:props.SerialNumber,PNA:'Philips DreamStation '+props.ModelNumber,Manufacturer:'Philips Respironics',Model:props.ModelNumber}};
+}
+function chunks(buffer,expectedExt){
+ const b=buffer instanceof Uint8Array?buffer:new Uint8Array(buffer),result=[];
+ if(!b.length)throw Error('Empty Philips data file');
+ for(let offset=0;offset<b.length;){
+  const fail=message=>{throw Error(`${message} (byte ${offset})`);};
+  if(b.length-offset<20)fail('Truncated Philips header');
+  const size=u16(b,offset+1),end=offset+size;
+  if(size<21||end>b.length)fail('Invalid or truncated Philips block');
+  const h=b.subarray(offset,end),type=h[3],ext=h[6];
+  if(h[0]!==3||h[4]!==0||h[5]!==6)fail('Unsupported Philips family/version');
+  if(expectedExt!==undefined&&ext!==expectedExt)fail('Philips extension/header mismatch');
+  if(![1,2,5].includes(ext)||(ext===5?type!==1:type!==0))fail('Unsupported Philips block type');
+  let length;const sizes=Object.create(null),wave=[];
+  let duration=0;
+  if(type===0){
+   length=17+2*h[15];if(length+4>size)fail('Truncated record-size table');
+   for(let p=16;p<length-1;p+=2){if(sizes[h[p]]!==undefined)fail('Duplicate record code');sizes[h[p]]=h[p+1];}
+  }else{
+   length=21+4*h[18];if(length+4>size||h[18]<1||h[18]>2)fail('Unsupported waveform header');
+   duration=u16(h,15)*h[17];if(duration<=0)fail('Invalid waveform duration');
+   for(let p=19;p<length-2;p+=4){if(h[p]!==wave.length||h[p+3]!==8||!u16(h,p+1))fail('Unsupported waveform channel');wave.push({kind:h[p],samples:u16(h,p+1),dt:h[17]/u16(h,p+1)});}
+   if(h[length-2]!==0)fail('Unsupported waveform flags');
+  }
+  let sum=0;for(let p=0;p<length-1;p++)sum=(sum+h[p])&255;
+  if(sum!==h[length-1])fail('Philips header checksum mismatch');
+  const data=h.subarray(length,size-4);
+  if(crc32wchar(data)!==u32(h,size-4))fail('Philips data CRC mismatch');
+  if(type===1&&data.length!==u16(h,15)*wave.reduce((n,w)=>n+w.samples,0))fail('Waveform sample count mismatch');
+  result.push({sessionId:u32(h,7),start:u32(h,11)*1000,ext,sizes,wave,duration,data});offset=end;
+ }
+ return result;
+}
+function records(chunk,minimum,visit){
+ const b=chunk.data;
+ for(let p=0;p<b.length;){const code=b[p++],size=chunk.sizes[code];
+  if(size===undefined||size<(minimum[code]??1)||p+size>b.length)throw Error('Invalid Philips record 0x'+code.toString(16));
+  visit(code,b.subarray(p,p+size));p+=size;
+ }
+}
+function settings(b){
+ const result={},raw={};let mode;
+ const min={0x0c:3,0x0d:2,0x0e:2,0x0f:4,0x10:3,0x35:2};
+ for(let p=0;p<b.length;){
+  if(p+2>b.length)throw Error('Truncated Philips setting');
+  const code=b[p++],len=b[p++];if(len<(min[code]||1)||p+len>b.length)throw Error('Invalid Philips setting length');
+  const v=b.subarray(p,p+len);p+=len;raw['0x'+code.toString(16).padStart(2,'0')]=Array.from(v);
+  switch(code){
+   case 0:mode=v[0];result.Mode=['CPAP','BiLevel','AutoCPAP','AutoBiLevel','CPAP-Check'][mode]||'Unknown ('+mode+')';break;
+   case 0x0a:result.Pressure=v[0]/10;break;
+   case 0x0c:result.MinPressure=v[0]/10;result.MaxPressure=v[1]/10;result.Pressure=v[2]/10;break;
+   case 0x0d:result.MinPressure=v[0]/10;result.MaxPressure=v[1]/10;break;
+   case 0x0e:result.EPAP=v[0]/10;result.IPAP=v[1]/10;break;
+   case 0x0f:result.MinEPAP=v[0]/10;result.MaxIPAP=v[1]/10;result.MinPS=v[2]/10;result.MaxPS=v[3]/10;break;
+   case 0x10:result.Mode='Auto-Trial';result.AutoTrialDays=v[0];result.MinPressure=v[1]/10;result.MaxPressure=v[2]/10;break;
+   case 0x2b:result.RampType=v[0]===0?'Linear':v[0]===128?'SmartRamp':'Unknown';break;
+   case 0x2c:result.RampMinutes=v[0];break;
+   case 0x2d:result.RampPressure=v[0]/10;break;
+   case 0x2e:result.FlexMode=v[0]===0?'Off':v[0]===0x80?([1,3].includes(mode)?'Bi-Flex':'C-Flex'):v[0]===0x90?(mode===2?'A-Flex':'C-Flex+'):v[0]===0xa0?'Rise time':v[0]===0xb0?'P-Flex':'Unknown';break;
+   case 0x30:result.FlexLevel=v[0];break;
+  }
+ }
+ return {settings:result,rawSettings:raw};
+}
+function summary(c){
+ let t=0,on=null,config={settings:{},rawSettings:{}};const intervals=[];
+ records(c,[1,1,9,4,2,4,1,4,27,2,4,11,1,2,6],(code,b)=>{
+  if(![0,1,2,3,4,5,6,7,8,9,10,11,12,13,14].includes(code))throw Error('Unsupported Philips summary record '+code);
+  if(code===1)config=settings(b);
+  if([2,3,4,9,10,11].includes(code))t+=u16(b,0);
+  if(code===3){if(on!==null)throw Error('Repeated Philips mask-on');on=t;}
+  if(code===4){if(on===null)throw Error('Philips mask-off without mask-on');if(t>on)intervals.push([c.start+on*1000,c.start+t*1000]);on=null;}
+ });
+ if(on!==null)throw Error('Incomplete Philips mask-on interval');
+ return {id:c.sessionId,start:c.start,end:c.start+t*1000,intervals,...config};
+}
+function events(c,p){
+ let t=0,lastStats=0,bilevel=false;const pressure=[];
+ const add=(code,seconds,duration,text)=>p.events.push({time:c.start+seconds*1000,duration,text,code,source:'Philips',sessionId:c.sessionId});
+ const segment=(label,unit,start,seconds,value)=>{if(seconds>0)p.signals.push({label,unit,start:c.start+start*1000,dt:seconds,values:Float64Array.of(value),step:true,sessionId:c.sessionId});};
+ records(c,[2,3,4,3,3,3,3,3,3,2,3,4,3,2,5,5,5,5,4,3,3,3],(code,b)=>{
+  if(![1,2,3,4,5,6,7,10,11,12,13,14,15,16,17,18,20,21].includes(code))throw Error('Unsupported Philips event record '+code);
+  if(code!==0x12)t+=u16(b,0);
+  const v=b.subarray(2);
+  if(code===1)pressure.push({t,label:'PRS1.Pressure',value:v[0]/10});
+  else if(code===2){bilevel=true;pressure.push({t,label:'PRS1.EPAP',value:v[0]/10},{t,label:'PRS1.IPAP',value:v[1]/10});}
+  else if(code===4)add(code,t,0,'Pressure pulse');
+  else if([5,6,7,10,11,12,20,21].includes(code))add(code,t-(code===11?v[1]:v[0]),0,({5:'RERA',6:'Obstructive apnea',7:'Clear airway apnea',12:'Flow limitation'})[code]||'Hypopnea');
+  else if(code===13)add(code,t,0,'Vibratory snore');
+  else if([14,15,16].includes(code)){const duration=u16(v,0)*2;add(code,t-v[2]-duration,duration,({14:'Variable breathing',15:'Periodic breathing',16:'Large leak'})[code]);}
+  else if(code===17){
+   segment('PRS1.TotalLeak','L/min',lastStats,t-lastStats,v[0]);
+   segment('PRS1.SnoreCount','count/interval',lastStats,t-lastStats,v[1]);
+   segment(bilevel?'PRS1.AveragePressure':'PRS1.FlexPressure','cmH2O',lastStats,t-lastStats,v[2]/10);lastStats=t;
+  }
+ });
+ for(const label of new Set(pressure.map(x=>x.label))){const list=pressure.filter(x=>x.label===label);list.forEach((x,i)=>segment(label,'cmH2O',x.t,(list[i+1]?.t??t)-x.t,x.value));}
+ if(t>0)p.eventCoverage.push([c.start,c.start+t*1000]);
+ return t;
+}
+function waveform(c,p){
+ const arrays=c.wave.map(w=>w.kind===0?new Int8Array(c.duration/w.dt):new Float64Array(c.duration/w.dt));
+ let at=0;const offsets=c.wave.map(()=>0);
+ while(at<c.data.length)for(let k=0;k<c.wave.length;k++)for(let j=0;j<c.wave[k].samples;j++){
+  const v=c.data[at++];arrays[k][offsets[k]++]=k===0?(v>127?v-256:v):v/10;
+ }
+ c.wave.forEach((w,k)=>p.signals.push({label:k===0?'PRS1.Flow':'PRS1.MaskPressure',unit:k===0?'L/min':'cmH2O',dt:w.dt,start:c.start,values:arrays[k],sessionId:c.sessionId}));
+}
+// Merge only truly contiguous waveform chunks; keep clock gaps/overlaps explicit.
+function mergeWaveforms(signals){
+ const groups=new Map();
+ for(const s of signals){const key=s.label+':'+s.sessionId;const list=groups.get(key)||[];list.push(s);groups.set(key,list);}
+ const out=[];
+ for(const list of groups.values()){
+  list.sort((a,b)=>a.start-b.start);let run=[];
+  const flush=()=>{if(!run.length)return;const length=run.reduce((n,s)=>n+s.values.length,0),values=new run[0].values.constructor(length);let pos=0;for(const s of run){values.set(s.values,pos);pos+=s.values.length;}out.push({...run[0],values});run=[];};
+  for(const s of list){const prev=run.at(-1);if(prev&&(prev.dt!==s.dt||Math.abs(prev.start+prev.dt*prev.values.length*1000-s.start)>.01))flush();run.push(s);}flush();
+ }
+ return out;
+}
+function parse(buffer,name){
+ const ext=Number(name.split('.').at(-1).replace(/^b/i,''));if(!isData(name))throw Error('Unsupported Philips file extension');
+ const list=chunks(buffer,ext),p={name,vendor:'Philips',parserVersion:VERSION,start:Infinity,duration:0,summary:false,signals:[],events:[],sessions:[],eventCoverage:[]};let finish=0;
+ for(const c of list){p.start=Math.min(p.start,c.start);let duration=c.duration;
+  if(ext===1){const s=summary(c);p.sessions.push(s);duration=(s.end-c.start)/1000;}
+  if(ext===2)duration=events(c,p);
+  if(ext===5)waveform(c,p);
+  finish=Math.max(finish,c.start+duration*1000);
+ }
+ p.duration=(finish-p.start)/1000;if(ext===5||ext===2)p.signals=mergeWaveforms(p.signals);return p;
+}
+const api={VERSION,properties,chunks,parse,crc32wchar,ignored,isData,isProperties};
+if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Philips=api;
+})(globalThis);
+</script><script>// SPDX-License-Identifier: GPL-3.0-only
+// Adapted from OSCAR PRDS2File and SleepLib/crypto.cpp, revision
+// d16e40388d7b4dcbfc97afef85df43c520a03ccb.
+// Copyright (c) 2021-2024 The OSCAR Team. See THIRD_PARTY_NOTICES.md.
+(function(root){
+'use strict';
+// OSCAR's published COMMON_KEY decrypted using its published OSCAR_KEY (AES-256 ECB).
+// This is a format constant, not a user password. Fixtures independently derive it.
+const COMMON='71849644a728112b015b6203cfb5c56951db5f18e3f49436fa4a0beb75658742';
+const hex=b=>Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
+const join=(a,b)=>{const out=new Uint8Array(a.length+b.length);out.set(a);out.set(b,a.length);return out;};
+function header(buffer){
+ const b=new Uint8Array(buffer.buffer||buffer,buffer.byteOffset||0,buffer.byteLength),view=new DataView(b.buffer,b.byteOffset,b.byteLength);let p=0;
+ const word=()=>{if(p+2>b.length)throw Error('Truncated DreamStation 2 header');const n=view.getUint16(p,true);p+=2;return n;};
+ const field=size=>{const n=word();if(n!==size||p+n>b.length)throw Error('Invalid DreamStation 2 header field');const v=b.slice(p,p+n);p+=n;return v;};
+ if(word()!==13||word()!==1||word()!==1)throw Error('Unsupported DreamStation 2 encryption header');
+ const guid=field(36),iv=field(12),salt=field(16);
+ if(word()!==0||word()!==1)throw Error('Unsupported DreamStation 2 key envelope');
+ field(32);field(16); // Device import key; export key below grants patient access.
+ const exportKey=field(32),exportTag=field(16),payloadTag=field(16);
+ if(p!==202||p>=b.length)throw Error('Truncated DreamStation 2 payload');
+ return {guid,iv,salt,exportKey,exportTag,payloadTag,payload:b.subarray(p)};
+}
+function createDecoder(){
+ const cache=new Map();
+ async function decrypt(buffer){
+  const subtle=globalThis.crypto?.subtle;if(!subtle)throw Error('DreamStation 2 requires Web Crypto. Open the app on localhost in a modern browser.');
+  const h=header(buffer),id=hex(join(join(h.iv,h.salt),join(h.exportKey,h.exportTag)));
+  let key=cache.get(id);
+  if(!key){
+   key=(async()=>{
+    const common=Uint8Array.from(COMMON.match(/../g),x=>parseInt(x,16));
+    const password=await subtle.importKey('raw',common,'PBKDF2',false,['deriveKey']);
+    const wrapping=await subtle.deriveKey({name:'PBKDF2',salt:h.salt,iterations:10000,hash:'SHA-256'},password,{name:'AES-GCM',length:256},false,['decrypt']);
+    let raw;try{raw=await subtle.decrypt({name:'AES-GCM',iv:h.iv,tagLength:128},wrapping,join(h.exportKey,h.exportTag));}catch{throw Error('DreamStation 2 export-key authentication failed');}
+    if(raw.byteLength!==32)throw Error('Invalid DreamStation 2 payload key');
+    return subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);
+   })();cache.set(id,key);if(cache.size>128)cache.delete(cache.keys().next().value);
+  }
+  let payload;
+  try{payload=await subtle.decrypt({name:'AES-GCM',iv:h.iv,tagLength:128},await key,join(h.payload,h.payloadTag));}
+  catch(e){if(e.message?.includes('export-key'))throw e;throw Error('DreamStation 2 payload authentication failed (damaged or incomplete file)');}
+  return payload;
+ }
+ return {decrypt};
+}
+const api={header,createDecoder};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DreamStation2=api;
+})(globalThis);
+</script><script>// SPDX-License-Identifier: GPL-3.0-or-later
+// Local-only ZIP and device preflight. No network or third-party runtime.
+(function(root){
+'use strict';
+const P=typeof module!=='undefined'&&module.exports?require('./philips.js'):root.Philips;
+const DS2=typeof module!=='undefined'&&module.exports?require('./dreamstation2.js'):root.DreamStation2;
+const pathOf=f=>(f.webkitRelativePath||f._path||f.name).replaceAll('\\','/');
+const table=Uint32Array.from({length:256},(_,i)=>{let c=i;for(let j=0;j<8;j++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0;});
+function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=table[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0;}
+function supported(name){return /\.(edf|tgt)$/i.test(name)||P.isProperties(name)||P.isData(name);}
+async function zipEntries(file){
+ // Read central directory only. Each compressed entry is inflated on demand.
+ if(file.size>1024**3)throw Error('ZIP exceeds 1 GiB. Extract it and choose the SD folder.');
+ const tail=new Uint8Array(await file.slice(Math.max(0,file.size-65557)).arrayBuffer()),view=new DataView(tail.buffer);
+ let e=-1;for(let p=tail.length-22;p>=0;p--)if(view.getUint32(p,true)===0x06054b50&&p+22+view.getUint16(p+20,true)===tail.length){e=p;break;}
+ if(e<0)throw Error('Invalid ZIP: end of directory not found');
+ const count=view.getUint16(e+10,true),size=view.getUint32(e+12,true),offset=view.getUint32(e+16,true);
+ if(view.getUint16(e+4,true)||view.getUint16(e+6,true)||view.getUint16(e+8,true)!==count||count===65535||offset===0xffffffff||size===0xffffffff)throw Error('ZIP64 and multi-volume ZIP are unsupported. Extract the SD folder first.');
+ if(offset+size>file.size-tail.length+e||size>32*1024**2)throw Error('Invalid ZIP directory bounds');
+ const b=new Uint8Array(await file.slice(offset,offset+size).arrayBuffer()),dv=new DataView(b.buffer),dec=new TextDecoder(),out=[];let p=0,total=0;
+ for(let i=0;i<count;i++){
+  if(p+46>b.length||dv.getUint32(p,true)!==0x02014b50)throw Error('Invalid ZIP directory entry');
+  const flags=dv.getUint16(p+8,true),method=dv.getUint16(p+10,true),crc=dv.getUint32(p+16,true),compressed=dv.getUint32(p+20,true),length=dv.getUint32(p+24,true),n=dv.getUint16(p+28,true),extra=dv.getUint16(p+30,true),comment=dv.getUint16(p+32,true),local=dv.getUint32(p+42,true);
+  if(p+46+n+extra+comment>b.length)throw Error('Truncated ZIP entry');
+  const path=dec.decode(b.subarray(p+46,p+46+n)).replaceAll('\\','/');p+=46+n+extra+comment;
+  if(path.startsWith('/')||/^[a-z]:/i.test(path)||path.split('/').includes('..')||path.includes('\0'))throw Error('Unsafe ZIP path');
+  if(path.endsWith('/')||P.ignored(path))continue;
+  if(!supported(path))continue;
+  total+=length;if(total>2*1024**3||length>128*1024**2)throw Error('ZIP expansion limit exceeded');
+  if(flags&1||![0,8].includes(method))throw Error('Encrypted ZIP or unsupported compression. Extract the SD folder first.');
+  const entry={name:path.split('/').at(-1),_path:path,size:length,type:'application/octet-stream',async arrayBuffer(){
+   if(local+30>offset)throw Error('Invalid ZIP local header');
+   const h=new DataView(await file.slice(local,local+30).arrayBuffer());
+   if(h.getUint32(0,true)!==0x04034b50||h.getUint16(8,true)!==method||(h.getUint16(6,true)&1))throw Error('Invalid ZIP local header');
+   const begin=local+30+h.getUint16(26,true)+h.getUint16(28,true);
+   if(begin+compressed>offset)throw Error('ZIP entry outside data area');
+   const blob=file.slice(begin,begin+compressed);let bytes;
+   if(method===0){if(compressed!==length)throw Error('Invalid stored ZIP size');bytes=new Uint8Array(await blob.arrayBuffer());}
+   else{
+    let stream;try{stream=blob.stream().pipeThrough(new DecompressionStream('deflate-raw'));}catch{throw Error('This browser cannot inflate ZIP files. Extract the ZIP and choose the SD folder.');}
+    const reader=stream.getReader(),parts=[];let got=0;
+    try{while(true){const r=await reader.read();if(r.done)break;got+=r.value.length;if(got>length)throw Error('ZIP entry exceeds declared size');parts.push(r.value);}}catch(e){await reader.cancel().catch(()=>{});throw e;}
+    if(got!==length)throw Error('Truncated ZIP content');bytes=new Uint8Array(got);let pos=0;for(const part of parts){bytes.set(part,pos);pos+=part.length;}
+   }
+   if(crc32(bytes)!==crc)throw Error('ZIP CRC mismatch');return bytes.buffer;
+  },async text(){return new TextDecoder().decode(await this.arrayBuffer());}};
+  out.push(entry);
+ }
+ if(p!==b.length)throw Error('Unexpected ZIP directory data');out.ignoredCount=count-out.length;return out;
+}
+function validateArchive(records){
+ const serials=new Set(records.map(f=>f.tags?.SRN||f.device?.serial).filter(Boolean));
+ const philips=records.some(f=>f.device?.vendor==='Philips'||f.parsed?.vendor==='Philips');
+ const resmed=records.some(f=>f.parsed&&!f.parsed.vendor||/\.(edf|tgt)$/i.test(f.name));
+ if(serials.size>1||philips&&resmed)throw Error('This archive supports one PAP device. Use a separate browser profile for Philips and ResMed.');
+}
+async function prepare(input,stored=[]){
+ const entries=[],decoder=DS2.createDecoder();let ignoredCount=0;
+ for(const f of input){if(P.ignored(pathOf(f))){ignoredCount++;continue;}if(/\.zip$/i.test(f.name)){const zipped=await zipEntries(f);entries.push(...zipped);ignoredCount+=zipped.ignoredCount;}else entries.push(f);}
+ const devices=new Map(),serials=new Set(stored.map(f=>f.tags?.SRN||f.device?.serial).filter(Boolean));
+ let hasPhilips=stored.some(f=>f.device?.vendor==='Philips'||f.parsed?.vendor==='Philips'),hasEDF=stored.some(f=>f.parsed&&!f.parsed.vendor||/\.edf$/i.test(f.name));
+ const selected=[];
+ for(const f of entries){
+  const path=pathOf(f);if(P.ignored(path)){ignoredCount++;continue;}
+  if(!supported(f.name)){ignoredCount++;continue;}
+  selected.push(f);
+  if(P.isProperties(f.name)){const encrypted=/\.bin$/i.test(f.name),text=encrypted?new TextDecoder().decode(await decoder.decrypt(await f.arrayBuffer())):await f.text(),device=P.properties(text);device.generation=encrypted?2:1;if(encrypted)device.tags.PNA='Philips DreamStation 2 '+device.model;serials.add(device.serial);devices.set(path.slice(0,path.lastIndexOf('/')+1),device);hasPhilips=true;}
+  if(P.isData(f.name))hasPhilips=true;
+  if(/\.edf$/i.test(f.name))hasEDF=true;
+  if(/\.tgt$/i.test(f.name)){hasEDF=true;const m=(await f.text()).match(/#SRN\s+(\S+)/);if(m)serials.add(m[1]);}
+ }
+ if(serials.size>1||hasPhilips&&hasEDF)throw Error('This archive supports one PAP device. Use a separate browser profile for Philips and ResMed; no files from this import were saved.');
+ const plan=[];
+ for(const f of selected){
+  let device=null;
+  if(P.isProperties(f.name)||P.isData(f.name)){
+   const path=pathOf(f),matches=[...devices].filter(([dir])=>dir?path.startsWith(dir):!path.includes('/')).sort((a,b)=>b[0].length-a[0].length);
+   device=matches[0]?.[1];
+   if(!device)throw Error('Select the complete Philips device folder, or PROP.TXT / PROP.BIN together with its session files. Device identity is required.');
+  }
+  if(P.isData(f.name)&&(/\.b0[125]$/i.test(f.name)!==(device.generation===2)))throw Error('Philips session format does not match its device properties.');
+  plan.push({file:f,path:pathOf(f),device,decode:device?.generation===2?decoder.decrypt:null});
+ }
+ return {plan,ignoredCount};
+}
+const api={prepare,zipEntries,crc32,pathOf,validateArchive};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.PAPImport=api;
+})(globalThis);
 </script><script>// SPDX-License-Identifier: GPL-3.0-or-later
 (function(root){
 'use strict';
@@ -167,7 +558,7 @@ if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Glas
 </script><script>// SPDX-License-Identifier: GPL-3.0-or-later
 (function(root){
 'use strict';
-function logicalPath(path,name){const parts=String(path||name).replaceAll('\\','/').split('/').filter(Boolean),anchor=parts.findIndex(p=>/^(DATALOG|SETTINGS)$/i.test(p));return (anchor>=0?parts.slice(anchor).join('/'):parts.at(-1)||name).toUpperCase();}
+function logicalPath(path,name){const parts=String(path||name).replaceAll('\\','/').split('/').filter(Boolean),anchor=parts.findIndex(p=>/^(DATALOG|SETTINGS|P-SERIES)$/i.test(p));return (anchor>=0?parts.slice(anchor).join('/'):parts.at(-1)||name).toUpperCase();}
 function plan(existing,record){
  const logical=record.logicalPath||logicalPath(record.path,record.name);
  const matching=existing.filter(f=>(f.logicalPath||logicalPath(f.path,f.name))===logical);
@@ -283,6 +674,7 @@ const Portable={
   else throw Error('Unrecognized backup.');
   const stores=['files','markers','external','tombstones','analysis','preferences'];
   for(const s of stores){if(data[s]===undefined&&['tombstones','analysis','preferences'].includes(s))data[s]=[];if(!Array.isArray(data[s])||data[s].some(x=>!x||typeof x.id!=='string'))throw Error('Invalid backup records.');if(new Set(data[s].map(x=>x.id)).size!==data[s].length)throw Error('Duplicate record IDs in backup.');}
+  PAPImport.validateArchive(data.files);
   if(!confirm('Restore into a new local preview archive? The active archive is kept. Nothing is published until you choose Use restored archive.'))return;
   busy=true;let started=false;
   try{
@@ -301,13 +693,14 @@ const Portable={
 };
 </script><script>'use strict';
 const $=id=>document.getElementById(id),el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;},fmt=n=>Number.isFinite(n)?Number(n.toFixed(2)).toLocaleString('en-US'):'—',clock=t=>new Date(t).toISOString().slice(11,19),iso=t=>new Date(t).toISOString().slice(0,-1),names={'Flow.40ms':'Respiratory flow','Press.40ms':'High-resolution pressure','MaskPress.2s':'Mask pressure','Press.2s':'Pressure · Press (IPAP)','EprPress.2s':'Pressure · EprPress (EPAP)','Leak.2s':'Leak','RespRate.2s':'Respiratory rate','TidVol.2s':'Tidal volume','MinVent.2s':'Minute ventilation','TgtVent.2s':'Target ventilation','Snore.2s':'Snore','FlowLim.2s':'Flow limitation'};
+Object.assign(names,{'PRS1.Flow':'Respiratory flow · Philips','PRS1.Pressure':'CPAP pressure setting · Philips','PRS1.EPAP':'EPAP setting · Philips','PRS1.IPAP':'IPAP setting · Philips','PRS1.MaskPressure':'Mask pressure · Philips','PRS1.TotalLeak':'Total leak · Philips (includes venting)','PRS1.SnoreCount':'Snore count per interval · Philips','PRS1.FlexPressure':'Average Flex pressure · Philips','PRS1.AveragePressure':'Average pressure · Philips'});
 let db,portable=false,tombstones=[],giCacheRecords=[],files=[],nights=[],metadata={},annotations=[],external=[],night=null,channels={},left=0,span=0,total=0,cursor=null,history=[],selected=new Set(),cards=[],urls=[],cache=new Map(),busy=false;
 const status=t=>$('status').textContent=t;
 const request=r=>new Promise((resolve,reject)=>{r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
 function transaction(store,mode,fn){return new Promise((resolve,reject)=>{const tx=db.transaction(store,mode);fn(tx.objectStore(store));tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Save cancelled'));});}
 async function api(path,body){return Portable.api(path,body);}
-async function portableEncode(v){if(v instanceof Blob){const {key}=await api('blob',v);return {__ref:key,type:v.type};}if(v instanceof Float64Array)return {__float:Array.from(v,x=>Number.isNaN(x)?null:x)};if(Array.isArray(v))return Promise.all(v.map(portableEncode));if(v&&typeof v==='object'){const out={};for(const [k,x] of Object.entries(v))out[k]=await portableEncode(x);return out;}return v;}
-async function portableDecode(v){if(v?.__ref){const response=await fetch('/api/blob/'+v.__ref,{headers:{'X-BPG-Local':'1'}});if(!response.ok)throw Error('Attachment unavailable.');return new Blob([await response.blob()],{type:v.type});}if(v?.__float)return Float64Array.from(v.__float,x=>x===null?NaN:x);if(Array.isArray(v))return Promise.all(v.map(portableDecode));if(v&&typeof v==='object'){const out={};for(const [k,x] of Object.entries(v))out[k]=await portableDecode(x);return out;}return v;}
+async function portableEncode(v){if(v instanceof Int8Array)return {__int8:Array.from(v)};if(v instanceof Blob){const {key}=await api('blob',v);return {__ref:key,type:v.type};}if(v instanceof Float64Array)return {__float:Array.from(v,x=>Number.isNaN(x)?null:x)};if(Array.isArray(v))return Promise.all(v.map(portableEncode));if(v&&typeof v==='object'){const out={};for(const [k,x] of Object.entries(v))out[k]=await portableEncode(x);return out;}return v;}
+async function portableDecode(v){if(v?.__int8!==undefined)return Array.isArray(v.__int8)?Int8Array.from(v.__int8):decode(v);if(v?.__ref){const response=await fetch('/api/blob/'+v.__ref,{headers:{'X-BPG-Local':'1'}});if(!response.ok)throw Error('Attachment unavailable.');return new Blob([await response.blob()],{type:v.type});}if(v?.__float)return Float64Array.from(v.__float,x=>x===null?NaN:x);if(Array.isArray(v))return Promise.all(v.map(portableDecode));if(v&&typeof v==='object'){const out={};for(const [k,x] of Object.entries(v))out[k]=await portableDecode(x);return out;}return v;}
 const put=(store,value)=>portable?portablePut(store,value):transaction(store,'readwrite',s=>s.put(value));
 async function portablePut(store,value){Portable.assertWrite();Portable.writing++;try{await api('batch',{put:[[store,await portableEncode(value)]]});}finally{Portable.writing--;Portable.changed();}}
 const del=(store,id)=>portable?api('batch',{delete:[[store,id]]}).then(portableStatus):transaction(store,'readwrite',s=>s.delete(id));
@@ -332,28 +725,31 @@ async function refresh(){files=await getAll('files');annotations=await getAll('m
 async function ingest(input){
  if(busy||!db)return;busy=true;let started=false;
  try{
-  if(portable){await Portable.begin('import');started=true;files=await getAll('files');}
-  let saved=0,updated=0,duplicates=0,empty=0;const errors=[],serials=new Set(files.filter(f=>f.tags?.SRN).map(f=>f.tags.SRN));
-  for(const f of input.filter(f=>/\.tgt$/i.test(f.name))){const match=(await f.text()).match(/#SRN\s+(\S+)/);if(match)serials.add(match[1]);}
-  if(serials.size>1)throw Error('One PAP device per archive. A second device was not imported.');
-  for(let i=0;i<input.length;i++){
-   const f=input[i];if(f.name.startsWith('.')||f.webkitRelativePath?.includes('/.'))continue;
-   status(`Checking SD delta ${i+1}/${input.length}: ${f.name}`);
+  if(portable)files=await getAll('files');
+  const {plan,ignoredCount}=await PAPImport.prepare(input,files);
+  if(portable){await Portable.begin('import');started=true;}
+  let saved=0,updated=0,duplicates=0,empty=0;const errors=[];
+  for(let i=0;i<plan.length;i++){
+   const {file:f,path,device,decode:decodePhilips}=plan[i];
+   status(`Checking SD delta ${i+1}/${plan.length}: ${f.name}`);
    try{
     const buffer=await f.arrayBuffer(),digest=await crypto.subtle.digest('SHA-256',buffer),id=Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join('')+':'+f.name.replace(/\(\d+\)(?=\.)/,'');
-    const record={id,name:f.name,path:f.webkitRelativePath||f._path||f.name,imported:Date.now(),blob:new Blob([buffer],{type:f.type||'application/octet-stream'})};
+    const record={id,name:f.name,path,imported:Date.now(),blob:new Blob([buffer],{type:f.type||'application/octet-stream'})};
     const delta=ImportDelta.plan(files,record);record.logicalPath=delta.logical;
-    if(delta.unchanged){duplicates++;continue;}
-    if(/\.edf$/i.test(f.name))record.parsed=readEDF(buffer,f.name);
+    const previous=files.find(x=>x.id===id),parsedCurrent=Philips.isData(f.name)?previous?.parserVersion===Philips.VERSION:Philips.isProperties(f.name)?previous?.tags?.SRN===device.serial:true;
+    if(delta.unchanged&&parsedCurrent){duplicates++;continue;}
+    if(device)record.device=device;if(Philips.isData(f.name))record.parserVersion=Philips.VERSION;
+    if(Philips.isProperties(f.name))record.tags=device.tags;
+    if(/\.edf$/i.test(f.name)||Philips.isData(f.name))record.parsed=Philips.isData(f.name)?Philips.parse(decodePhilips?await decodePhilips(buffer):buffer,f.name):readEDF(buffer,f.name);
     if(/\.tgt$/i.test(f.name)){record.tags={};for(const m of new TextDecoder().decode(buffer).matchAll(/#(\w+)\s+([^\r\n]+)/g))record.tags[m[1]]=m[2].trim();}
     if(portable){await api('batch',{delete:delta.remove.map(id=>['files',id]),put:[['files',await portableEncode(record)]]});files=files.filter(x=>!delta.remove.includes(x.id));}
-    else await put('files',record);
-    files.push(record);delta.remove.length?updated++:saved++;
+    else await transaction('files','readwrite',store=>{for(const id of delta.remove)store.delete(id);store.put(record);});
+    files=files.filter(x=>!delta.remove.includes(x.id)&&x.id!==record.id);files.push(record);delta.remove.length?updated++:saved++;
    }catch(e){if(e.code==='EDF_NO_DATA'){empty++;continue;}errors.push(f.name+': '+e.message);}
   }
   if(errors.length)throw Error(errors.join('\n')+'\nImport paused. Choose the same folder to resume; completed files are preserved locally.');
   if(portable){await Portable.finish();started=false;}
-  await refresh();showHome();status(`${saved} new · ${updated} updated · ${duplicates} unchanged · ${nights.length} visible nights.`+(empty?`\n${empty} empty EDF skipped: header only, no samples. Reimport after the recordings are finalized.`:''));
+  await refresh();showHome();status(`${saved} new · ${updated} updated · ${duplicates} unchanged · ${ignoredCount} unrelated files ignored · ${nights.length} visible nights.`+(empty?`\n${empty} empty EDF skipped: header only, no samples. Reimport after the recordings are finalized.`:''));
  }catch(e){if(portable&&started)await Portable.pause().catch(()=>{});await refresh().catch(()=>{});status(e.message);}
  finally{busy=false;$('files').value='';$('folder').value='';if(portable)Portable.render();}
 }
@@ -361,19 +757,27 @@ async function walk(entry,path=''){if(entry.isFile){const f=await new Promise((r
 $('files').onchange=e=>ingest([...e.target.files]);$('folder').onchange=e=>ingest([...e.target.files]);$('drop').ondragover=e=>e.preventDefault();$('drop').ondrop=async e=>{e.preventDefault();const entries=[...e.dataTransfer.items].map(i=>i.webkitGetAsEntry?.()).filter(Boolean),fallback=[...e.dataTransfer.files];try{const list=entries.length?(await Promise.all(entries.map(e=>walk(e)))).flat():fallback;await ingest(list);}catch(err){status(err.message);}};
 function table(headers,rows){const t=el('table'),head=el('tr');headers.forEach(x=>head.append(el('th',x)));const thead=el('thead');thead.append(head);t.append(thead);const body=el('tbody');rows.forEach(row=>{const tr=el('tr');row.forEach(x=>{const td=el('td');x instanceof Node?td.append(x):td.textContent=x;tr.append(td);});body.append(tr);});t.append(body);return t;}
 function stat(n,key){const id=n.key+'|'+key+'|'+$('excludeZeros').checked;if(!cache.has(id))cache.set(id,stats(n.channels[key],$('excludeZeros').checked&&/^(RespRate|TidVol|MinVent)/.test(key)));return cache.get(id);}
-function count(n,type){if(n.events.length)return n.events.filter(e=>type==='apnea'?/apnea/i.test(e.text)&&!/hypopnea/i.test(e.text):/hypopnea/i.test(e.text)).length;const hasEve=files.some(f=>f.parsed&&!f.parsed.summary&&/EVE/i.test(f.name)&&nightKey(f.parsed.start)===n.key);return hasEve?0:null;}
+function count(n,type){if(n.vendor==='Philips'){if(!n.eventsComplete)return null;return n.events.filter(e=>type==='apnea'?/apnea/i.test(e.text)&&!/hypopnea/i.test(e.text):/hypopnea/i.test(e.text)).length;}if(n.events.length)return n.events.filter(e=>type==='apnea'?/apnea/i.test(e.text)&&!/hypopnea/i.test(e.text):/hypopnea/i.test(e.text)).length;const hasEve=files.some(f=>f.parsed&&!f.parsed.summary&&/EVE/i.test(f.name)&&nightKey(f.parsed.start)===n.key);return hasEve?0:null;}
 function home(){
  renderOverview();
- const rows=[...nights].reverse().map(n=>[button(n.key,()=>openNight(n.key)),fmt(n.usage)+' h',n.intervals.length?Object.keys(n.channels).length+' signals':'STR summary only',fmt(count(n,'apnea')),fmt(count(n,'hypopnea')),button('Delete',()=>askDeleteNight(n.key))]);$('nightList').replaceChildren(table(['Night','Usage','Data','Apneas','Hypopneas','Actions'],rows));if(!nights.length)$('nightList').append(el('p','Import your SD card to get started.'));$('nightSelect').replaceChildren(...nights.map(n=>{const o=el('option',n.key);o.value=n.key;return o;}));trend();if(typeof giRenderHome==='function')giRenderHome();}
+ const rows=[...nights].reverse().map(n=>[button(n.key,()=>openNight(n.key)),fmt(n.usage)+' h',Object.keys(n.channels).length?Object.keys(n.channels).length+' signals':n.vendor==='Philips'?'Philips summary only':'STR summary only',fmt(count(n,'apnea')),fmt(count(n,'hypopnea')),button('Delete',()=>askDeleteNight(n.key))]);$('nightList').replaceChildren(table(['Night','Usage','Data','Apneas','Hypopneas','Actions'],rows));if(!nights.length)$('nightList').append(el('p','Import your SD card to get started.'));$('nightSelect').replaceChildren(...nights.map(n=>{const o=el('option',n.key);o.value=n.key;return o;}));trend();if(typeof giRenderHome==='function')giRenderHome();}
 function trend(){if(typeof renderTrend==='function')renderTrend();}
 $('snoreThreshold').onchange=trend;$('flowThreshold').onchange=trend;
 function showHome(){$('home').hidden=false;$('detail').hidden=true;trend();}$('homeBtn').onclick=showHome;$('nightBtn').onclick=()=>{if(night)openNight(night.key);else if(nights.length)openNight(nights.at(-1).key);};
-function openNight(key){night=nights.find(n=>n.key===key);if(!night)return;$('home').hidden=true;$('detail').hidden=false;$('nightSelect').value=key;channels={...night.channels};for(const e of external.filter(e=>e.night===key))channels['external:'+e.id]=alignChannel(e.channel,e.offset,e.ppm);total=Math.max(.5,(night.end-night.origin)/1000);left=0;span=total;cursor=null;history=[];selected=new Set(Object.keys(channels).filter(k=>['Flow.40ms','Press.2s','Leak.2s','FlowLim.2s'].includes(k)||k.startsWith('external:')));$('nightTitle').textContent=night.key+' · '+night.device;$('summary').textContent=`${fmt(night.usage)} hours of use · ${night.intervals.length} recording segments · ${clock(night.origin)}–${clock(night.end)} · PAP clock`;$('window').value='all';selected.add('glasgow');renderSettings();renderStats();renderChoices();renderEvents();renderMarkers();build();if(typeof giRenderNight==='function')giRenderNight();}
+function openNight(key){night=nights.find(n=>n.key===key);if(!night)return;$('home').hidden=true;$('detail').hidden=false;$('nightSelect').value=key;channels={...night.channels};for(const e of external.filter(e=>e.night===key))channels['external:'+e.id]=alignChannel(e.channel,e.offset,e.ppm);total=Math.max(.5,(night.end-night.origin)/1000);left=0;span=total;cursor=null;history=[];selected=new Set(Object.keys(channels).filter(k=>['Flow.40ms','Press.2s','Leak.2s','FlowLim.2s','PRS1.Flow','PRS1.Pressure','PRS1.TotalLeak'].includes(k)||k.startsWith('external:')));$('nightTitle').textContent=night.key+' · '+night.device;$('summary').textContent=`${fmt(night.usage)} ${night.vendor==='Philips'&&!night.hasTherapySummary?'hours recorded (summary unavailable)':'hours of use'} · ${night.intervals.length} recording segments · ${clock(night.origin)}–${clock(night.end)} · PAP clock`+(night.vendor==='Philips'&&!night.eventsComplete?' · Event coverage incomplete; AHI unavailable.':'');$('window').value='all';if(night.vendor!=='Philips')selected.add('glasgow');renderSettings();renderStats();renderChoices();renderEvents();renderMarkers();build();if(typeof giRenderNight==='function')giRenderNight();}
 $('nightSelect').onchange=e=>openNight(e.target.value);function stepNight(d){if(!night)return;const i=nights.indexOf(night);if(nights[i+d])openNight(nights[i+d].key);}$('older').onclick=()=>stepNight(-1);$('newer').onclick=()=>stepNight(1);
-function renderSettings(){const s=night.settings,rows=[],add=(key,label,convert=v=>fmt(v),unit='')=>{if(Number.isFinite(s[key]))rows.push([label,convert(s[key])+(unit?' '+unit:''),key]);};add('Mode','Mode',v=>({7:'ASV',8:'ASVAuto'}[v]||'Code '+v));const prefix=s.Mode===8?'S.AA.':'S.AV.';add(prefix+'EPAP','EPAP',fmt,'cmH₂O');add(prefix+'MinEPAP','EPAP min',fmt,'cmH₂O');add(prefix+'MaxEPAP','EPAP max',fmt,'cmH₂O');add(prefix+'MinPS','PS min',fmt,'cmH₂O');add(prefix+'MaxPS','PS max',fmt,'cmH₂O');if(s.Mode===7&&Number.isFinite(s['S.AV.EPAP'])&&Number.isFinite(s['S.AV.MaxPS']))rows.push(['Max IPAP (calculated)',fmt(s['S.AV.EPAP']+s['S.AV.MaxPS'])+' cmH₂O','EPAP + PS max']);add('S.Mask','Mask',v=>v===1?'Full face':'Code '+v);const toggle=v=>v===0?'Off':v===1?'On':'Code '+v;add('S.RampEnable','Ramp',toggle);add('S.RampTime','Ramp time',fmt,'min');add('S.HumLevel','Humidity');add('S.HumEnable','Humidifier',toggle);add('S.SmartStart','Smart start',toggle);add('S.ABFilter','Antibacterial filter',toggle);add('S.Temp','Temperature',v=>fmt(v)+' °C / '+fmt(v*9/5+32)+' °F');add('S.ClimateControl','Climate control',v=>v===0?'Auto':'Code '+v);add('S.PtAccess','Essentials',v=>v===0?'Plus':'Code '+v);add('S.TempEnable','Temperature enabled',v=>v===2?'Auto':toggle(v));$('settings').replaceChildren(rows.length?table(['Parameter','Value','STR source'],rows):el('p','STR summary unavailable for this night.'));$('settings').append(el('p','PaceWave code names compared with the supplied SleepHQ values; other codes remain explicit.','muted'));$('rawSTR').replaceChildren(table(['Field','Value'],Object.entries(night.summary).map(([k,v])=>[k,Array.isArray(v)?v.map(fmt).join(', '):fmt(v)])));}
+function renderSettings(){if(night.vendor==='Philips'){renderPhilipsSettings();return;}const s=night.settings,rows=[],add=(key,label,convert=v=>fmt(v),unit='')=>{if(Number.isFinite(s[key]))rows.push([label,convert(s[key])+(unit?' '+unit:''),key]);};add('Mode','Mode',v=>({7:'ASV',8:'ASVAuto'}[v]||'Code '+v));const prefix=s.Mode===8?'S.AA.':'S.AV.';add(prefix+'EPAP','EPAP',fmt,'cmH₂O');add(prefix+'MinEPAP','EPAP min',fmt,'cmH₂O');add(prefix+'MaxEPAP','EPAP max',fmt,'cmH₂O');add(prefix+'MinPS','PS min',fmt,'cmH₂O');add(prefix+'MaxPS','PS max',fmt,'cmH₂O');if(s.Mode===7&&Number.isFinite(s['S.AV.EPAP'])&&Number.isFinite(s['S.AV.MaxPS']))rows.push(['Max IPAP (calculated)',fmt(s['S.AV.EPAP']+s['S.AV.MaxPS'])+' cmH₂O','EPAP + PS max']);add('S.Mask','Mask',v=>v===1?'Full face':'Code '+v);const toggle=v=>v===0?'Off':v===1?'On':'Code '+v;add('S.RampEnable','Ramp',toggle);add('S.RampTime','Ramp time',fmt,'min');add('S.HumLevel','Humidity');add('S.HumEnable','Humidifier',toggle);add('S.SmartStart','Smart start',toggle);add('S.ABFilter','Antibacterial filter',toggle);add('S.Temp','Temperature',v=>fmt(v)+' °C / '+fmt(v*9/5+32)+' °F');add('S.ClimateControl','Climate control',v=>v===0?'Auto':'Code '+v);add('S.PtAccess','Essentials',v=>v===0?'Plus':'Code '+v);add('S.TempEnable','Temperature enabled',v=>v===2?'Auto':toggle(v));$('settings').replaceChildren(rows.length?table(['Parameter','Value','STR source'],rows):el('p','STR summary unavailable for this night.'));$('settings').append(el('p','PaceWave code names compared with the supplied SleepHQ values; other codes remain explicit.','muted'));$('rawSTR').replaceChildren(table(['Field','Value'],Object.entries(night.summary).map(([k,v])=>[k,Array.isArray(v)?v.map(fmt).join(', '):fmt(v)])));}
+function renderPhilipsSettings(){
+ const pressureKeys=new Set(['Pressure','MinPressure','MaxPressure','EPAP','IPAP','MinEPAP','MaxIPAP','MinPS','MaxPS','RampPressure']);
+ const rows=Object.entries(night.settings).map(([k,v])=>[k,String(v)+(pressureKeys.has(k)?' cmH₂O':k==='RampMinutes'?' min':'')]);
+ $('settings').replaceChildren(rows.length?table(['Parameter','Value'],rows):el('p','Session settings unavailable. Import the .001 summary files.'));
+ $('settings').append(el('p','Philips .001 source. Settings shown for the latest session; all session snapshots are listed below. Total leak includes intentional mask venting. Flex pressure is an interval average, not measured EPAP.','muted'));
+ const raw=[];for(const session of night.sessionSettings){for(const [k,v] of Object.entries(session.settings))raw.push([clock(session.start)+' · session '+session.id,k,String(v)]);for(const [k,v]of Object.entries(session.rawSettings))raw.push([clock(session.start)+' · raw',k,JSON.stringify(v)]);}
+ $('rawSTR').replaceChildren(table(['Session','Field','Value'],raw));
+}
 function renderStats(){const rows=Object.entries(night.channels).map(([k,ch])=>{const s=stat(night,k);return [names[k]||k,displayUnit(ch.unit),fmt(s?.min),fmt(s?.med),fmt(s?.p95),fmt(s?.p995),fmt(s?.mean)];});const gi=giStatisticRows(),expanded=$('giMore')?.open||false,more=el('details');more.id='giMore';more.open=expanded;more.append(el('summary','Glasgow component fractions (9)'),table(['Component','Unit','Min','Med','95%','99.5%','Mean'],gi.slice(2)));$('stats').replaceChildren(table(['Signal','Unit','Min','Med','95%','99.5%','Mean'],[...rows,...gi.slice(0,2)]),more,el('p',giStatisticsNote(),'muted'));}$('excludeZeros').onchange=()=>{cache.clear();home();if(night)renderStats();};
 
-function renderChoices(){$('choices').replaceChildren();for(const [k,ch] of [...Object.entries(channels),['glasgow',{label:'Glasgow Index'}]]){const l=el('label'),c=el('input');c.type='checkbox';c.checked=selected.has(k);c.onchange=()=>{c.checked?selected.add(k):selected.delete(k);build();};l.append(c,document.createTextNode(names[k]||ch.label));$('choices').append(l);}}
+function renderChoices(){$('choices').replaceChildren();for(const [k,ch] of [...Object.entries(channels),['glasgow',{label:'Glasgow Index'}]]){const l=el('label'),c=el('input');c.type='checkbox';c.checked=selected.has(k);if(k==='glasgow'&&night.vendor==='Philips'){c.disabled=true;l.title='Glasgow Index requires validated 25 Hz flow; Philips flow is not resampled.';}c.onchange=()=>{c.checked?selected.add(k):selected.delete(k);build();};l.append(c,document.createTextNode(names[k]||ch.label));$('choices').append(l);}}
 function jump(t){pushZoom();span=Math.min(120,total);left=(t-night.origin)/1000-span/2;$('window').value='120';render();}
 function renderEvents(){$('events').replaceChildren();for(const e of night.events)$('events').append(button(`${e.text} · ${clock(e.time)} · ${e.duration?e.duration+' s':'duration unspecified'}`,()=>jump(e.time)));}
 function pushZoom(){history.push({left,span});if(history.length>50)history.shift();}
@@ -382,19 +786,29 @@ function render(){span=Math.min(Math.max(.2,span),total);left=Math.max(0,Math.mi
 function build(){cards=[];$('charts').replaceChildren();for(const k of orderedSignals()){if(k==='glasgow'){const box=giCreateCard();$('charts').append(box);continue;}const ch=channels[k];if(!ch)continue;const box=el('section',undefined,'chart'),head=el('div',undefined,'head'),value=el('span',undefined,'value');setupSignalCard(box,head,k);head.append(el('strong',names[k]||ch.label),value);const legend=el('div',undefined,'legend');legend.append(el('span','● '+ch.label+' ('+displayUnit(ch.unit)+')','teal'));const overlay=['Press.2s','Press.40ms'].includes(k)?channels['EprPress.2s']:null;if(overlay)legend.append(el('span','   ● EprPress · EPAP','purple'));const canvas=el('canvas');box.append(head,legend,canvas,button('CSV · full signal',()=>exportSignal(ch,false)),button('CSV · visible range',()=>exportSignal(ch,true)));$('charts').append(box);cards.push({key:k,ch,overlay,canvas,value});let drag=null;const at=e=>{const r=canvas.getBoundingClientRect();return left+Math.max(0,Math.min(1,(e.clientX-r.left-65)/(r.width-82)))*span;};canvas.onpointerdown=e=>{drag={x:e.clientX,t:at(e),left,span,mode:e.shiftKey?'pan':$('dragMode').value};canvas.setPointerCapture(e.pointerId);};canvas.onpointermove=e=>{cursor=at(e);if(drag?.mode==='pan'){left=drag.left-(e.clientX-drag.x)/(canvas.clientWidth-82)*drag.span;render();}else drawAll();};canvas.onpointerup=e=>{if(!drag)return;const d=drag;drag=null;if(d.mode==='marker'){editMarker(night.origin+at(e)*1000);return;}if(d.mode==='zoom'&&Math.abs(e.clientX-d.x)>5){const end=at(e);pushZoom();left=Math.min(end,d.t);span=Math.max(.2,Math.abs(end-d.t));$('window').value='custom';render();}};canvas.onpointercancel=()=>drag=null;canvas.ondblclick=reset;canvas.onpointerleave=()=>{if(!drag){cursor=null;drawAll();}};}render();giRenderNight();}
 function drawAll(){cards.filter(c=>c.key!=='glasgow').forEach(draw);if(typeof giDrawHeatmap==='function')giDrawHeatmap();}
 function draw({ch,overlay,canvas,value}){const w=canvas.clientWidth;if(w<100)return;const h=210,dpr=devicePixelRatio||1;canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);const x0=65,x1=w-17,y0=12,y1=174,pw=x1-x0,start=night.origin+left*1000,end=start+span*1000,lines=[ch,...overlay?[overlay]:[]];const parts=[];let min=Infinity,max=-Infinity;
- for(const c of lines)for(const s of c.segments){const a=Math.max(0,Math.ceil((start-s.start)/(s.dt*1000))),b=Math.min(s.values.length,Math.floor((end-s.start)/(s.dt*1000))+1),m=factor(c.unit);if(a>=b)continue;parts.push({c,s,a,b,m});for(let i=a;i<b;i++){const v=s.values[i]*m;if(Number.isFinite(v)){min=Math.min(min,v);max=Math.max(max,v);}}}if(min===Infinity){value.textContent='No samples in this range';return;}if(min===max){min-=1;max+=1;}const pad=(max-min)*.08;min-=pad;max+=pad;const xx=t=>x0+(t-start)/(span*1000)*pw,yy=v=>y1-(v-min)/(max-min)*(y1-y0);ctx.font='11px system-ui';ctx.fillStyle='#6c818b';ctx.strokeStyle='#e6edef';for(let i=0;i<5;i++){const v=min+(max-min)*i/4,y=yy(v);ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();ctx.fillText(fmt(v),2,y+4);ctx.fillText(clock(start+span*1000*i/4),Math.max(x0,Math.min(w-60,x0+pw*i/4-20)),200);}ctx.save();ctx.beginPath();ctx.rect(x0,y0,pw,y1-y0);ctx.clip();for(const {c,s,a,b,m} of parts){ctx.strokeStyle=c===ch?'#087f7a':'#8656cb';ctx.lineWidth=c===ch?1:1.6;ctx.beginPath();if(b-a>pw*2){for(let p=0;p<pw;p++){const lo=Math.max(a,Math.ceil((start+span*1000*p/pw-s.start)/(s.dt*1000))),hi=Math.min(b,Math.ceil((start+span*1000*(p+1)/pw-s.start)/(s.dt*1000)));let mn=Infinity,mx=-Infinity;for(let i=lo;i<hi;i++){const v=s.values[i]*m;if(Number.isFinite(v)){mn=Math.min(mn,v);mx=Math.max(mx,v);}}if(mn!==Infinity){ctx.moveTo(x0+p,yy(mn));ctx.lineTo(x0+p,yy(mx)+(mn===mx?.5:0));}}}else{let fresh=true;for(let i=a;i<b;i++){const v=s.values[i]*m;if(!Number.isFinite(v)){fresh=true;continue;}const x=xx(s.start+i*s.dt*1000),y=yy(v);fresh?ctx.moveTo(x,y):ctx.lineTo(x,y);fresh=false;}}ctx.stroke();}
+ for(const c of lines)for(const s of c.segments){const a=Math.max(0,(s.step?Math.floor:Math.ceil)((start-s.start)/(s.dt*1000))),b=Math.min(s.values.length,Math.floor((end-s.start)/(s.dt*1000))+1),m=factor(c.unit);if(a>=b)continue;parts.push({c,s,a,b,m});for(let i=a;i<b;i++){const v=s.values[i]*m;if(Number.isFinite(v)){min=Math.min(min,v);max=Math.max(max,v);}}}if(min===Infinity){value.textContent='No samples in this range';return;}if(min===max){min-=1;max+=1;}const pad=(max-min)*.08;min-=pad;max+=pad;const xx=t=>x0+(t-start)/(span*1000)*pw,yy=v=>y1-(v-min)/(max-min)*(y1-y0);ctx.font='11px system-ui';ctx.fillStyle='#6c818b';ctx.strokeStyle='#e6edef';for(let i=0;i<5;i++){const v=min+(max-min)*i/4,y=yy(v);ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();ctx.fillText(fmt(v),2,y+4);ctx.fillText(clock(start+span*1000*i/4),Math.max(x0,Math.min(w-60,x0+pw*i/4-20)),200);}ctx.save();ctx.beginPath();ctx.rect(x0,y0,pw,y1-y0);ctx.clip();for(const {c,s,a,b,m} of parts){ctx.strokeStyle=c===ch?'#087f7a':'#8656cb';ctx.lineWidth=c===ch?1:1.6;ctx.beginPath();if(s.step){for(let i=a;i<b;i++){const v=s.values[i]*m;if(!Number.isFinite(v))continue;const x=xx(s.start+i*s.dt*1000),endX=xx(s.start+(i+1)*s.dt*1000),y=yy(v);ctx.moveTo(x,y);ctx.lineTo(endX,y);}}else if(b-a>pw*2){for(let p=0;p<pw;p++){const lo=Math.max(a,Math.ceil((start+span*1000*p/pw-s.start)/(s.dt*1000))),hi=Math.min(b,Math.ceil((start+span*1000*(p+1)/pw-s.start)/(s.dt*1000)));let mn=Infinity,mx=-Infinity;for(let i=lo;i<hi;i++){const v=s.values[i]*m;if(Number.isFinite(v)){mn=Math.min(mn,v);mx=Math.max(mx,v);}}if(mn!==Infinity){ctx.moveTo(x0+p,yy(mn));ctx.lineTo(x0+p,yy(mx)+(mn===mx?.5:0));}}}else{let fresh=true;for(let i=a;i<b;i++){const v=s.values[i]*m;if(!Number.isFinite(v)){fresh=true;continue;}const x=xx(s.start+i*s.dt*1000),y=yy(v);fresh?ctx.moveTo(x,y):ctx.lineTo(x,y);fresh=false;}}ctx.stroke();}
  const vertical=(t,color,dash)=>{if(t<start||t>end)return;ctx.strokeStyle=color;ctx.setLineDash(dash);ctx.beginPath();ctx.moveTo(xx(t),y0);ctx.lineTo(xx(t),y1);ctx.stroke();};for(const e of night.events)vertical(e.time,'#d79442',[4,4]);for(const m of annotations.filter(m=>m.night===night.key)){vertical(m.time,'#ce4475',[2,2]);ctx.fillStyle='#ce4475';if(m.time>=start&&m.time<=end)ctx.fillText('◆',xx(m.time)-4,22);}if(cursor!==null){const t=night.origin+cursor*1000;vertical(t,'#253d4d',[]);value.textContent=lines.map(c=>{const s=sample(c,t);return c.label+': '+(s?fmt(s.v)+' '+displayUnit(c.unit)+' · '+clock(s.t):'—');}).join(' | ');}else value.textContent='';ctx.restore();ctx.setLineDash([]);}
 $('window').onchange=e=>{pushZoom();span=e.target.value==='all'?total:Number(e.target.value);render();};$('prev').onclick=()=>{left-=span*.8;render();};$('next').onclick=()=>{left+=span*.8;render();};$('seek').oninput=e=>{left=Number(e.target.value);render();};$('reset').onclick=reset;$('undo').onclick=()=>{const z=history.pop();if(z){left=z.left;span=z.span;$('window').value='custom';render();}};$('go').onclick=()=>{if(!$('goto').value)return;const [h,m,s=0]=$('goto').value.split(':').map(Number),d=new Date(night.origin);d.setUTCHours(h,m,s,0);let t=d.getTime();if(t<night.origin)t+=DAY;if(t>night.end){status('Time outside this night.');return;}pushZoom();left=(t-night.origin)/1000-span/2;render();};window.onresize=()=>{if(night)drawAll();else trend();};document.onkeydown=e=>{if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||$('markerDialog').open||$('detail').hidden)return;if(e.key==='Escape')reset();if(e.key==='ArrowLeft')$('prev').click();if(e.key==='ArrowRight')$('next').click();};
-function exportSignal(ch,visible){const rows=['time_device,seconds_from_night_start,value,unit,signal'];for(const s of ch.segments){const start=visible?night.origin+left*1000:-Infinity,end=visible?start+span*1000:Infinity;for(let i=0;i<s.values.length;i++){const t=s.start+i*s.dt*1000;if(t<start||t>=end)continue;rows.push([iso(t),(t-night.origin)/1000,s.values[i]*factor(ch.unit),displayUnit(ch.unit),ch.label].map(v=>'"'+String(v).replaceAll('"','""')+'"').join(','));}}download(new Blob([rows.join('\n')],{type:'text/csv'}),night.key+'_'+ch.label.replace(/[^\w.-]/g,'_')+'.csv');}
+function exportSignal(ch,visible){
+ const intervals=ch.segments.some(s=>s.step),rows=['time_device,seconds_from_night_start,value,unit,signal'+(intervals?',duration_seconds':'')];
+ const begin=visible?night.origin+left*1000:-Infinity,end=visible?begin+span*1000:Infinity;
+ for(const s of ch.segments)for(let i=0;i<s.values.length;i++){
+  const sampleTime=s.start+i*s.dt*1000,t=s.step?Math.max(sampleTime,begin):sampleTime,finish=Math.min(sampleTime+s.dt*1000,end);
+  if(s.step?finish<=t:t<begin||t>=end)continue;
+  const row=[iso(t),(t-night.origin)/1000,s.values[i]*factor(ch.unit),displayUnit(ch.unit),ch.label];if(intervals)row.push((finish-t)/1000);
+  rows.push(row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(','));
+ }
+ download(new Blob([rows.join('\n')],{type:'text/csv'}),night.key+'_'+ch.label.replace(/[^\w.-]/g,'_')+'.csv');
+}
 $('pdf').onclick=exportReport;
 function editMarker(time,id){if(portable){try{Portable.assertWrite();}catch(e){status(e.message);return;}}const m=annotations.find(m=>m.id===id);$('markerId').value=id||'';$('markerTime').value=iso(m?.time??time);$('markerTitle').value=m?.title||'';$('markerNote').value=m?.note||'';$('markerMedia').value='';$('markerDialog').showModal();}
 $('addMarker').onclick=()=>editMarker(night.origin+(cursor??left+span/2)*1000);$('cancelMarker').onclick=()=>$('markerDialog').close();$('markerForm').onsubmit=async e=>{e.preventDefault();try{const media=[...$('markerMedia').files];if(media.some(f=>f.size>30*1024*1024))throw Error('An attachment exceeds 30 MB.');const time=Date.parse($('markerTime').value+'Z');if(time<night.origin||time>night.end)throw Error('The marker must fall within the selected night.');const old=annotations.find(m=>m.id===$('markerId').value),m={id:old?.id||crypto.randomUUID(),night:night.key,time,title:$('markerTitle').value,note:$('markerNote').value,media:[...(old?.media||[]),...media.map(f=>({name:f.name,blob:f}))]};await put('markers',m);annotations=await getAll('markers');$('markerDialog').close();renderMarkers();drawAll();}catch(err){status(err.message);alert(err.message);}};
 function renderMarkers(){urls.forEach(u=>URL.revokeObjectURL(u));urls=[];$('markers').replaceChildren();for(const m of annotations.filter(m=>m.night===night.key).sort((a,b)=>a.time-b.time)){const box=el('div',undefined,'mark');if(ImportDelta.markerOutside(m,night))box.append(el('p','Review marker: outside the updated recording intervals.','muted'));box.append(el('strong',clock(m.time)+' · '+m.title),el('p',m.note),button('Go',()=>jump(m.time)),button('Edit',()=>editMarker(m.time,m.id)),button('Delete',()=>confirmMarkerDeletion(m,box)));for(const item of m.media||[]){const u=URL.createObjectURL(item.blob);urls.push(u);if(item.blob.type.startsWith('image/')){const img=el('img');img.src=u;img.alt=item.name;box.append(img);}else if(item.blob.type.startsWith('video/')){const v=el('video');v.src=u;v.controls=true;v.preload='metadata';box.append(v);}box.append(button('Download '+item.name,()=>download(item.blob,item.name)));}$('markers').append(box);}if(!$('markers').children.length)$('markers').append(el('p','No markers. Use “+ Marker” or click mode on the charts.'));}
 
-async function encode(v){if(v instanceof Blob){const bytes=new Uint8Array(await v.arrayBuffer());let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));return {__blob:btoa(binary),type:v.type};}if(v instanceof Float64Array)return {__float:Array.from(v,x=>Number.isNaN(x)?null:x)};if(Array.isArray(v))return Promise.all(v.map(encode));if(v&&typeof v==='object'){const o={};for(const [k,x]of Object.entries(v))o[k]=await encode(x);return o;}return v;}
-function decode(v){if(v?.__blob!==undefined){const b=atob(v.__blob);return new Blob([Uint8Array.from(b,c=>c.charCodeAt(0))],{type:v.type});}if(v?.__float)return Float64Array.from(v.__float,x=>x===null?NaN:x);if(Array.isArray(v))return v.map(decode);if(v&&typeof v==='object'){const o={};for(const [k,x]of Object.entries(v))o[k]=decode(x);return o;}return v;}
+async function encode(v){if(v instanceof Blob){const bytes=new Uint8Array(await v.arrayBuffer());let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));return {__blob:btoa(binary),type:v.type};}if(v instanceof Int8Array){const bytes=await encode(new Blob([v]));return {__int8:bytes.__blob};}if(v instanceof Float64Array)return {__float:Array.from(v,x=>Number.isNaN(x)?null:x)};if(Array.isArray(v))return Promise.all(v.map(encode));if(v&&typeof v==='object'){const o={};for(const [k,x]of Object.entries(v))o[k]=await encode(x);return o;}return v;}
+function decode(v){if(v?.__int8!==undefined){const b=atob(v.__int8);return Int8Array.from(b,c=>c.charCodeAt(0));}if(v?.__blob!==undefined){const b=atob(v.__blob);return new Blob([Uint8Array.from(b,c=>c.charCodeAt(0))],{type:v.type});}if(v?.__float)return Float64Array.from(v.__float,x=>x===null?NaN:x);if(Array.isArray(v))return v.map(decode);if(v&&typeof v==='object'){const o={};for(const [k,x]of Object.entries(v))o[k]=decode(x);return o;}return v;}
 $('backup').onclick=async()=>{if(portable)return Portable.backup().catch(e=>status(e.message));try{status('Preparing local backup…');const data=await encode({format:'pap-local-v2',files:await getAll('files'),markers:await getAll('markers'),external:await getAll('external')});download(new Blob([JSON.stringify(data)],{type:'application/json'}),'pap-backup-'+new Date().toISOString().slice(0,10)+'.json');status('Backup ready: choose a save option in the dialog.');}catch(e){status(e.message);}};
-$('restore').onchange=async e=>{if(portable){try{if(e.target.files[0])await Portable.restoreBackup(e.target.files[0]);}catch(err){status(err.message);}finally{e.target.value='';}return;}try{const f=e.target.files[0];if(!f)return;const data=decode(JSON.parse(await f.text()));if(data.format!=='pap-local-v2'||!Array.isArray(data.files)||!Array.isArray(data.markers)||!Array.isArray(data.external))throw Error('Unrecognized backup');for(const [store,list]of [['files',data.files],['markers',data.markers],['external',data.external]])for(const item of list){if(!item.id)throw Error('Record has no ID');await put(store,item);}await refresh();status('Backup restored.');}catch(err){status('Restore incomplete: '+err.message);}};
+$('restore').onchange=async e=>{if(portable){try{if(e.target.files[0])await Portable.restoreBackup(e.target.files[0]);}catch(err){status(err.message);}finally{e.target.value='';}return;}try{const f=e.target.files[0];if(!f)return;const data=decode(JSON.parse(await f.text()));if(data.format!=='pap-local-v2'||!Array.isArray(data.files)||!Array.isArray(data.markers)||!Array.isArray(data.external))throw Error('Unrecognized backup');PAPImport.validateArchive([...files,...data.files]);for(const [store,list]of [['files',data.files],['markers',data.markers],['external',data.external]])for(const item of list){if(!item.id)throw Error('Record has no ID');await put(store,item);}await refresh();status('Backup restored.');}catch(err){status('Restore incomplete: '+err.message);}};
 $('erase').onclick=()=>askDeleteNight(null);
 async function openBrowserArchive(){const req=indexedDB.open('bpg-synthetic-preview-v2',1);req.onupgradeneeded=()=>{for(const s of ['files','markers','external'])req.result.createObjectStore(s,{keyPath:'id'});};return request(req);}
 (async()=>{try{
@@ -420,11 +834,11 @@ async function exportReport(){
  function heading(value){ensure(65);y+=16;text(value,27);}
  function rows(headers,data,widths){const rowH=37;function row(values,header=false){ctx.font=(header?'bold ':'')+'17px sans-serif';ctx.fillStyle=header?'#e7f2ef':'#f7f9fa';ctx.fillRect(M,y-24,W-2*M,rowH);let x=M+8;values.forEach((v,i)=>{ctx.save();ctx.beginPath();ctx.rect(x-4,y-22,widths[i]-8,rowH);ctx.clip();ctx.fillStyle='#213c49';ctx.fillText(String(v),x,y);ctx.restore();x+=widths[i];});y+=rowH;}ensure(rowH*2);row(headers,true);for(const vals of data){if(y+rowH>H-80){newPage();row(headers,true);}row(vals);}y+=10;}
  newPage();text(night.device,30);text($('summary').textContent,21);text('Device times. No time zone conversion.',18,'#667e89');
- heading('Night settings');const settingRows=[...$('settings').querySelectorAll('tbody tr')].map(r=>[...r.cells].slice(0,2).map(c=>c.textContent));if(settingRows.length)rows(['Parameter','Value'],settingRows,[520,526]);else text('STR settings unavailable.');
- heading('Statistics · full night');text('Percentiles: linear interpolation. Zeros '+($('excludeZeros').checked?'excluded for rate, volume and ventilation.':'included.'),18);
+ heading('Night settings');const settingRows=[...$('settings').querySelectorAll('tbody tr')].map(r=>[...r.cells].slice(0,2).map(c=>c.textContent));if(settingRows.length)rows(['Parameter','Value'],settingRows,[520,526]);else text('Device settings unavailable.');if(night.vendor==='Philips')text('Latest session settings. Total leak includes mask venting; Flex pressure is an interval average, not measured EPAP.',18);
+ heading('Statistics · full night');text((night.vendor==='Philips'?'Percentiles: duration-weighted for interval statistics; sample interpolation for waveforms. Zeros ':'Percentiles: linear interpolation. Zeros ')+($('excludeZeros').checked?'excluded for rate, volume and ventilation.':'included.'),18);
  const data=Object.entries(night.channels).map(([k,c])=>{const s=stat(night,k);return [c.label,displayUnit(c.unit),fmt(s?.min),fmt(s?.med),fmt(s?.p95),fmt(s?.p995),fmt(s?.mean)];});data.push(...giStatisticRows());rows(['Signal','Unit','Min','Med','95%','99.5%','Mean'],data,[260,116,134,134,134,134,134]);text(giStatisticsNote(),17);
  heading('Annotated events');for(const e of night.events)text(clock(e.time)+' · '+e.text+' · '+(e.duration?e.duration+' s':'duration unspecified'),21);if(!night.events.length)text('No annotated events available.');
- heading('Charts · '+$('range').textContent);text('Visible range. Press / high resolution in green; EprPress in purple.',18);const previous=cursor;cursor=null;drawAll();for(const card of cards){
+ heading('Charts · '+$('range').textContent);text(night.vendor==='Philips'?'Visible range. Philips signals retain their recorded units and sampling intervals.':'Visible range. Press / high resolution in green; EprPress in purple.',18);const previous=cursor;cursor=null;drawAll();for(const card of cards){
  const giCard=card.key==='glasgow',title=giCard?'Glasgow Index · '+(giChartMode==='classic'?'Classic Chart':'Component curves'):(names[card.key]||card.ch.label);
  const target=Math.min(giCard?440:280,(W-2*M)*card.canvas.height/Math.max(1,card.canvas.width));
  ensure(target+90);text(title,23);
@@ -485,6 +899,7 @@ async function giAnalyze(list,epoch){
  for(let i=0;i<list.length&&epoch===giEpoch;i++){
   const n=list[i];$('giStatus').textContent=`Analyzing Glasgow Index · ${i+1}/${list.length} · ${n.key}`;
   try{
+   if(n.vendor==='Philips'){giResults.set(n.key,{status:'unavailable',reason:'Glasgow Index unavailable for Philips flow: the current algorithm requires validated 25 Hz input. No resampling is applied.'});continue;}
    const signature=portable?await giSignature(n):null,cached=portable?(giCacheRecords.find(x=>x.id===n.key&&x.signature===signature&&x.method===GI_METHOD)||giMemoryCache.get(signature)):null;
    const result=cached?.result||await new Promise((resolve,reject)=>{
     const worker=new Worker(previewWorkerURL);giWorker=worker;giReject=reject;
@@ -500,7 +915,7 @@ async function giAnalyze(list,epoch){
   }catch(e){if(epoch!==giEpoch)return;giResults.set(n.key,{status:'unavailable',reason:e.message});}
   giRenderHome();renderOverview();giRenderNight();if(night?.key===n.key)renderStats();
  }
- if(epoch===giEpoch){if(portable){Portable.analysisBusy=false;Portable.changed();}const done=[...giResults.values()].filter(r=>r.status==='ok').length;$('giStatus').textContent=list.length?`Glasgow analysis complete · ${done}/${list.length} nights available. Cached results are reused when flow and algorithm are unchanged.`:'';}
+ if(epoch===giEpoch){giRenderHome();renderOverview();giRenderNight();if(night)renderStats();if(portable){Portable.analysisBusy=false;Portable.changed();}const done=[...giResults.values()].filter(r=>r.status==='ok').length;$('giStatus').textContent=list.length?`Glasgow analysis complete · ${done}/${list.length} nights available. Cached results are reused when flow and algorithm are unchanged.`:'';}
 }
 function giRows(){const min=$('giFrom').value,max=$('giTo').value;return nights.filter(n=>(!min||n.key>=min)&&(!max||n.key<=max)&&(!$('giHideShort').checked||n.usage>=4));}
 function giRenderHome(){renderTrend();}

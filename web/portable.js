@@ -104,6 +104,7 @@ const Portable={
   else throw Error('Unrecognized backup.');
   const stores=['files','markers','external','tombstones','analysis','preferences'];
   for(const s of stores){if(data[s]===undefined&&['tombstones','analysis','preferences'].includes(s))data[s]=[];if(!Array.isArray(data[s])||data[s].some(x=>!x||typeof x.id!=='string'))throw Error('Invalid backup records.');if(new Set(data[s].map(x=>x.id)).size!==data[s].length)throw Error('Duplicate record IDs in backup.');}
+  PAPImport.validateArchive(data.files);
   if(!confirm('Restore into a new local preview archive? The active archive is kept. Nothing is published until you choose Use restored archive.'))return;
   busy=true;let started=false;
   try{

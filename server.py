@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 from portable_store import PortableStore
 
 ROOT = Path(__file__).resolve().parent / 'web'
-FILES = {'/', '/index.html', '/app.js', '/portable.js', '/import-delta.js', '/core.js', '/style.css', '/pdf-export.js', '/glasgow.js', '/glasgow-ui.js', '/glasgow-worker.js', '/vendor/glasgow-reference.js'}
+FILES = {'/', '/index.html', '/app.js', '/portable.js', '/import-delta.js', '/philips.js', '/dreamstation2.js', '/import-files.js', '/core.js', '/style.css', '/pdf-export.js', '/glasgow.js', '/glasgow-ui.js', '/glasgow-worker.js', '/vendor/glasgow-reference.js'}
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
        "img-src 'self' blob: data:; media-src 'self' blob: data:; "
        "worker-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; "
@@ -134,7 +134,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     if bool(args.data_dir) != bool(args.shared_dir):
         parser.error('--data-dir and --shared-dir must be provided together')
-    if not args.data_dir and not args.browser_storage:
+    if not args.data_dir and not args.browser_storage and json.loads((Path(__file__).resolve().parent / 'storage-mode.json').read_text())['default'] == 'portable':
         parser.error('Portable branch requires --data-dir and --shared-dir. See docs/portable-archive.md.')
     if args.data_dir and args.browser_storage:
         parser.error('Choose portable or explicit browser storage, not both')
