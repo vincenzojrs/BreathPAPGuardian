@@ -8,7 +8,7 @@ const pathOf=f=>(f.webkitRelativePath||f._path||f.name).replaceAll('\\','/');
 const table=Uint32Array.from({length:256},(_,i)=>{let c=i;for(let j=0;j<8;j++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0;});
 function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=table[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0;}
 function supported(name){return /\.(edf|tgt)$/i.test(name)||P.isProperties(name)||P.isData(name);}
-async function zipEntries(file){
+async function zipEntries(file,options={}){
  // Read central directory only. Each compressed entry is inflated on demand.
  if(file.size>1024**3)throw Error('ZIP exceeds 1 GiB. Extract it and choose the SD folder.');
  const tail=new Uint8Array(await file.slice(Math.max(0,file.size-65557)).arrayBuffer()),view=new DataView(tail.buffer);
@@ -25,8 +25,8 @@ async function zipEntries(file){
   const path=dec.decode(b.subarray(p+46,p+46+n)).replaceAll('\\','/');p+=46+n+extra+comment;
   if(path.startsWith('/')||/^[a-z]:/i.test(path)||path.split('/').includes('..')||path.includes('\0'))throw Error('Unsafe ZIP path');
   if(path.endsWith('/')||P.ignored(path))continue;
-  if(!supported(path))continue;
-  total+=length;if(total>2*1024**3||length>128*1024**2)throw Error('ZIP expansion limit exceeded');
+  if(!(options.include?options.include(path):supported(path)))continue;
+  total+=length;if(total>2*1024**3||length>(options.maxEntry||128*1024**2))throw Error('ZIP expansion limit exceeded');
   if(flags&1||![0,8].includes(method))throw Error('Encrypted ZIP or unsupported compression. Extract the SD folder first.');
   const entry={name:path.split('/').at(-1),_path:path,size:length,type:'application/octet-stream',async arrayBuffer(){
    if(local+30>offset)throw Error('Invalid ZIP local header');
