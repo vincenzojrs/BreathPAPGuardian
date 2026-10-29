@@ -1,0 +1,1037 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BreathPAPGuardian</title><style>*{box-sizing:border-box}body{margin:0;background:#f3f6f7;color:#1b3543;font:14px system-ui,sans-serif}main{max-width:1500px;margin:auto;padding:32px}header{display:flex;align-items:center;justify-content:space-between;gap:20px}h1{font-size:32px;letter-spacing:-1px;margin:8px 0}h2{font-size:22px}h3{font-size:17px}p{line-height:1.55;color:#5b707c}.eyebrow{color:#007d79;font-size:11px;font-weight:800;letter-spacing:2px}.panel,.chart{background:white;border:1px solid #dce4e8;border-radius:13px;padding:20px;margin:16px 0}#drop{border:1px dashed #83aaa9;background:#fafffe}button,.button,select,input,textarea{font:inherit;border:1px solid #bfd0d8;border-radius:7px;padding:8px;background:white;color:#1b3543}button,.button{cursor:pointer;display:inline-block}button:hover,.button:hover{background:#e4f4f1}.primary{background:#087f7a;color:white;border-color:#087f7a}label{display:inline-flex;gap:7px;align-items:center;margin:5px 10px 5px 0}input[type=number]{width:90px}button{margin:2px}nav{white-space:nowrap}.muted,small{font-size:12px;color:#6e818b}.toolbar{display:flex;gap:5px;align-items:center;flex-wrap:wrap;position:sticky;top:0;background:#eef4f4f5;z-index:2;padding:10px;border-radius:8px}canvas{width:100%;height:210px;display:block;touch-action:none;cursor:crosshair}.head{display:flex;justify-content:space-between;gap:10px}.value{font-variant-numeric:tabular-nums;font-size:12px;color:#007d79}#seek{width:100%}#status{white-space:pre-wrap;font-size:13px}#range{font-weight:650}table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:9px 7px;border-bottom:1px solid #e8eef1;text-align:right}td:first-child,th:first-child{text-align:left}.grid{display:grid;grid-template-columns:1fr 1.4fr;gap:16px}.grid .panel{overflow:auto}.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.kpi{padding:20px;background:#e5f1ee;border-radius:12px}.kpi strong{font-size:28px;display:block}.legend{font-size:12px;margin:6px 0}.teal{color:#087f7a}.purple{color:#8656cb}.mark{border-left:3px solid #cb4475;padding:12px;margin:12px 0;background:#fff9fb}.mark img,.mark video{max-width:260px;max-height:200px;margin:8px;vertical-align:top}.mark p{white-space:pre-wrap}.trendrow{display:grid;grid-template-columns:100px 1fr 110px;gap:15px;align-items:center;padding:7px;cursor:pointer}.trendrow:hover{background:#f1f6f6}.bar{height:16px;background:#128d84;min-width:2px;border-radius:4px}.track{background:#f0f4f5;height:16px;border-radius:4px}.nightrow{cursor:pointer}.nightrow:hover{background:#edf6f4}dialog{border:1px solid #c6d6dc;border-radius:15px;width:min(560px,95vw)}dialog::backdrop{background:#17313e88}dialog label{display:flex;flex-direction:column;align-items:stretch}footer{font-size:12px;color:#6e818b;margin:30px 0}.nightnav{display:flex;align-items:center;flex-wrap:wrap}details{margin:12px 0}summary{cursor:pointer}#trend{max-height:480px;overflow:auto}#nightList{overflow:auto}code{background:#eef3f4;padding:3px}#externalList>div{border-top:1px solid #dce4e8;padding:12px 0}[hidden]{display:none!important}
+@media(max-width:800px){main{padding:14px}header{display:block}.grid{display:block}.kpis{grid-template-columns:1fr 1fr}.head{display:block}.chart{padding:10px}}
+@media print{body{background:white}main{padding:0;max-width:none}header nav,.no-print,#home,footer,.toolbar,button{display:none!important}#detail{display:block!important}.grid{display:block}.panel,.chart{break-inside:avoid;border:1px solid #ddd}.chart canvas{height:210px}.mark video{display:none}.mark img{max-height:160px}details:not([open]){display:none}h1{font-size:24px}#markers:empty{display:none}}
+.delete-confirm{padding:12px;background:#fff0f2;border:1px solid #e9bac7;border-radius:8px;margin-bottom:10px}.delete-confirm button{font-weight:600}#exportDialog a.button{text-decoration:none}#exportDialog p{overflow-wrap:anywhere}
+
+
+.gi-scroll{overflow:auto}#giHeatmap{height:320px;cursor:pointer}#giNightStatus,#giStatus{white-space:pre-wrap}
+.series-choices{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0}.series-chip{margin:0;padding:6px 10px;border:1px solid #dce4e8;border-radius:20px;font-size:12px;cursor:pointer;background:#f8fafb}.series-chip:has(input:checked){background:#edf6f4;border-color:#7fa9a5}.series-swatch{display:inline-block;width:15px;height:4px;border-radius:2px}.trend-controls{display:flex;flex-wrap:wrap;gap:8px;border-top:1px solid #edf1f3;margin-top:16px;padding-top:12px}.trend-scroll{overflow-x:auto;max-height:none!important}#trendCanvas{height:300px}.trend-scales{display:flex;gap:10px 20px;flex-wrap:wrap;font-size:12px;padding:8px}.drag-handle{cursor:grab;font-size:20px;line-height:20px}.dragging{opacity:.45}.drop-target{outline:2px dashed #087f7a}.chart .head{align-items:center;justify-content:flex-start;margin-bottom:10px}.chart .head .value{margin-left:auto}.chart .head strong{margin-left:6px}#yourNights>summary{font-size:22px;font-weight:700;padding:4px 0}#trendReadout{min-height:24px;font-variant-numeric:tabular-nums}#giChartMode{margin:6px 0 4px}
+#overview{margin:16px 0}#overview h2{margin-bottom:2px}#overview>p{margin-top:0}.kpis{grid-template-columns:repeat(5,minmax(0,1fr))}.kpi{min-height:100px;padding:15px}.kpi span{display:block;line-height:1.3}.import-heading,.import-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.import-heading strong{font-size:16px}.import-actions{margin:7px 0}.import-actions .button,.import-actions button{margin:0}.import-actions label{margin:0}.import-actions input{display:none}#drop{padding:12px 18px}#drop>p{margin:6px 0}#drop #status{font-size:12px;margin-top:4px}#giMore{margin:8px 0}#giMore summary{font-weight:600}#giMore table{margin-top:7px}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:500px){.kpis{grid-template-columns:1fr}.kpi{min-height:0}}
+#archiveVersion,#archivePaths{overflow-wrap:anywhere;white-space:pre-wrap}#archivePanel select{max-width:100%}#archivePanel button{margin-bottom:5px}
+</style></head><body><main><p class="preview-notice">INTERACTIVE PREVIEW · Synthetic data only · Changes stay in this preview’s separate browser archive.</p><header><div><div class="eyebrow">PAP / LOCAL JOURNAL</div><h1>BreathPAPGuardian</h1><p>Local version · no account · works offline too.</p></div><nav><button id="homeBtn" class="primary">Trends</button><button id="nightBtn">Explore night</button></nav></header>
+<section id="archivePanel" class="panel no-print" hidden aria-label="Portable archive">
+<strong id="archiveMode"></strong><p id="archiveVersion"></p><details><summary>Archive folders</summary><pre id="archivePaths"></pre></details>
+<p id="archiveSaveState" role="status"></p><p id="archiveMessage" role="status"></p>
+<button id="confirmSync" class="primary">Proton Drive is synchronized · enable editing</button>
+<button id="saveClose">Save and close</button><button id="retryArchive">Refresh archive status</button>
+<div id="archiveConflict" hidden><p>Local and shared versions diverged. Both copies are preserved. Export a backup or choose the copy to continue with.</p><button id="resolvelocal">Use local copy</button><button id="resolveshared">Use shared copy</button></div>
+<div id="pendingControls" hidden><p>Interrupted import: choose the same SD folder to resume. Interrupted restore: preview it, or return to the previous archive. No incomplete import is published.</p><button id="previewPending">Preview interrupted copy</button><button id="acceptRestore" hidden>Use restored archive</button><button id="discardPending">Return to previous archive</button></div>
+<details><summary>Recovery, versions and reimport</summary>
+<p><button id="allowReimport">Manage deleted nights</button></p><div id="deletedNights"></div>
+<p><button id="loadVersions">Load version history and recovery copies</button></p>
+<label>Published version <select id="versionSelect"></select></label><button id="restoreVersion">Restore version</button><button id="protectVersion">Toggle protection</button><button id="cleanVersion">Preview cleanup</button>
+<p><label>Local recovery copy <select id="recoverySelect"></select></label><button id="restoreRecovery">Preview local recovery</button></p>
+<p><button id="recoverSession">Recover browser session</button> Close other app tabs before using this after a browser crash.</p>
+<p>Deleted nights remain blocked until reimport is allowed. Historical versions and backups may contain them. Cleanup preserves referenced content and applies a seven-day grace period to unused content.</p>
+</details></section>
+<section id="home"><section id="overview"><h2>At a glance</h2><p class="muted">Latest 7 available nights for the averages below; each metric uses only nights with that measurement.</p><div id="kpis" class="kpis"></div></section>
+<section class="panel no-print" id="drop"><div class="import-heading"><strong>Import SD card data</strong><span class="muted" id="storageLabel">Local to this browser</span></div><div class="import-actions"><label class="button">Choose files<input id="files" type="file" multiple hidden></label><label class="button">Choose SD folder<input id="folder" type="file" webkitdirectory multiple hidden></label><button id="backup">Download local backup</button><label class="button">Restore backup<input id="restore" type="file" accept="application/json" hidden></label><button id="erase">Delete local archive</button></div><p class="muted" id="storageHint">ResMed EDF and Philips DreamStation / DreamStation 2: choose an SD folder or ZIP, including PROP.TXT or PROP.BIN. One device per archive. You can also drop files or folders here. Originals stay in this browser; clearing site data removes your archive. Keep your SD card and a backup.</p><div id="portableControls" hidden><p><strong>Portable archive</strong> · use one computer at a time. Wait for Proton Drive to finish syncing before switching computers.</p><div class="import-actions"><button id="publishPortable">Publish to shared folder</button><button id="openPortable">Open shared version</button><button id="migratePortable">Copy browser archive here</button></div><p id="portableStatus" role="status"></p></div><div id="status" role="status">Opening local archive…</div></section>
+<section class="panel"><h2>Trend over time</h2>
+<p class="muted">Select any combination of metrics. Bars for different units use separate scales; original ranges and units are listed below. Hover for values; click a night to open it.</p>
+<div id="trendChoices" class="series-choices"></div>
+<div class="trend-controls"><label>From <input type="date" id="giFrom"></label><label>To <input type="date" id="giTo"></label><label><input type="checkbox" id="giHideShort">Hide nights under 4 h</label>
+<label>Trailing mean <select id="giSmooth"><option value="1">None</option><option value="3">3 days</option><option value="7">7 days</option><option value="14">14 days</option></select></label>
+<label>Snore threshold <input id="snoreThreshold" type="number" value="0" min="0" step="0.01"></label><label>Flow limitation threshold <input id="flowThreshold" type="number" value="0" min="0" step="0.01"></label></div>
+<div id="trend" class="trend-scroll"></div><p id="trendReadout" aria-live="polite"></p>
+<p id="giStatus" role="status"></p>
+<details><summary>How to read these trends</summary><p>Mean GI is the nightly nine-component Glasgow Index (0–9). The optional trailing mean uses calendar days and excludes unavailable values. Missing measurements have no bar. Calculated snore/flow-limitation episodes are consecutive samples above the chosen threshold, not device-reported clinical events. GI describes flow shape and is not an RDI or a diagnosis.</p></details>
+</section><details class="panel" id="yourNights"><summary>Your nights</summary><div id="nightList"></div></details></section>
+<section id="detail" hidden><div class="nightnav no-print"><button id="older">← Previous night</button><select id="nightSelect" aria-label="Night"></select><button id="newer">Next night →</button><button id="deleteNight">Delete this night</button><button id="pdf">Download PDF report</button></div><h2 id="nightTitle"></h2><p id="summary"></p><div class="grid"><section class="panel"><h3>Night settings</h3><div id="settings"></div><details><summary>Original device fields</summary><div id="rawSTR"></div></details></section><section class="panel"><h3>Signal statistics · full night</h3><label class="no-print"><input type="checkbox" id="excludeZeros">Exclude zeros for respiratory rate, volume and ventilation</label><p class="muted">Sample percentiles for EDF; duration-weighted percentiles for Philips interval statistics. Units L/min and mL. Zeros are included by default. SleepHQ conventions may differ.</p><div id="stats"></div></section></div><section class="panel no-print"><h3>Visible signals</h3><div id="choices"></div><div id="events"></div></section>
+<div class="toolbar no-print"><button id="prev">←</button><select id="window"><option value="all">Full night</option><option value="3600">1 hour</option><option value="600">10 minutes</option><option value="120">2 minutes</option><option value="30">30 seconds</option><option value="10">10 seconds</option><option value="custom" disabled>Manual zoom</option></select><button id="next">→</button><button id="undo">Undo zoom</button><button id="reset">Full night</button><select id="dragMode"><option value="zoom">Drag: zoom</option><option value="pan">Drag: pan</option><option value="marker">Click: marker</option></select><input id="goto" type="time" step="1"><button id="go">Go</button><button id="addMarker">+ Marker</button></div><input id="seek" class="no-print" type="range" min="0" step="0.1" aria-label="Pan through the night"><div id="range"></div><p class="muted">Double-click or Esc: full night. ← / →: pan. Shift + drag: pan. Click in marker mode: annotate a time across all signals.</p><div id="charts"></div><section class="panel"><h3>Shared markers</h3><div id="markers"></div></section>
+</section>
+<footer>PAP days run from noon to noon, using the device clock. No automatic time zone conversion. Press and EprPress retain their source labels. Charts do not constitute a diagnosis.</footer></main><dialog id="deleteNightDialog"><h2 id="deleteNightTitle">Delete night</h2><p id="deleteNightMessage"></p><p id="deleteNightError" role="status"></p><button id="deleteNightConfirm">Confirm deletion</button><button id="deleteNightCancel">Cancel</button></dialog><dialog id="exportDialog"><h2>File ready</h2><p id="exportName"></p><p><a id="exportSave" class="button primary">Download file</a> <a id="exportOpen" class="button" target="_blank" rel="noopener">Open file</a> <button id="exportPicker" hidden>Save as</button> <button id="exportShare" hidden>Share / Save to Files</button></p><p id="exportMessage" role="status"></p><p class="muted">Use “Download file” or “Open file” and save from your browser. Files are generated on your computer.</p><button id="exportClose">Close</button></dialog><dialog id="markerDialog"><form id="markerForm"><h2>An observation during the night</h2><input id="markerId" type="hidden"><label>Time <input id="markerTime" type="datetime-local" step="0.001" required></label><label>Title <input id="markerTitle" maxlength="100" required></label><label>Note <textarea id="markerNote" rows="4" maxlength="4000"></textarea></label><label>Images or short videos <input id="markerMedia" type="file" accept="image/*,video/*" multiple></label><p>Maximum 30 MB per attachment. Attachments stay in your browser and backup.</p><button type="submit" class="primary">Save</button><button type="button" id="cancelMarker">Cancel</button></form></dialog><script>// Self-contained PDF serializer. All pages are rendered locally; no upload or print dialog.
+function pdfFromJpegs(pages){
+ const encoder=new TextEncoder(),chunks=[],offsets=[0];let length=0;
+ const append=value=>{const bytes=typeof value==='string'?encoder.encode(value):value;chunks.push(bytes);length+=bytes.length;};
+ const obj=(id,body)=>{offsets[id]=length;append(id+' 0 obj\n');append(body);append('\nendobj\n');};
+ const stream=(id,dict,bytes)=>{offsets[id]=length;append(id+' 0 obj\n<< '+dict+' /Length '+bytes.length+' >>\nstream\n');append(bytes);append('\nendstream\nendobj\n');};
+ append('%PDF-1.4\n');obj(1,'<< /Type /Catalog /Pages 2 0 R >>');obj(2,'<< /Type /Pages /Count '+pages.length+' /Kids ['+pages.map((_,i)=>(3+i*3)+' 0 R').join(' ')+'] >>');
+ pages.forEach((page,i)=>{const id=3+i*3;obj(id,'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /XObject << /Im0 '+(id+1)+' 0 R >> >> /Contents '+(id+2)+' 0 R >>');stream(id+1,'/Type /XObject /Subtype /Image /Width '+page.width+' /Height '+page.height+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode',page.bytes);stream(id+2,'',encoder.encode('q\n595 0 0 842 0 0 cm\n/Im0 Do\nQ'));});
+ const xref=length;append('xref\n0 '+offsets.length+'\n0000000000 65535 f \n');for(let i=1;i<offsets.length;i++)append(String(offsets[i]).padStart(10,'0')+' 00000 n \n');append('trailer\n<< /Size '+offsets.length+' /Root 1 0 R >>\nstartxref\n'+xref+'\n%%EOF');return new Blob(chunks,{type:'application/pdf'});
+}
+async function pdfFromCanvases(canvases){const pages=[];for(const c of canvases){const blob=await new Promise((resolve,reject)=>c.toBlob(b=>b?resolve(b):reject(Error('Unable to convert PDF page')),'image/jpeg',.94));pages.push({width:c.width,height:c.height,bytes:new Uint8Array(await blob.arrayBuffer())});}return pdfFromJpegs(pages);}
+if(typeof module!=='undefined')module.exports={pdfFromJpegs};
+</script><script>'use strict';
+const DAY=86400000;
+function nightKey(t){return new Date(t-12*3600000).toISOString().slice(0,10);}
+function readEDF(buffer,name){
+ const bytes=new Uint8Array(buffer),dv=new DataView(buffer),dec=new TextDecoder('utf-8'),txt=(p,n)=>dec.decode(bytes.subarray(p,p+n)).trim();
+ if(bytes.length<256)throw Error('Incomplete EDF header');
+ const ns=Number(txt(252,4)),nr=Number(txt(236,8)),duration=Number(txt(244,8)),header=Number(txt(184,8));
+ if(!Number.isInteger(ns)||ns<1||ns>1000||!Number.isInteger(nr)||(nr<0&&!(nr===-1&&bytes.length===header))||header!==256+256*ns)throw Error('Unsupported EDF structure');
+ const date=txt(168,8).split('.').map(Number),time=txt(176,8).split('.').map(Number),year=date[2]>=85?1900+date[2]:2000+date[2],start=Date.UTC(year,date[1]-1,date[0],...time);
+ if(!Number.isFinite(start)||duration<0)throw Error('Invalid EDF times');let pos=256;const fields=[];
+ for(const width of [16,80,8,8,8,8,8,80,8,32]){fields.push(Array.from({length:ns},(_,i)=>txt(pos+i*width,width)));pos+=ns*width;}
+ const counts=fields[8].map(Number);if(counts.some(n=>!Number.isInteger(n)||n<0))throw Error('Invalid sample count');const stride=counts.reduce((a,b)=>a+b,0)*2;
+ if(bytes.length===header&&(nr===-1||nr===0)){const error=Error('EDF contains only its header: no recorded samples yet. Reimport after the recording is finalized.');error.code='EDF_NO_DATA';throw error;}
+ if(header+nr*stride!==bytes.length)throw Error('Inconsistent EDF size');const signals=[],events=[];let offset=0;
+ const summary=/^STR(?:\(|\.|$)/i.test(name);
+ for(let c=0;c<ns;c++){const label=fields[0][c],n=counts[c];
+ if(label==='EDF Annotations'){for(let r=0;r<nr;r++){const raw=dec.decode(bytes.subarray(header+r*stride+offset,header+r*stride+offset+n*2));for(const tal of raw.split('\0')){const chunks=tal.split('\x14'),tim=chunks.shift().split('\x15');for(const text of chunks.filter(Boolean)){const onset=Number(tim[0]);if(Number.isFinite(onset))events.push({time:start+onset*1000,duration:Number(tim[1]||0),text});}}}}
+ else if(label!=='Crc16'&&duration>0&&n>0){const [pmin,pmax,dmin,dmax]=[3,4,5,6].map(j=>Number(fields[j][c]));if(dmin===dmax)throw Error('Invalid EDF scale');const values=new Float64Array(n*nr);for(let r=0;r<nr;r++)for(let j=0;j<n;j++){const raw=dv.getInt16(header+r*stride+offset+j*2,true);values[r*n+j]=summary&&raw===-1?NaN:pmin+(raw-dmin)*(pmax-pmin)/(dmax-dmin);}signals.push({label,unit:fields[2][c],dt:duration/n,start,values,name,samplesPerRecord:n});}offset+=n*2;}
+ return {name,start,duration:nr*duration,recordDuration:duration,records:nr,summary,signals,events};
+}
+function unionIntervals(intervals){
+ const result=[];
+ for(const [a,b] of intervals.filter(([a,b])=>Number.isFinite(a)&&b>a).sort((a,b)=>a[0]-b[0])){
+  const prev=result.at(-1);if(prev&&a<=prev[1])prev[1]=Math.max(prev[1],b);else result.push([a,b]);
+ }
+ return result;
+}
+function splitInterval(a,b,visit){
+ while(a<b){const key=nightKey(a),end=Math.min(b,Date.parse(key+'T12:00:00Z')+DAY);visit(key,a,end);a=end;}
+}
+function coverageSeconds(intervals,coverage){
+ const covered=unionIntervals(coverage);let ms=0;
+ for(const [a,b] of unionIntervals(intervals))for(const [c,d] of covered)ms+=Math.max(0,Math.min(b,d)-Math.max(a,c));
+ return ms/1000;
+}
+function buildNights(files){
+ const nights=new Map(),get=k=>{
+  if(!nights.has(k))nights.set(k,{key:k,channels:{},events:[],settings:{},summary:{},intervals:[],sessionSettings:[],eventCoverage:[]});
+  return nights.get(k);
+ };
+ let device='PAP',identity={},rawSettings=[];
+ const sorted=[...files].sort((a,b)=>a.imported-b.imported),sessions=new Map();
+ for(const f of sorted){
+  if(f.tags){if(f.tags.PNA){device=f.tags.PNA.replaceAll('_',' ');identity={...identity,...f.tags};}rawSettings.push({path:f.path,tags:f.tags});}
+  const p=f.parsed;if(!p)continue;
+  if(p.vendor==='Philips'){
+   for(const session of p.sessions||[]){const key=session.id+':'+session.start,previous=sessions.get(key);sessions.set(key,previous?{...session,intervals:unionIntervals([...previous.intervals,...session.intervals])}:session);}
+   for(const [a,b] of p.eventCoverage||[])splitInterval(a,b,(k,x,y)=>{const n=get(k);n.vendor='Philips';n.eventCoverage.push([x,y]);});
+  }
+  if(p.summary){
+   for(let r=0;r<p.records;r++){
+    const t=p.start+r*p.recordDuration*1000,k=nightKey(t),vals={};
+    for(const s of p.signals){const v=Array.from(s.values.slice(r*s.samplesPerRecord,(r+1)*s.samplesPerRecord));vals[s.label]=v.length===1?v[0]:v;}
+    if(!Number.isFinite(vals.Duration))continue;
+    const n=get(k);n.summary=vals;n.settings=Object.fromEntries(Object.entries(vals).filter(([key])=>key.startsWith('S.')||key==='Mode'));
+   }
+   continue;
+  }
+  for(const s of p.signals){
+   if(s.values.every(v=>!Number.isFinite(v))||/^(Pulse|SpO2)/.test(s.label)&&s.values.every(v=>v===-1))continue;
+   let i=0;
+   while(i<s.values.length){
+    const t=s.start+i*s.dt*1000,k=nightKey(t),boundary=Date.parse(k+'T12:00:00Z')+DAY;
+    // Interval statistics use their actual duration, including when crossing noon.
+    if(s.step){
+     let j=i+1;while(j<s.values.length&&s.start+(j+1)*s.dt*1000<=boundary)j++;
+     const end=s.start+j*s.dt*1000;
+     if(end>boundary){
+      splitInterval(t,end,(key,a,b)=>{const n=get(key);if(p.vendor)n.vendor=p.vendor;const ch=n.channels[s.label]||(n.channels[s.label]={label:s.label,unit:s.unit,segments:[]});ch.segments.push({...s,start:a,dt:(b-a)/1000,values:s.values.slice(i,i+1)});});i++;continue;
+     }
+     const n=get(k);if(p.vendor)n.vendor=p.vendor;const ch=n.channels[s.label]||(n.channels[s.label]={label:s.label,unit:s.unit,segments:[]});
+     ch.segments.push({...s,start:t,values:i===0&&j===s.values.length?s.values:s.values.slice(i,j)});i=j;continue;
+    }
+    const j=Math.min(s.values.length,Math.max(i+1,Math.ceil((boundary-s.start)/(s.dt*1000))));
+    const n=get(k);if(p.vendor)n.vendor=p.vendor;
+    const part={...s,start:t,values:i===0&&j===s.values.length?s.values:s.values.slice(i,j)};delete part.samplesPerRecord;
+    const ch=n.channels[s.label]||(n.channels[s.label]={label:s.label,unit:s.unit,segments:[]});
+    const duplicate=ch.segments.findIndex(q=>q.start===part.start);if(duplicate>=0)ch.segments[duplicate]=part;else ch.segments.push(part);i=j;
+   }
+  }
+  for(const e of p.events){if(e.text==='Recording starts')continue;const n=get(nightKey(e.time));if(p.vendor)n.vendor=p.vendor;if(!n.events.some(x=>x.time===e.time&&x.text===e.text&&x.duration===e.duration))n.events.push(e);}
+ }
+ for(const s of sessions.values()){
+  const keys=new Set();
+  for(const [a,b] of s.intervals)splitInterval(a,b,(k,x,y)=>{get(k).intervals.push([x,y]);keys.add(k);});
+  if(!keys.size)keys.add(nightKey(s.start));
+  for(const k of keys){const n=get(k);n.vendor='Philips';n.hasTherapySummary=true;n.sessionSettings.push(s);}
+ }
+ for(const n of nights.values()){
+  n.device=device;
+  for(const ch of Object.values(n.channels)){
+   ch.segments.sort((a,b)=>a.start-b.start);let end=-Infinity;
+   ch.segments=ch.segments.flatMap(s=>{const cut=Math.max(0,Math.ceil((end-s.start)/(s.dt*1000)));if(cut>=s.values.length)return [];const p=cut?{...s,start:s.start+cut*s.dt*1000,values:s.values.slice(cut)}:s;end=p.start+p.values.length*p.dt*1000;return [p];});
+  }
+  const primary=n.channels['Flow.40ms']||n.channels['PRS1.Flow']||n.channels['Press.2s']||Object.values(n.channels)[0];
+  if(!n.hasTherapySummary)n.intervals=primary?primary.segments.map(s=>[s.start,s.start+s.dt*s.values.length*1000]):[];
+  n.intervals=unionIntervals(n.intervals);n.usage=n.intervals.reduce((a,[x,y])=>a+(y-x)/3600000,0);
+  if(!primary&&!n.hasTherapySummary&&Number.isFinite(n.summary.Duration))n.usage=n.summary.Duration/60;
+  n.origin=n.intervals[0]?.[0]||Date.parse(n.key+'T12:00:00Z');n.end=n.intervals.at(-1)?.[1]||n.origin+DAY;
+  if(n.vendor==='Philips'){
+   n.sessionSettings.sort((a,b)=>a.start-b.start);n.settings=n.sessionSettings.at(-1)?.settings||{};
+   n.summary={SessionCount:n.sessionSettings.length,MaskOnMinutes:n.usage*60};
+   n.eventCoverage=unionIntervals(n.eventCoverage);n.eventCoverageSeconds=coverageSeconds(n.intervals,n.eventCoverage);
+   n.eventsComplete=!!n.hasTherapySummary&&n.usage>0&&n.usage*3600-n.eventCoverageSeconds<=1;
+  }
+  n.events.sort((a,b)=>a.time-b.time);
+ }
+ return {nights:[...nights.values()].sort((a,b)=>a.key.localeCompare(b.key)),device,identity,rawSettings};
+}
+function factor(unit){return unit==='L/s'?60:unit==='L'?1000:1;}
+function displayUnit(unit){return unit==='L/s'?'L/min':unit==='L'?'mL':unit||'index';}
+function stats(ch,excludeZeros=false){
+ if(!ch)return null;const values=[];let sum=0,weight=0;const intervalData=ch.segments.some(s=>s.step);
+ for(const s of ch.segments)for(const v of s.values){if(!Number.isFinite(v)||excludeZeros&&v===0)continue;values.push(intervalData?{v,w:s.dt}:v);sum+=v*s.dt;weight+=s.dt;}
+ if(!values.length)return null;values.sort(intervalData?(a,b)=>a.v-b.v:(a,b)=>a-b);
+ const q=p=>{if(intervalData){let cumulative=0;for(const x of values){cumulative+=x.w;if(cumulative>=p*weight)return x.v;}return values.at(-1).v;}const x=(values.length-1)*p,a=Math.floor(x);return values[a]+(values[Math.ceil(x)]-values[a])*(x-a);};
+ const m=factor(ch.unit);return {min:(intervalData?values[0].v:values[0])*m,med:q(.5)*m,p95:q(.95)*m,p995:q(.995)*m,mean:sum/weight*m,count:values.length};
+}
+function episodes(ch,threshold=0){if(!ch)return null;let count=0,seconds=0,on=false,lastEnd=null;for(const s of ch.segments){if(lastEnd===null||Math.abs(s.start-lastEnd)>1)on=false;for(const v of s.values){const yes=Number.isFinite(v)&&v>threshold;if(yes&&!on)count++;if(yes)seconds+=s.dt;on=yes;}lastEnd=s.start+s.values.length*s.dt*1000;}return {count,minutes:seconds/60};}
+function sample(ch,t){if(!ch)return null;for(const s of ch.segments){if(t>=s.start&&t<s.start+s.values.length*s.dt*1000){const i=Math.min(s.values.length-1,(s.step?Math.floor:Math.round)((t-s.start)/1000/s.dt));return {t:s.start+i*s.dt*1000,v:s.values[i]*factor(ch.unit)};}}return null;}
+function alignChannel(ch,offset,ppm){const base=ch.segments[0].start,scale=1+ppm/1e6;if(scale<=0)throw Error('Invalid drift');return {...ch,segments:ch.segments.map(s=>({...s,start:base+offset*1000+(s.start-base)*scale,dt:s.dt*scale}))};}
+if(typeof module!=='undefined')module.exports={readEDF,buildNights,nightKey,stats,episodes,sample,alignChannel};
+// Purge a PAP noon-to-noon day while preserving records from other days.
+function removeNightFromParsed(p,key){
+ if(p.summary){const removed=[];for(let r=0;r<p.records;r++)if(nightKey(p.start+r*p.recordDuration*1000)===key)removed.push(r);if(!removed.length)return {affected:false,parts:[p]};const parts=[];for(let r=0;r<p.records;r++){if(removed.includes(r))continue;parts.push({...p,start:p.start+r*p.recordDuration*1000,records:1,duration:p.recordDuration,signals:p.signals.map(s=>({...s,start:p.start+r*p.recordDuration*1000,values:s.values.slice(r*s.samplesPerRecord,(r+1)*s.samplesPerRecord)}))});}return {affected:true,parts};}
+ const begin=Date.parse(key+'T12:00:00Z'),end=begin+DAY;
+ const metadataHit=(p.sessions||[]).some(s=>s.intervals.some(([a,b])=>a<end&&b>begin)||nightKey(s.start)===key)||(p.eventCoverage||[]).some(([a,b])=>a<end&&b>begin);
+ const affected=metadataHit||p.events.some(e=>e.time>=begin&&e.time<end)||p.signals.some(s=>s.start<end&&s.start+s.values.length*s.dt*1000>begin)||(!p.signals.length&&!p.events.length&&nightKey(p.start)===key);
+ if(!affected)return {affected:false,parts:[p]};const parts=[];
+ for(const [lo,hi]of [[-Infinity,begin],[end,Infinity]]){
+  const signals=[];
+  for(const s of p.signals){
+   if(s.step){
+    for(let i=0;i<s.values.length;i++){const a=Math.max(lo,s.start+i*s.dt*1000),b=Math.min(hi,s.start+(i+1)*s.dt*1000);if(b>a)signals.push({...s,start:a,dt:(b-a)/1000,values:s.values.slice(i,i+1)});}
+   }else{const a=Math.max(0,Math.ceil((lo-s.start)/(s.dt*1000))),b=Math.min(s.values.length,Math.ceil((hi-s.start)/(s.dt*1000)));if(b>a)signals.push({...s,start:s.start+a*s.dt*1000,values:s.values.slice(a,b)});}
+  }
+  const events=p.events.filter(e=>e.time>=lo&&e.time<hi);
+  const clip=intervals=>(intervals||[]).map(([a,b])=>[Math.max(a,lo),Math.min(b,hi)]).filter(([a,b])=>b>a);
+  const sessions=(p.sessions||[]).flatMap(s=>{const intervals=clip(s.intervals);return intervals.length||!s.intervals.length&&s.start>=lo&&s.start<hi?[{...s,intervals}]:[];});
+  const eventCoverage=clip(p.eventCoverage);
+  if(!signals.length&&!events.length&&!sessions.length&&!eventCoverage.length)continue;
+  const starts=[...signals.map(s=>s.start),...events.map(e=>e.time),...sessions.flatMap(s=>s.intervals.length?s.intervals.map(x=>x[0]):[s.start]),...eventCoverage.map(x=>x[0])];
+  const start=Math.min(...starts),finish=Math.max(start,...signals.map(s=>s.start+s.values.length*s.dt*1000),...events.map(e=>e.time),...sessions.flatMap(s=>s.intervals.map(x=>x[1])),...eventCoverage.map(x=>x[1]));
+  parts.push({...p,start,duration:(finish-start)/1000,signals,events,sessions,eventCoverage});
+ }
+ return {affected:true,parts};
+}
+if(typeof module!=='undefined')module.exports.removeNightFromParsed=removeNightFromParsed;
+
+if(typeof module!=='undefined')Object.assign(module.exports,{unionIntervals,coverageSeconds});
+</script><script>// SPDX-License-Identifier: GPL-3.0-only
+// PRS1 F0V6 decoding adapted from OSCAR. See THIRD_PARTY_NOTICES.md.
+// Copyright (c) 2019-2024 The OSCAR Team; 2011-2018 Mark Watkins.
+(function(root){
+'use strict';
+const VERSION='prs1-f0v6-v2';
+const u16=(b,p)=>b[p]+256*b[p+1];
+const u32=(b,p)=>(b[p]+256*b[p+1]+65536*b[p+2]+16777216*b[p+3])>>>0;
+const crcTable=Uint32Array.from({length:256},(_,i)=>{let c=i<<24;for(let j=0;j<8;j++)c=c&0x80000000?(c<<1)^0x04c11db7:c<<1;return c>>>0;});
+function crc32wchar(bytes){let c=0xffffffff;for(const b of bytes){for(let i=0;i<3;i++)c=(c<<8)^crcTable[c>>>24];c=(c<<8)^crcTable[(c>>>24)^b];}return c>>>0;}
+function ignored(path){return path.replaceAll('\\','/').split('/').some(p=>p.startsWith('.')||p==='__MACOSX');}
+function isData(name){return /\.(001|002|005|b01|b02|b05)$/i.test(name);}
+function isProperties(name){return /^prop(?:(?:erties|\d*)\.txt|\.bin)$/i.test(name.split('/').at(-1));}
+function properties(text){
+ const props=Object.create(null),aliases={CF:'CardFormat',SN:'SerialNumber',MN:'ModelNumber',DFV:'DataFormatVersion',F:'Family',FV:'FamilyVersion',SV:'SoftwareVersion'};
+ for(const line of text.split(/\r?\n/)){const at=line.indexOf('=');if(at>0){const k=line.slice(0,at).trim();props[aliases[k]||k]=line.slice(at+1).trim();}}
+ if(props.Family==='xPAP')props.Family='0';
+ if(props.Family!=='0'||props.FamilyVersion!=='6'||props.DataFormatVersion!=='3')throw Error('Unsupported Philips format: only PRS1 family 0 / version 6 / data version 3 is supported.');
+ if(!props.SerialNumber||!props.ModelNumber)throw Error('Philips properties lack device identity.');
+ return {vendor:'Philips',family:0,familyVersion:6,serial:props.SerialNumber,model:props.ModelNumber,software:props.SoftwareVersion||'',tags:{SRN:props.SerialNumber,PNA:'Philips DreamStation '+props.ModelNumber,Manufacturer:'Philips Respironics',Model:props.ModelNumber}};
+}
+function chunks(buffer,expectedExt){
+ const b=buffer instanceof Uint8Array?buffer:new Uint8Array(buffer),result=[];
+ if(!b.length)throw Error('Empty Philips data file');
+ for(let offset=0;offset<b.length;){
+  const fail=message=>{throw Error(`${message} (byte ${offset})`);};
+  if(b.length-offset<20)fail('Truncated Philips header');
+  const size=u16(b,offset+1),end=offset+size;
+  if(size<21||end>b.length)fail('Invalid or truncated Philips block');
+  const h=b.subarray(offset,end),type=h[3],ext=h[6];
+  if(h[0]!==3||h[4]!==0||h[5]!==6)fail('Unsupported Philips family/version');
+  if(expectedExt!==undefined&&ext!==expectedExt)fail('Philips extension/header mismatch');
+  if(![1,2,5].includes(ext)||(ext===5?type!==1:type!==0))fail('Unsupported Philips block type');
+  let length;const sizes=Object.create(null),wave=[];
+  let duration=0;
+  if(type===0){
+   length=17+2*h[15];if(length+4>size)fail('Truncated record-size table');
+   for(let p=16;p<length-1;p+=2){if(sizes[h[p]]!==undefined)fail('Duplicate record code');sizes[h[p]]=h[p+1];}
+  }else{
+   length=21+4*h[18];if(length+4>size||h[18]<1||h[18]>2)fail('Unsupported waveform header');
+   duration=u16(h,15)*h[17];if(duration<=0)fail('Invalid waveform duration');
+   for(let p=19;p<length-2;p+=4){if(h[p]!==wave.length||h[p+3]!==8||!u16(h,p+1))fail('Unsupported waveform channel');wave.push({kind:h[p],samples:u16(h,p+1),dt:h[17]/u16(h,p+1)});}
+   if(h[length-2]!==0)fail('Unsupported waveform flags');
+  }
+  let sum=0;for(let p=0;p<length-1;p++)sum=(sum+h[p])&255;
+  if(sum!==h[length-1])fail('Philips header checksum mismatch');
+  const data=h.subarray(length,size-4);
+  if(crc32wchar(data)!==u32(h,size-4))fail('Philips data CRC mismatch');
+  if(type===1&&data.length!==u16(h,15)*wave.reduce((n,w)=>n+w.samples,0))fail('Waveform sample count mismatch');
+  result.push({sessionId:u32(h,7),start:u32(h,11)*1000,ext,sizes,wave,duration,data});offset=end;
+ }
+ return result;
+}
+function records(chunk,minimum,visit){
+ const b=chunk.data;
+ for(let p=0;p<b.length;){const code=b[p++],size=chunk.sizes[code];
+  if(size===undefined||size<(minimum[code]??1)||p+size>b.length)throw Error('Invalid Philips record 0x'+code.toString(16));
+  visit(code,b.subarray(p,p+size));p+=size;
+ }
+}
+function settings(b){
+ const result={},raw={};let mode;
+ const min={0x0c:3,0x0d:2,0x0e:2,0x0f:4,0x10:3,0x35:2};
+ for(let p=0;p<b.length;){
+  if(p+2>b.length)throw Error('Truncated Philips setting');
+  const code=b[p++],len=b[p++];if(len<(min[code]||1)||p+len>b.length)throw Error('Invalid Philips setting length');
+  const v=b.subarray(p,p+len);p+=len;raw['0x'+code.toString(16).padStart(2,'0')]=Array.from(v);
+  switch(code){
+   case 0:mode=v[0];result.Mode=['CPAP','BiLevel','AutoCPAP','AutoBiLevel','CPAP-Check'][mode]||'Unknown ('+mode+')';break;
+   case 0x0a:result.Pressure=v[0]/10;break;
+   case 0x0c:result.MinPressure=v[0]/10;result.MaxPressure=v[1]/10;result.Pressure=v[2]/10;break;
+   case 0x0d:result.MinPressure=v[0]/10;result.MaxPressure=v[1]/10;break;
+   case 0x0e:result.EPAP=v[0]/10;result.IPAP=v[1]/10;break;
+   case 0x0f:result.MinEPAP=v[0]/10;result.MaxIPAP=v[1]/10;result.MinPS=v[2]/10;result.MaxPS=v[3]/10;break;
+   case 0x10:result.Mode='Auto-Trial';result.AutoTrialDays=v[0];result.MinPressure=v[1]/10;result.MaxPressure=v[2]/10;break;
+   case 0x2b:result.RampType=v[0]===0?'Linear':v[0]===128?'SmartRamp':'Unknown';break;
+   case 0x2c:result.RampMinutes=v[0];break;
+   case 0x2d:result.RampPressure=v[0]/10;break;
+   case 0x2e:result.FlexMode=v[0]===0?'Off':v[0]===0x80?([1,3].includes(mode)?'Bi-Flex':'C-Flex'):v[0]===0x90?(mode===2?'A-Flex':'C-Flex+'):v[0]===0xa0?'Rise time':v[0]===0xb0?'P-Flex':'Unknown';break;
+   case 0x30:result.FlexLevel=v[0];break;
+  }
+ }
+ return {settings:result,rawSettings:raw};
+}
+function summary(c){
+ let t=0,on=null,config={settings:{},rawSettings:{}};const intervals=[];
+ records(c,[1,1,9,4,2,4,1,4,27,2,4,11,1,2,6],(code,b)=>{
+  if(![0,1,2,3,4,5,6,7,8,9,10,11,12,13,14].includes(code))throw Error('Unsupported Philips summary record '+code);
+  if(code===1)config=settings(b);
+  if([2,3,4,9,10,11].includes(code))t+=u16(b,0);
+  if(code===3){if(on!==null)throw Error('Repeated Philips mask-on');on=t;}
+  if(code===4){if(on===null)throw Error('Philips mask-off without mask-on');if(t>on)intervals.push([c.start+on*1000,c.start+t*1000]);on=null;}
+ });
+ if(on!==null)throw Error('Incomplete Philips mask-on interval');
+ return {id:c.sessionId,start:c.start,end:c.start+t*1000,intervals,...config};
+}
+function events(c,p){
+ let t=0,lastStats=0,bilevel=false;const pressure=[];
+ const add=(code,seconds,duration,text)=>p.events.push({time:c.start+seconds*1000,duration,text,code,source:'Philips',sessionId:c.sessionId});
+ const segment=(label,unit,start,seconds,value)=>{if(seconds>0)p.signals.push({label,unit,start:c.start+start*1000,dt:seconds,values:Float64Array.of(value),step:true,sessionId:c.sessionId});};
+ records(c,[2,3,4,3,3,3,3,3,3,2,3,4,3,2,5,5,5,5,4,3,3,3],(code,b)=>{
+  if(![1,2,3,4,5,6,7,10,11,12,13,14,15,16,17,18,20,21].includes(code))throw Error('Unsupported Philips event record '+code);
+  if(code!==0x12)t+=u16(b,0);
+  const v=b.subarray(2);
+  if(code===1)pressure.push({t,label:'PRS1.Pressure',value:v[0]/10});
+  else if(code===2){bilevel=true;pressure.push({t,label:'PRS1.EPAP',value:v[0]/10},{t,label:'PRS1.IPAP',value:v[1]/10});}
+  else if(code===4)add(code,t,0,'Pressure pulse');
+  else if([5,6,7,10,11,12,20,21].includes(code))add(code,t-(code===11?v[1]:v[0]),0,({5:'RERA',6:'Obstructive apnea',7:'Clear airway apnea',12:'Flow limitation'})[code]||'Hypopnea');
+  else if(code===13)add(code,t,0,'Vibratory snore');
+  else if([14,15,16].includes(code)){const duration=u16(v,0)*2;add(code,t-v[2]-duration,duration,({14:'Variable breathing',15:'Periodic breathing',16:'Large leak'})[code]);}
+  else if(code===17){
+   segment('PRS1.TotalLeak','L/min',lastStats,t-lastStats,v[0]);
+   segment('PRS1.SnoreCount','count/interval',lastStats,t-lastStats,v[1]);
+   segment(bilevel?'PRS1.AveragePressure':'PRS1.FlexPressure','cmH2O',lastStats,t-lastStats,v[2]/10);lastStats=t;
+  }
+ });
+ for(const label of new Set(pressure.map(x=>x.label))){const list=pressure.filter(x=>x.label===label);list.forEach((x,i)=>segment(label,'cmH2O',x.t,(list[i+1]?.t??t)-x.t,x.value));}
+ if(t>0)p.eventCoverage.push([c.start,c.start+t*1000]);
+ return t;
+}
+function waveform(c,p){
+ const arrays=c.wave.map(w=>w.kind===0?new Int8Array(c.duration/w.dt):new Float64Array(c.duration/w.dt));
+ let at=0;const offsets=c.wave.map(()=>0);
+ while(at<c.data.length)for(let k=0;k<c.wave.length;k++)for(let j=0;j<c.wave[k].samples;j++){
+  const v=c.data[at++];arrays[k][offsets[k]++]=k===0?(v>127?v-256:v):v/10;
+ }
+ c.wave.forEach((w,k)=>p.signals.push({label:k===0?'PRS1.Flow':'PRS1.MaskPressure',unit:k===0?'L/min':'cmH2O',dt:w.dt,start:c.start,values:arrays[k],sessionId:c.sessionId}));
+}
+// Merge only truly contiguous waveform chunks; keep clock gaps/overlaps explicit.
+function mergeWaveforms(signals){
+ const groups=new Map();
+ for(const s of signals){const key=s.label+':'+s.sessionId;const list=groups.get(key)||[];list.push(s);groups.set(key,list);}
+ const out=[];
+ for(const list of groups.values()){
+  list.sort((a,b)=>a.start-b.start);let run=[];
+  const flush=()=>{if(!run.length)return;const length=run.reduce((n,s)=>n+s.values.length,0),values=new run[0].values.constructor(length);let pos=0;for(const s of run){values.set(s.values,pos);pos+=s.values.length;}out.push({...run[0],values});run=[];};
+  for(const s of list){const prev=run.at(-1);if(prev&&(prev.dt!==s.dt||Math.abs(prev.start+prev.dt*prev.values.length*1000-s.start)>.01))flush();run.push(s);}flush();
+ }
+ return out;
+}
+function parse(buffer,name){
+ const ext=Number(name.split('.').at(-1).replace(/^b/i,''));if(!isData(name))throw Error('Unsupported Philips file extension');
+ const list=chunks(buffer,ext),p={name,vendor:'Philips',parserVersion:VERSION,start:Infinity,duration:0,summary:false,signals:[],events:[],sessions:[],eventCoverage:[]};let finish=0;
+ for(const c of list){p.start=Math.min(p.start,c.start);let duration=c.duration;
+  if(ext===1){const s=summary(c);p.sessions.push(s);duration=(s.end-c.start)/1000;}
+  if(ext===2)duration=events(c,p);
+  if(ext===5)waveform(c,p);
+  finish=Math.max(finish,c.start+duration*1000);
+ }
+ p.duration=(finish-p.start)/1000;if(ext===5||ext===2)p.signals=mergeWaveforms(p.signals);return p;
+}
+const api={VERSION,properties,chunks,parse,crc32wchar,ignored,isData,isProperties};
+if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Philips=api;
+})(globalThis);
+</script><script>// SPDX-License-Identifier: GPL-3.0-only
+// Adapted from OSCAR PRDS2File and SleepLib/crypto.cpp, revision
+// d16e40388d7b4dcbfc97afef85df43c520a03ccb.
+// Copyright (c) 2021-2024 The OSCAR Team. See THIRD_PARTY_NOTICES.md.
+(function(root){
+'use strict';
+// OSCAR's published COMMON_KEY decrypted using its published OSCAR_KEY (AES-256 ECB).
+// This is a format constant, not a user password. Fixtures independently derive it.
+const COMMON='71849644a728112b015b6203cfb5c56951db5f18e3f49436fa4a0beb75658742';
+const hex=b=>Array.from(b,x=>x.toString(16).padStart(2,'0')).join('');
+const join=(a,b)=>{const out=new Uint8Array(a.length+b.length);out.set(a);out.set(b,a.length);return out;};
+function header(buffer){
+ const b=new Uint8Array(buffer.buffer||buffer,buffer.byteOffset||0,buffer.byteLength),view=new DataView(b.buffer,b.byteOffset,b.byteLength);let p=0;
+ const word=()=>{if(p+2>b.length)throw Error('Truncated DreamStation 2 header');const n=view.getUint16(p,true);p+=2;return n;};
+ const field=size=>{const n=word();if(n!==size||p+n>b.length)throw Error('Invalid DreamStation 2 header field');const v=b.slice(p,p+n);p+=n;return v;};
+ if(word()!==13||word()!==1||word()!==1)throw Error('Unsupported DreamStation 2 encryption header');
+ const guid=field(36),iv=field(12),salt=field(16);
+ if(word()!==0||word()!==1)throw Error('Unsupported DreamStation 2 key envelope');
+ field(32);field(16); // Device import key; export key below grants patient access.
+ const exportKey=field(32),exportTag=field(16),payloadTag=field(16);
+ if(p!==202||p>=b.length)throw Error('Truncated DreamStation 2 payload');
+ return {guid,iv,salt,exportKey,exportTag,payloadTag,payload:b.subarray(p)};
+}
+function createDecoder(){
+ const cache=new Map();
+ async function decrypt(buffer){
+  const subtle=globalThis.crypto?.subtle;if(!subtle)throw Error('DreamStation 2 requires Web Crypto. Open the app on localhost in a modern browser.');
+  const h=header(buffer),id=hex(join(join(h.iv,h.salt),join(h.exportKey,h.exportTag)));
+  let key=cache.get(id);
+  if(!key){
+   key=(async()=>{
+    const common=Uint8Array.from(COMMON.match(/../g),x=>parseInt(x,16));
+    const password=await subtle.importKey('raw',common,'PBKDF2',false,['deriveKey']);
+    const wrapping=await subtle.deriveKey({name:'PBKDF2',salt:h.salt,iterations:10000,hash:'SHA-256'},password,{name:'AES-GCM',length:256},false,['decrypt']);
+    let raw;try{raw=await subtle.decrypt({name:'AES-GCM',iv:h.iv,tagLength:128},wrapping,join(h.exportKey,h.exportTag));}catch{throw Error('DreamStation 2 export-key authentication failed');}
+    if(raw.byteLength!==32)throw Error('Invalid DreamStation 2 payload key');
+    return subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);
+   })();cache.set(id,key);if(cache.size>128)cache.delete(cache.keys().next().value);
+  }
+  let payload;
+  try{payload=await subtle.decrypt({name:'AES-GCM',iv:h.iv,tagLength:128},await key,join(h.payload,h.payloadTag));}
+  catch(e){if(e.message?.includes('export-key'))throw e;throw Error('DreamStation 2 payload authentication failed (damaged or incomplete file)');}
+  return payload;
+ }
+ return {decrypt};
+}
+const api={header,createDecoder};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.DreamStation2=api;
+})(globalThis);
+</script><script>// SPDX-License-Identifier: GPL-3.0-or-later
+// Local-only ZIP and device preflight. No network or third-party runtime.
+(function(root){
+'use strict';
+const P=typeof module!=='undefined'&&module.exports?require('./philips.js'):root.Philips;
+const DS2=typeof module!=='undefined'&&module.exports?require('./dreamstation2.js'):root.DreamStation2;
+const pathOf=f=>(f.webkitRelativePath||f._path||f.name).replaceAll('\\','/');
+const table=Uint32Array.from({length:256},(_,i)=>{let c=i;for(let j=0;j<8;j++)c=c&1?0xedb88320^(c>>>1):c>>>1;return c>>>0;});
+function crc32(bytes){let c=0xffffffff;for(const b of bytes)c=table[(c^b)&255]^(c>>>8);return (c^0xffffffff)>>>0;}
+function supported(name){return /\.(edf|tgt)$/i.test(name)||P.isProperties(name)||P.isData(name);}
+async function zipEntries(file){
+ // Read central directory only. Each compressed entry is inflated on demand.
+ if(file.size>1024**3)throw Error('ZIP exceeds 1 GiB. Extract it and choose the SD folder.');
+ const tail=new Uint8Array(await file.slice(Math.max(0,file.size-65557)).arrayBuffer()),view=new DataView(tail.buffer);
+ let e=-1;for(let p=tail.length-22;p>=0;p--)if(view.getUint32(p,true)===0x06054b50&&p+22+view.getUint16(p+20,true)===tail.length){e=p;break;}
+ if(e<0)throw Error('Invalid ZIP: end of directory not found');
+ const count=view.getUint16(e+10,true),size=view.getUint32(e+12,true),offset=view.getUint32(e+16,true);
+ if(view.getUint16(e+4,true)||view.getUint16(e+6,true)||view.getUint16(e+8,true)!==count||count===65535||offset===0xffffffff||size===0xffffffff)throw Error('ZIP64 and multi-volume ZIP are unsupported. Extract the SD folder first.');
+ if(offset+size>file.size-tail.length+e||size>32*1024**2)throw Error('Invalid ZIP directory bounds');
+ const b=new Uint8Array(await file.slice(offset,offset+size).arrayBuffer()),dv=new DataView(b.buffer),dec=new TextDecoder(),out=[];let p=0,total=0;
+ for(let i=0;i<count;i++){
+  if(p+46>b.length||dv.getUint32(p,true)!==0x02014b50)throw Error('Invalid ZIP directory entry');
+  const flags=dv.getUint16(p+8,true),method=dv.getUint16(p+10,true),crc=dv.getUint32(p+16,true),compressed=dv.getUint32(p+20,true),length=dv.getUint32(p+24,true),n=dv.getUint16(p+28,true),extra=dv.getUint16(p+30,true),comment=dv.getUint16(p+32,true),local=dv.getUint32(p+42,true);
+  if(p+46+n+extra+comment>b.length)throw Error('Truncated ZIP entry');
+  const path=dec.decode(b.subarray(p+46,p+46+n)).replaceAll('\\','/');p+=46+n+extra+comment;
+  if(path.startsWith('/')||/^[a-z]:/i.test(path)||path.split('/').includes('..')||path.includes('\0'))throw Error('Unsafe ZIP path');
+  if(path.endsWith('/')||P.ignored(path))continue;
+  if(!supported(path))continue;
+  total+=length;if(total>2*1024**3||length>128*1024**2)throw Error('ZIP expansion limit exceeded');
+  if(flags&1||![0,8].includes(method))throw Error('Encrypted ZIP or unsupported compression. Extract the SD folder first.');
+  const entry={name:path.split('/').at(-1),_path:path,size:length,type:'application/octet-stream',async arrayBuffer(){
+   if(local+30>offset)throw Error('Invalid ZIP local header');
+   const h=new DataView(await file.slice(local,local+30).arrayBuffer());
+   if(h.getUint32(0,true)!==0x04034b50||h.getUint16(8,true)!==method||(h.getUint16(6,true)&1))throw Error('Invalid ZIP local header');
+   const begin=local+30+h.getUint16(26,true)+h.getUint16(28,true);
+   if(begin+compressed>offset)throw Error('ZIP entry outside data area');
+   const blob=file.slice(begin,begin+compressed);let bytes;
+   if(method===0){if(compressed!==length)throw Error('Invalid stored ZIP size');bytes=new Uint8Array(await blob.arrayBuffer());}
+   else{
+    let stream;try{stream=blob.stream().pipeThrough(new DecompressionStream('deflate-raw'));}catch{throw Error('This browser cannot inflate ZIP files. Extract the ZIP and choose the SD folder.');}
+    const reader=stream.getReader(),parts=[];let got=0;
+    try{while(true){const r=await reader.read();if(r.done)break;got+=r.value.length;if(got>length)throw Error('ZIP entry exceeds declared size');parts.push(r.value);}}catch(e){await reader.cancel().catch(()=>{});throw e;}
+    if(got!==length)throw Error('Truncated ZIP content');bytes=new Uint8Array(got);let pos=0;for(const part of parts){bytes.set(part,pos);pos+=part.length;}
+   }
+   if(crc32(bytes)!==crc)throw Error('ZIP CRC mismatch');return bytes.buffer;
+  },async text(){return new TextDecoder().decode(await this.arrayBuffer());}};
+  out.push(entry);
+ }
+ if(p!==b.length)throw Error('Unexpected ZIP directory data');out.ignoredCount=count-out.length;return out;
+}
+function validateArchive(records){
+ const serials=new Set(records.map(f=>f.tags?.SRN||f.device?.serial).filter(Boolean));
+ const philips=records.some(f=>f.device?.vendor==='Philips'||f.parsed?.vendor==='Philips');
+ const resmed=records.some(f=>f.parsed&&!f.parsed.vendor||/\.(edf|tgt)$/i.test(f.name));
+ if(serials.size>1||philips&&resmed)throw Error('This archive supports one PAP device. Use a separate browser profile for Philips and ResMed.');
+}
+async function prepare(input,stored=[]){
+ const entries=[],decoder=DS2.createDecoder();let ignoredCount=0;
+ for(const f of input){if(P.ignored(pathOf(f))){ignoredCount++;continue;}if(/\.zip$/i.test(f.name)){const zipped=await zipEntries(f);entries.push(...zipped);ignoredCount+=zipped.ignoredCount;}else entries.push(f);}
+ const devices=new Map(),serials=new Set(stored.map(f=>f.tags?.SRN||f.device?.serial).filter(Boolean));
+ let hasPhilips=stored.some(f=>f.device?.vendor==='Philips'||f.parsed?.vendor==='Philips'),hasEDF=stored.some(f=>f.parsed&&!f.parsed.vendor||/\.edf$/i.test(f.name));
+ const selected=[];
+ for(const f of entries){
+  const path=pathOf(f);if(P.ignored(path)){ignoredCount++;continue;}
+  if(!supported(f.name)){ignoredCount++;continue;}
+  selected.push(f);
+  if(P.isProperties(f.name)){const encrypted=/\.bin$/i.test(f.name),text=encrypted?new TextDecoder().decode(await decoder.decrypt(await f.arrayBuffer())):await f.text(),device=P.properties(text);device.generation=encrypted?2:1;if(encrypted)device.tags.PNA='Philips DreamStation 2 '+device.model;serials.add(device.serial);devices.set(path.slice(0,path.lastIndexOf('/')+1),device);hasPhilips=true;}
+  if(P.isData(f.name))hasPhilips=true;
+  if(/\.edf$/i.test(f.name))hasEDF=true;
+  if(/\.tgt$/i.test(f.name)){hasEDF=true;const m=(await f.text()).match(/#SRN\s+(\S+)/);if(m)serials.add(m[1]);}
+ }
+ if(serials.size>1||hasPhilips&&hasEDF)throw Error('This archive supports one PAP device. Use a separate browser profile for Philips and ResMed; no files from this import were saved.');
+ const plan=[];
+ for(const f of selected){
+  let device=null;
+  if(P.isProperties(f.name)||P.isData(f.name)){
+   const path=pathOf(f),matches=[...devices].filter(([dir])=>dir?path.startsWith(dir):!path.includes('/')).sort((a,b)=>b[0].length-a[0].length);
+   device=matches[0]?.[1];
+   if(!device)throw Error('Select the complete Philips device folder, or PROP.TXT / PROP.BIN together with its session files. Device identity is required.');
+  }
+  if(P.isData(f.name)&&(/\.b0[125]$/i.test(f.name)!==(device.generation===2)))throw Error('Philips session format does not match its device properties.');
+  plan.push({file:f,path:pathOf(f),device,decode:device?.generation===2?decoder.decrypt:null});
+ }
+ return {plan,ignoredCount};
+}
+const api={prepare,zipEntries,crc32,pathOf,validateArchive};if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.PAPImport=api;
+})(globalThis);
+</script><script>// SPDX-License-Identifier: GPL-3.0-or-later
+(function(root){
+'use strict';
+const reference=typeof module!=='undefined'&&module.exports?require('./vendor/glasgow-reference.js'):root.GlasgowReference;
+const VERSION='glasgow-9-v1';
+const COMPONENTS=[['skew','Skew'],['spike','Spike'],['flatTop','Flat Top'],['topHeavy','Top Heavy'],['multiPeak','Multi Peak'],['noPause','No Pause'],['inspirRate','Inspir Rate'],['multiBreath','Multi Breath'],['ampVar','Variable Amp']];
+const round=v=>Math.round(v*100)/100;
+// Each uninterrupted finite run is independent: never synthesize breaths across gaps.
+function analyzeChannel(channel){
+ const sessions=[],warnings=[];
+ if(!channel)return {version:VERSION,status:'unavailable',reason:'High-resolution flow unavailable. Import BRP EDF data.',sessions,warnings};
+ const unit=channel.unit.trim(),scale=unit==='L/s'?60:unit==='L/min'?1:null;
+ if(scale===null)return {version:VERSION,status:'unavailable',reason:'Unsupported flow unit: '+unit,sessions,warnings};
+ for(const segment of channel.segments){
+  if(!Number.isFinite(segment.dt)||Math.abs(segment.dt-.04)>1e-7){warnings.push('Skipped flow segment: expected 25 Hz.');continue;}
+  let a=0;
+  while(a<segment.values.length){
+   while(a<segment.values.length&&!Number.isFinite(segment.values[a]))a++;
+   let b=a;while(b<segment.values.length&&Number.isFinite(segment.values[b]))b++;
+   if(b===a)break;
+   if(b-a>=51){
+    const start=segment.start+a*40;
+    const data=Array.from(segment.values.subarray(a,b),(v,i)=>({x:start+i*40,y:v*scale}));
+    const result=reference.analyze(data);
+    if(result.cumIndex){
+     const components=Object.fromEntries(COMPONENTS.map(([key])=>[key,result.cumIndex[key]]));
+     const breaths=result.inspirations.map(v=>({time:start+v.start*40,end:start+v.end*40,indices:v.indices}));
+     sessions.push({start,end:start+(b-a)*40,seconds:(b-a)*.04,components,breaths});
+    }else warnings.push('No complete inspirations in a flow run; its duration is excluded.');
+   }else warnings.push('Flow run shorter than 51 samples excluded.');
+   a=b;
+  }
+ }
+ const seconds=sessions.reduce((sum,s)=>sum+s.seconds,0);
+ if(!seconds)return {version:VERSION,status:'unavailable',reason:'No analyzable 25 Hz flow with complete inspirations.',sessions,warnings:[...new Set(warnings)]};
+ const components=Object.fromEntries(COMPONENTS.map(([key])=>[key,round(sessions.reduce((sum,s)=>sum+s.components[key]*s.seconds,0)/seconds)]));
+ // Match groupByNight in upstream multi_night_analyzer.html: sum all NINE rounded components.
+ const overall=round(COMPONENTS.reduce((sum,[key])=>sum+components[key],0));
+ const inspirations=sessions.reduce((sum,s)=>sum+s.breaths.length,0);
+ if(seconds<300)warnings.push('Less than five minutes analyzed; interpret short runs cautiously.');
+ return {version:VERSION,status:'ok',overall,components,seconds,inspirations,sessions,warnings:[...new Set(warnings)]};
+}
+// Trailing calendar-day window. Do not turn missing nights into zeros.
+function movingMean(rows,key,days){
+ return rows.map(row=>{
+  const stop=Date.parse(row.key+'T12:00:00Z'),begin=stop-(days-1)*86400000;
+  const values=rows.filter(r=>{const t=Date.parse(r.key+'T12:00:00Z');return t>=begin&&t<=stop&&Number.isFinite(r[key]);}).map(r=>r[key]);
+  return {...row,smoothed:Number.isFinite(row[key])&&values.length?values.reduce((a,b)=>a+b,0)/values.length:null};
+ });
+}
+function heatBins(result,start,end,width){
+ const bins=Array.from({length:width},()=>({count:0,overall:0,...Object.fromEntries(COMPONENTS.map(([k])=>[k,0]))}));
+ if(result?.status!=='ok'||end<=start)return bins;
+ for(const s of result.sessions)for(const breath of s.breaths){
+  if(breath.time<start||breath.time>=end)continue;
+  const bin=bins[Math.min(width-1,Math.floor((breath.time-start)/(end-start)*width))];bin.count++;bin.overall+=breath.indices.overall;
+  for(const [key] of COMPONENTS)if(breath.indices[key])bin[key]++;
+ }
+ for(const bin of bins)if(bin.count){bin.overall/=bin.count;for(const [key] of COMPONENTS)bin[key]/=bin.count;}
+ return bins;
+}
+const api={VERSION,COMPONENTS,analyzeChannel,movingMean,heatBins};
+if(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Glasgow=api;
+})(globalThis);
+</script><script>// SPDX-License-Identifier: GPL-3.0-or-later
+(function(root){
+'use strict';
+function logicalPath(path,name){const parts=String(path||name).replaceAll('\\','/').split('/').filter(Boolean),anchor=parts.findIndex(p=>/^(DATALOG|SETTINGS|P-SERIES)$/i.test(p));return (anchor>=0?parts.slice(anchor).join('/'):parts.at(-1)||name).toUpperCase();}
+function plan(existing,record){
+ const logical=record.logicalPath||logicalPath(record.path,record.name);
+ const matching=existing.filter(f=>(f.logicalPath||logicalPath(f.path,f.name))===logical);
+ return {logical,unchanged:matching.some(f=>f.id===record.id),remove:matching.filter(f=>f.id!==record.id).map(f=>f.id)};
+}
+function visible(nights,tombstones){const removed=new Set(tombstones.map(t=>t.id));return nights.filter(n=>!removed.has(n.key));}
+function markerOutside(marker,night){return night.intervals.length?!night.intervals.some(([start,end])=>marker.time>=start&&marker.time<=end):marker.time<night.origin||marker.time>night.end;}
+const api={logicalPath,plan,visible,markerOutside};if(typeof module!=='undefined')module.exports=api;else root.ImportDelta=api;
+})(globalThis);
+</script><script>// SPDX-License-Identifier: GPL-3.0-or-later
+'use strict';
+const Portable={
+ token:'',state:null,writable:false,closed:false,timer:null,poll:null,saving:null,analysisBusy:false,writing:0,
+ async api(path,body){
+  const response=await fetch('/api/'+path,{method:body===undefined?'GET':'POST',headers:{'X-BPG-Local':'1','X-BPG-Session':this.token,...(body!==undefined&&!(body instanceof Blob)?{'Content-Type':'application/json'}:{})},body:body===undefined?undefined:body instanceof Blob?body:JSON.stringify(body)});
+  let result;try{result=await response.json();}catch{throw Error('Local archive server unavailable. Local work is preserved.');}
+  if(!response.ok)throw Error(result.error||'Archive operation failed.');
+  if(path==='batch'){this.state=result;this.changed();}
+  return result;
+ },
+ assertWrite(allowPending=false){if(!this.writable||this.closed||this.state?.preview||this.state?.conflict||this.state?.pending&&!(allowPending&&this.state.pending==='import'))throw Error('Read-only archive. Confirm synchronization, resolve conflicts, or finish the interrupted operation.');},
+ async init(){
+  const result=await this.api('session/start',{});this.token=result.token;this.state=result.status;
+  const box=document.getElementById('archivePanel');box.hidden=false;
+  document.getElementById('storageLabel').textContent='Portable archive · local work + Proton Drive';
+  document.getElementById('storageHint').textContent='SD imports add new or changed files. Edits publish automatically; wait for Proton Drive synchronization before switching computers.';
+  document.getElementById('portableControls').hidden=true;
+  this.bind();this.render();
+  this.poll=setInterval(()=>this.check().catch(e=>this.error(e)),5000);
+  window.addEventListener('beforeunload',e=>{if(this.writing||this.state?.dirty||this.state?.operation||this.state?.pending||this.saving||this.formDirty()){e.preventDefault();e.returnValue='';}});
+  window.addEventListener('pagehide',()=>{if(this.writable&&!this.closed)fetch('/api/session/leave',{method:'POST',headers:{'X-BPG-Local':'1','X-BPG-Session':this.token,'Content-Type':'application/json'},body:'{}',keepalive:true}).catch(()=>{});});
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&this.writable&&!busy)this.flush().catch(e=>this.error(e));});
+ },
+ formDirty(){const d=document.getElementById('markerDialog');return d?.open&&this.markerDirty;},
+ error(e){document.getElementById('archiveMessage').textContent=e.message||String(e);},
+ changed(){this.render();clearTimeout(this.timer);if(!this.state.operation&&!this.state.preview&&!this.state.pending&&!this.analysisBusy)this.timer=setTimeout(()=>this.flush().catch(e=>this.error(e)),800);},
+ async check(){
+  if(this.closed||this.saving||this.writing||busy)return;
+  const s=await this.api('status');this.state=s;this.render();
+  if(!s.dirty&&!s.operation&&!s.pending&&!s.preview&&s.base!==s.latest&&s.latest){
+   // A new publication invalidates the previous synchronization confirmation.
+   this.writable=false;await this.api('open-shared',{});await refresh();this.state=await this.api('status');this.render();
+  }
+ },
+ async flush(){
+  clearTimeout(this.timer);
+  if(this.saving)return this.saving;
+  if(!this.writable||this.closed||this.analysisBusy||this.writing||this.state?.operation||this.state?.pending||this.state?.preview)return;
+  this.saving=(async()=>{try{this.state=await this.api('publish',{});document.getElementById('archiveMessage').textContent='Saved in the Proton Drive folder. Check Proton Drive upload completion before switching computers.';return this.state;}catch(e){this.state=await this.api('status').catch(()=>this.state);this.error(e);throw e;}finally{this.saving=null;this.render();}})();
+  return this.saving;
+ },
+ async begin(kind){this.assertWrite(kind==='import');if(this.saving)await this.saving;clearTimeout(this.timer);this.state=await this.api('operation/begin',{kind});this.render();},
+ async finish(){this.state=await this.api('operation/end',{});this.render();if(!this.state.preview)await this.flush();},
+ async pause(){this.state=await this.api('operation/pause',{});this.render();},
+ async saveClose(){
+  this.assertWrite();if(busy)throw Error('Wait for the current operation to finish.');
+  if(this.formDirty())throw Error('Save or cancel the open marker form first.');
+  while(this.analysisBusy||this.writing)await new Promise(r=>setTimeout(r,100));
+  if(this.saving)await this.saving;
+  this.state=await this.api('session/close',{});this.closed=true;this.writable=false;clearInterval(this.poll);clearTimeout(this.timer);this.render();
+  document.getElementById('archiveMessage').textContent='Saved. Wait for Proton Drive upload completion. You can now close this tab.';
+  window.close();
+ },
+ render(){
+  const s=this.state;if(!s)return;const byId=id=>document.getElementById(id);
+  byId('archiveMode').textContent=this.closed?'Session closed':s.preview?'Recovery preview · read only':this.writable?'Portable archive · editing enabled':'Portable archive · read only';
+  const date=s.created?new Date(Number(s.created)*1000).toLocaleString():'not published';
+  byId('archiveVersion').textContent=`Archive ${s.archive} · local ${s.base||'new'} · shared ${s.latest||'none'} · published ${date}`;
+  byId('archivePaths').textContent=`Working folder: ${s.local}\nProton Drive folder: ${s.shared}`;
+  byId('archiveSaveState').textContent=this.saving?'Publishing…':s.operation?'Import/restore in progress · not published':s.pending?'Interrupted operation preserved':s.dirty?'Local changes awaiting publication':'Saved locally · cloud sync must be checked in Proton Drive';
+  byId('confirmSync').hidden=this.writable||this.closed;byId('saveClose').disabled=!this.writable||this.closed;
+  byId('archiveConflict').hidden=!s.conflict;byId('pendingControls').hidden=!s.pending;
+  byId('acceptRestore').hidden=!s.preview||s.pending!=='restore'||!s.complete;byId('allowReimport').disabled=!this.writable||s.preview;
+  if(s.error)byId('archiveMessage').textContent=s.error;
+  for(const id of ['files','folder','restore','erase','addMarker','deleteNight','migratePortable']){const e=byId(id);if(e)e.disabled=!this.writable||s.preview||this.closed||s.conflict||!!s.pending&&!(s.pending==='import'&&['files','folder'].includes(id));}
+ },
+ async busyAction(fn){if(busy)throw Error('An operation is already running.');busy=true;try{await fn();}finally{busy=false;this.render();}},
+ bind(){
+  const on=(id,fn)=>{document.getElementById(id).onclick=()=>Promise.resolve().then(fn).catch(e=>this.error(e));};
+  on('confirmSync',async()=>{this.state=await this.api('session/confirm',{});this.writable=true;await refresh();this.render();if(this.state.dirty&&!this.state.conflict&&!this.state.pending)await this.flush();});
+  on('saveClose',()=>this.saveClose());
+  on('recoverSession',async()=>{if(!confirm('Close any other BreathPAPGuardian tab first. Recover this browser session? Pending work is preserved.'))return;this.state=await this.api('session/recover',{});this.writable=true;this.render();});
+  on('retryArchive',async()=>{await this.check();document.getElementById('archiveMessage').textContent='Archive status refreshed.';});
+  for(const choice of ['local','shared'])on('resolve'+choice,()=>this.busyAction(async()=>{if(!confirm(`Use the ${choice} copy? The current local copy is preserved in Local recovery copies; shared history is retained.`))return;this.state=await this.api('resolve',{choice});await refresh();if(choice==='local')await this.flush();this.render();}));
+  on('previewPending',async()=>{this.state=await this.api('operation/preview',{});await refresh();this.render();});
+  on('discardPending',async()=>{if(!confirm('Return to the previous archive? The interrupted operation will be kept as a local recovery copy.'))return;this.state=await this.api('operation/discard',{});await refresh();this.render();});
+  on('acceptRestore',async()=>{if(!confirm('Replace the active archive with this complete restored copy and publish it? The previous copy is retained.'))return;this.state=await this.api('operation/accept',{});await refresh();this.render();await this.flush();status('Restored archive activated. Automatic publication is enabled.');});
+  on('allowReimport',async()=>{this.assertWrite();const deleted=await getAll('tombstones');const host=document.getElementById('deletedNights');host.replaceChildren();for(const row of deleted){const b=document.createElement('button');b.textContent='Allow reimport · '+row.id;b.onclick=async()=>{try{await del('tombstones',row.id);await refresh();await this.flush();b.remove();}catch(e){this.error(e);}};host.append(b);}if(!deleted.length)host.textContent='No nights blocked from reimport.';});
+  on('loadVersions',()=>this.loadHistory());
+  on('restoreVersion',()=>this.busyAction(async()=>{this.assertWrite();const id=document.getElementById('versionSelect').value;if(!id||!confirm('Restore this published version? It will become a new publication; current history is retained.'))return;await this.flush();this.state=await this.api('restore-version',{id});await refresh();await this.flush();await this.loadHistory();}));
+  on('protectVersion',async()=>{this.assertWrite();const e=document.getElementById('versionSelect'),option=e.selectedOptions[0];if(!option)return;await this.api('protect',{id:e.value,enabled:option.dataset.protected!=='true'});await this.loadHistory();});
+  on('cleanVersion',async()=>{this.assertWrite();await this.flush();const versions=[document.getElementById('versionSelect').value];const plan=await this.api('cleanup',{versions});if(!confirm(`Delete ${plan.versions} historical version(s) and ${plan.files} files (${(plan.bytes/1048576).toFixed(2)} MB)? Referenced contents and contents under 7 days old are retained. External backups and other Macs are not erased.`))return;await this.api('cleanup',{versions,execute:true,token:plan.token});await this.loadHistory();});
+  on('restoreRecovery',async()=>{this.assertWrite();const id=document.getElementById('recoverySelect').value;if(!id)return;this.state=await this.api('restore-recovery',{id});await refresh();this.render();});
+  document.getElementById('markerForm').addEventListener('input',()=>{this.markerDirty=true;});
+  document.getElementById('markerDialog').addEventListener('close',()=>{this.markerDirty=false;});
+ },
+ async hash(text){const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,'0')).join('');},
+ async backup(){
+  if(busy||this.writing)throw Error('Wait for the current operation to finish.');
+  status('Preparing a complete, independent backup…');
+  const data={};for(const store of ['files','markers','external','tombstones','analysis','preferences'])data[store]=await encode(await getAll(store));
+  const backup={format:'bpg-backup-v3',schema:3,archiveSchema:2,created:new Date().toISOString(),data,sha256:await this.hash(JSON.stringify(data))};
+  download(new Blob([JSON.stringify(backup)],{type:'application/json'}),'bpg-backup-'+Date.now()+'.json');
+  status('Complete backup ready. It contains recordings and media without application encryption; store it on an encrypted independent device.');
+ },
+ async restoreBackup(file){
+  this.assertWrite();if(busy)throw Error('Wait for the current operation.');
+  const input=JSON.parse(await file.text());let data;
+  if(input.format==='bpg-backup-v3'){
+   if(input.schema!==3||input.archiveSchema!==2)throw Error('Unsupported backup format. Update the app.');
+   if(await this.hash(JSON.stringify(input.data))!==input.sha256)throw Error('Backup checksum failed. Current archive was preserved.');data=decode(input.data);
+  }else if(input.format==='pap-local-v2')data=decode(input);
+  else throw Error('Unrecognized backup.');
+  const stores=['files','markers','external','tombstones','analysis','preferences'];
+  for(const s of stores){if(data[s]===undefined&&['tombstones','analysis','preferences'].includes(s))data[s]=[];if(!Array.isArray(data[s])||data[s].some(x=>!x||typeof x.id!=='string'))throw Error('Invalid backup records.');if(new Set(data[s].map(x=>x.id)).size!==data[s].length)throw Error('Duplicate record IDs in backup.');}
+  PAPImport.validateArchive(data.files);
+  if(!confirm('Restore into a new local preview archive? The active archive is kept. Nothing is published until you choose Use restored archive.'))return;
+  busy=true;let started=false;
+  try{
+   await this.begin('restore');started=true;
+   for(const s of stores)for(const item of data[s]){status('Restoring '+s+'…');await api('batch',{put:[[s,await portableEncode(item)]]});}
+   const counts=await api('status');for(const s of stores)if(counts.counts[s]!==data[s].length)throw Error('Restored record count mismatch.');
+   await this.finish();started=false;await refresh();status('Restored archive preview. Inspect it, export a backup, or choose Use restored archive to replace and publish.');
+  }catch(e){if(started)await this.pause();throw e;}finally{busy=false;this.render();}
+ },
+ async loadHistory(){
+  const versions=await this.api('versions'),select=document.getElementById('versionSelect');select.replaceChildren();
+  for(const v of versions){const o=document.createElement('option');o.value=v.id;o.dataset.protected=String(v.protected);o.textContent=`${new Date(v.created*1000).toLocaleString()} · ${v.id.slice(0,10)}${v.current?' · current':''}${v.protected?' · protected':''}`;select.append(o);}
+  const recoveries=await this.api('recoveries'),r=document.getElementById('recoverySelect');r.replaceChildren();
+  for(const v of recoveries){const o=document.createElement('option');o.value=v.id;o.textContent=new Date(v.created*1000).toLocaleString()+' · '+v.id;r.append(o);}
+ }
+};
+</script><script>'use strict';
+const $=id=>document.getElementById(id),el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;},fmt=n=>Number.isFinite(n)?Number(n.toFixed(2)).toLocaleString('en-US'):'—',clock=t=>new Date(t).toISOString().slice(11,19),iso=t=>new Date(t).toISOString().slice(0,-1),names={'Flow.40ms':'Respiratory flow','Press.40ms':'High-resolution pressure','MaskPress.2s':'Mask pressure','Press.2s':'Pressure · Press (IPAP)','EprPress.2s':'Pressure · EprPress (EPAP)','Leak.2s':'Leak','RespRate.2s':'Respiratory rate','TidVol.2s':'Tidal volume','MinVent.2s':'Minute ventilation','TgtVent.2s':'Target ventilation','Snore.2s':'Snore','FlowLim.2s':'Flow limitation'};
+Object.assign(names,{'PRS1.Flow':'Respiratory flow · Philips','PRS1.Pressure':'CPAP pressure setting · Philips','PRS1.EPAP':'EPAP setting · Philips','PRS1.IPAP':'IPAP setting · Philips','PRS1.MaskPressure':'Mask pressure · Philips','PRS1.TotalLeak':'Total leak · Philips (includes venting)','PRS1.SnoreCount':'Snore count per interval · Philips','PRS1.FlexPressure':'Average Flex pressure · Philips','PRS1.AveragePressure':'Average pressure · Philips'});
+let db,portable=false,tombstones=[],giCacheRecords=[],files=[],nights=[],metadata={},annotations=[],external=[],night=null,channels={},left=0,span=0,total=0,cursor=null,history=[],selected=new Set(),cards=[],urls=[],cache=new Map(),busy=false;
+const status=t=>$('status').textContent=t;
+const request=r=>new Promise((resolve,reject)=>{r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+function transaction(store,mode,fn){return new Promise((resolve,reject)=>{const tx=db.transaction(store,mode);fn(tx.objectStore(store));tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Save cancelled'));});}
+async function api(path,body){return Portable.api(path,body);}
+async function portableEncode(v){if(v instanceof Int8Array)return {__int8:Array.from(v)};if(v instanceof Blob){const {key}=await api('blob',v);return {__ref:key,type:v.type};}if(v instanceof Float64Array)return {__float:Array.from(v,x=>Number.isNaN(x)?null:x)};if(Array.isArray(v))return Promise.all(v.map(portableEncode));if(v&&typeof v==='object'){const out={};for(const [k,x] of Object.entries(v))out[k]=await portableEncode(x);return out;}return v;}
+async function portableDecode(v){if(v?.__int8!==undefined)return Array.isArray(v.__int8)?Int8Array.from(v.__int8):decode(v);if(v?.__ref){const response=await fetch('/api/blob/'+v.__ref,{headers:{'X-BPG-Local':'1'}});if(!response.ok)throw Error('Attachment unavailable.');return new Blob([await response.blob()],{type:v.type});}if(v?.__float)return Float64Array.from(v.__float,x=>x===null?NaN:x);if(Array.isArray(v))return Promise.all(v.map(portableDecode));if(v&&typeof v==='object'){const out={};for(const [k,x] of Object.entries(v))out[k]=await portableDecode(x);return out;}return v;}
+const put=(store,value)=>portable?portablePut(store,value):transaction(store,'readwrite',s=>s.put(value));
+async function portablePut(store,value){Portable.assertWrite();Portable.writing++;try{await api('batch',{put:[[store,await portableEncode(value)]]});}finally{Portable.writing--;Portable.changed();}}
+const del=(store,id)=>portable?api('batch',{delete:[[store,id]]}).then(portableStatus):transaction(store,'readwrite',s=>s.delete(id));
+const getAll=async store=>portable?Promise.all((await api('records/'+store)).map(portableDecode)):request(db.transaction(store).objectStore(store).getAll());
+async function portableStatus(){if(!portable)return;Portable.state=await api('status');Portable.render();return Portable.state;}
+function button(text,fn){const b=el('button',text);b.onclick=fn;return b;}
+let exportURL=null,exportBlob=null,exportFilename='';
+function download(blob,name){
+ if(exportURL)URL.revokeObjectURL(exportURL);exportBlob=blob;exportFilename=name;exportURL=URL.createObjectURL(blob);
+ $('exportName').textContent=name+' · '+fmt(blob.size/1024)+' KB';$('exportMessage').textContent='The file is ready. Click “Download file” to save it.';
+ $('exportSave').href=exportURL;$('exportSave').download=name;$('exportOpen').href=exportURL;
+ $('exportPicker').hidden=typeof window.showSaveFilePicker!=='function';
+ const file=new File([blob],name,{type:blob.type});$('exportShare').hidden=!(navigator.canShare&&navigator.canShare({files:[file]}));
+ if(!$('exportDialog').open)$('exportDialog').showModal();
+}
+$('exportClose').onclick=()=>$('exportDialog').close();
+$('exportSave').onclick=()=>{$('exportMessage').textContent='Download requested. If it does not appear, try “Open file” or open the app in a separate tab.';};
+$('exportPicker').onclick=async()=>{try{const handle=await window.showSaveFilePicker({suggestedName:exportFilename}),writer=await handle.createWritable();await writer.write(exportBlob);await writer.close();$('exportMessage').textContent='File saved.';}catch(e){$('exportMessage').textContent=e.name==='AbortError'?'Save cancelled.':'Save failed: '+e.message;}};
+$('exportShare').onclick=async()=>{try{await navigator.share({files:[new File([exportBlob],exportFilename,{type:exportBlob.type})]});$('exportMessage').textContent='Sharing complete.';}catch(e){$('exportMessage').textContent=e.name==='AbortError'?'Sharing cancelled.':e.message;}};
+
+async function refresh(){files=await getAll('files');annotations=await getAll('markers');external=await getAll('external');metadata=buildNights(files);if(portable){tombstones=await getAll('tombstones');giCacheRecords=await getAll('analysis');if(typeof applyPortablePreferences==='function')applyPortablePreferences(await getAll('preferences'));}nights=portable?ImportDelta.visible(metadata.nights,tombstones):metadata.nights;cache.clear();if(typeof giReset==='function')giReset();home();if(night){const found=nights.find(n=>n.key===night.key);if(found)openNight(found.key);else{night=null;showHome();}}}
+async function ingest(input){
+ if(busy||!db)return;busy=true;let started=false;
+ try{
+  if(portable)files=await getAll('files');
+  const {plan,ignoredCount}=await PAPImport.prepare(input,files);
+  if(portable){await Portable.begin('import');started=true;}
+  let saved=0,updated=0,duplicates=0,empty=0;const errors=[];
+  for(let i=0;i<plan.length;i++){
+   const {file:f,path,device,decode:decodePhilips}=plan[i];
+   status(`Checking SD delta ${i+1}/${plan.length}: ${f.name}`);
+   try{
+    const buffer=await f.arrayBuffer(),digest=await crypto.subtle.digest('SHA-256',buffer),id=Array.from(new Uint8Array(digest),v=>v.toString(16).padStart(2,'0')).join('')+':'+f.name.replace(/\(\d+\)(?=\.)/,'');
+    const record={id,name:f.name,path,imported:Date.now(),blob:new Blob([buffer],{type:f.type||'application/octet-stream'})};
+    const delta=ImportDelta.plan(files,record);record.logicalPath=delta.logical;
+    const previous=files.find(x=>x.id===id),parsedCurrent=Philips.isData(f.name)?previous?.parserVersion===Philips.VERSION:Philips.isProperties(f.name)?previous?.tags?.SRN===device.serial:true;
+    if(delta.unchanged&&parsedCurrent){duplicates++;continue;}
+    if(device)record.device=device;if(Philips.isData(f.name))record.parserVersion=Philips.VERSION;
+    if(Philips.isProperties(f.name))record.tags=device.tags;
+    if(/\.edf$/i.test(f.name)||Philips.isData(f.name))record.parsed=Philips.isData(f.name)?Philips.parse(decodePhilips?await decodePhilips(buffer):buffer,f.name):readEDF(buffer,f.name);
+    if(/\.tgt$/i.test(f.name)){record.tags={};for(const m of new TextDecoder().decode(buffer).matchAll(/#(\w+)\s+([^\r\n]+)/g))record.tags[m[1]]=m[2].trim();}
+    if(portable){await api('batch',{delete:delta.remove.map(id=>['files',id]),put:[['files',await portableEncode(record)]]});files=files.filter(x=>!delta.remove.includes(x.id));}
+    else await transaction('files','readwrite',store=>{for(const id of delta.remove)store.delete(id);store.put(record);});
+    files=files.filter(x=>!delta.remove.includes(x.id)&&x.id!==record.id);files.push(record);delta.remove.length?updated++:saved++;
+   }catch(e){if(e.code==='EDF_NO_DATA'){empty++;continue;}errors.push(f.name+': '+e.message);}
+  }
+  if(errors.length)throw Error(errors.join('\n')+'\nImport paused. Choose the same folder to resume; completed files are preserved locally.');
+  if(portable){await Portable.finish();started=false;}
+  await refresh();showHome();status(`${saved} new · ${updated} updated · ${duplicates} unchanged · ${ignoredCount} unrelated files ignored · ${nights.length} visible nights.`+(empty?`\n${empty} empty EDF skipped: header only, no samples. Reimport after the recordings are finalized.`:''));
+ }catch(e){if(portable&&started)await Portable.pause().catch(()=>{});await refresh().catch(()=>{});status(e.message);}
+ finally{busy=false;$('files').value='';$('folder').value='';if(portable)Portable.render();}
+}
+async function walk(entry,path=''){if(entry.isFile){const f=await new Promise((r,j)=>entry.file(r,j));f._path=path+f.name;return [f];}if(entry.isDirectory){const reader=entry.createReader(),all=[];while(true){const batch=await new Promise((r,j)=>reader.readEntries(r,j));if(!batch.length)break;for(const child of batch)all.push(...await walk(child,path+entry.name+'/'));}return all;}return [];}
+$('files').onchange=e=>ingest([...e.target.files]);$('folder').onchange=e=>ingest([...e.target.files]);$('drop').ondragover=e=>e.preventDefault();$('drop').ondrop=async e=>{e.preventDefault();const entries=[...e.dataTransfer.items].map(i=>i.webkitGetAsEntry?.()).filter(Boolean),fallback=[...e.dataTransfer.files];try{const list=entries.length?(await Promise.all(entries.map(e=>walk(e)))).flat():fallback;await ingest(list);}catch(err){status(err.message);}};
+function table(headers,rows){const t=el('table'),head=el('tr');headers.forEach(x=>head.append(el('th',x)));const thead=el('thead');thead.append(head);t.append(thead);const body=el('tbody');rows.forEach(row=>{const tr=el('tr');row.forEach(x=>{const td=el('td');x instanceof Node?td.append(x):td.textContent=x;tr.append(td);});body.append(tr);});t.append(body);return t;}
+function stat(n,key){const id=n.key+'|'+key+'|'+$('excludeZeros').checked;if(!cache.has(id))cache.set(id,stats(n.channels[key],$('excludeZeros').checked&&/^(RespRate|TidVol|MinVent)/.test(key)));return cache.get(id);}
+function count(n,type){if(n.vendor==='Philips'){if(!n.eventsComplete)return null;return n.events.filter(e=>type==='apnea'?/apnea/i.test(e.text)&&!/hypopnea/i.test(e.text):/hypopnea/i.test(e.text)).length;}if(n.events.length)return n.events.filter(e=>type==='apnea'?/apnea/i.test(e.text)&&!/hypopnea/i.test(e.text):/hypopnea/i.test(e.text)).length;const hasEve=files.some(f=>f.parsed&&!f.parsed.summary&&/EVE/i.test(f.name)&&nightKey(f.parsed.start)===n.key);return hasEve?0:null;}
+function home(){
+ renderOverview();
+ const rows=[...nights].reverse().map(n=>[button(n.key,()=>openNight(n.key)),fmt(n.usage)+' h',Object.keys(n.channels).length?Object.keys(n.channels).length+' signals':n.vendor==='Philips'?'Philips summary only':'STR summary only',fmt(count(n,'apnea')),fmt(count(n,'hypopnea')),button('Delete',()=>askDeleteNight(n.key))]);$('nightList').replaceChildren(table(['Night','Usage','Data','Apneas','Hypopneas','Actions'],rows));if(!nights.length)$('nightList').append(el('p','Import your SD card to get started.'));$('nightSelect').replaceChildren(...nights.map(n=>{const o=el('option',n.key);o.value=n.key;return o;}));trend();if(typeof giRenderHome==='function')giRenderHome();}
+function trend(){if(typeof renderTrend==='function')renderTrend();}
+$('snoreThreshold').onchange=trend;$('flowThreshold').onchange=trend;
+function showHome(){$('home').hidden=false;$('detail').hidden=true;trend();}$('homeBtn').onclick=showHome;$('nightBtn').onclick=()=>{if(night)openNight(night.key);else if(nights.length)openNight(nights.at(-1).key);};
+function openNight(key){night=nights.find(n=>n.key===key);if(!night)return;$('home').hidden=true;$('detail').hidden=false;$('nightSelect').value=key;channels={...night.channels};for(const e of external.filter(e=>e.night===key))channels['external:'+e.id]=alignChannel(e.channel,e.offset,e.ppm);total=Math.max(.5,(night.end-night.origin)/1000);left=0;span=total;cursor=null;history=[];selected=new Set(Object.keys(channels).filter(k=>['Flow.40ms','Press.2s','Leak.2s','FlowLim.2s','PRS1.Flow','PRS1.Pressure','PRS1.TotalLeak'].includes(k)||k.startsWith('external:')));$('nightTitle').textContent=night.key+' · '+night.device;$('summary').textContent=`${fmt(night.usage)} ${night.vendor==='Philips'&&!night.hasTherapySummary?'hours recorded (summary unavailable)':'hours of use'} · ${night.intervals.length} recording segments · ${clock(night.origin)}–${clock(night.end)} · PAP clock`+(night.vendor==='Philips'&&!night.eventsComplete?' · Event coverage incomplete; AHI unavailable.':'');$('window').value='all';if(night.vendor!=='Philips')selected.add('glasgow');renderSettings();renderStats();renderChoices();renderEvents();renderMarkers();build();if(typeof giRenderNight==='function')giRenderNight();}
+$('nightSelect').onchange=e=>openNight(e.target.value);function stepNight(d){if(!night)return;const i=nights.indexOf(night);if(nights[i+d])openNight(nights[i+d].key);}$('older').onclick=()=>stepNight(-1);$('newer').onclick=()=>stepNight(1);
+function renderSettings(){if(night.vendor==='Philips'){renderPhilipsSettings();return;}const s=night.settings,rows=[],add=(key,label,convert=v=>fmt(v),unit='')=>{if(Number.isFinite(s[key]))rows.push([label,convert(s[key])+(unit?' '+unit:''),key]);};add('Mode','Mode',v=>({7:'ASV',8:'ASVAuto'}[v]||'Code '+v));const prefix=s.Mode===8?'S.AA.':'S.AV.';add(prefix+'EPAP','EPAP',fmt,'cmH₂O');add(prefix+'MinEPAP','EPAP min',fmt,'cmH₂O');add(prefix+'MaxEPAP','EPAP max',fmt,'cmH₂O');add(prefix+'MinPS','PS min',fmt,'cmH₂O');add(prefix+'MaxPS','PS max',fmt,'cmH₂O');if(s.Mode===7&&Number.isFinite(s['S.AV.EPAP'])&&Number.isFinite(s['S.AV.MaxPS']))rows.push(['Max IPAP (calculated)',fmt(s['S.AV.EPAP']+s['S.AV.MaxPS'])+' cmH₂O','EPAP + PS max']);add('S.Mask','Mask',v=>v===1?'Full face':'Code '+v);const toggle=v=>v===0?'Off':v===1?'On':'Code '+v;add('S.RampEnable','Ramp',toggle);add('S.RampTime','Ramp time',fmt,'min');add('S.HumLevel','Humidity');add('S.HumEnable','Humidifier',toggle);add('S.SmartStart','Smart start',toggle);add('S.ABFilter','Antibacterial filter',toggle);add('S.Temp','Temperature',v=>fmt(v)+' °C / '+fmt(v*9/5+32)+' °F');add('S.ClimateControl','Climate control',v=>v===0?'Auto':'Code '+v);add('S.PtAccess','Essentials',v=>v===0?'Plus':'Code '+v);add('S.TempEnable','Temperature enabled',v=>v===2?'Auto':toggle(v));$('settings').replaceChildren(rows.length?table(['Parameter','Value','STR source'],rows):el('p','STR summary unavailable for this night.'));$('settings').append(el('p','PaceWave code names compared with the supplied SleepHQ values; other codes remain explicit.','muted'));$('rawSTR').replaceChildren(table(['Field','Value'],Object.entries(night.summary).map(([k,v])=>[k,Array.isArray(v)?v.map(fmt).join(', '):fmt(v)])));}
+function renderPhilipsSettings(){
+ const pressureKeys=new Set(['Pressure','MinPressure','MaxPressure','EPAP','IPAP','MinEPAP','MaxIPAP','MinPS','MaxPS','RampPressure']);
+ const rows=Object.entries(night.settings).map(([k,v])=>[k,String(v)+(pressureKeys.has(k)?' cmH₂O':k==='RampMinutes'?' min':'')]);
+ $('settings').replaceChildren(rows.length?table(['Parameter','Value'],rows):el('p','Session settings unavailable. Import the .001 summary files.'));
+ $('settings').append(el('p','Philips .001 source. Settings shown for the latest session; all session snapshots are listed below. Total leak includes intentional mask venting. Flex pressure is an interval average, not measured EPAP.','muted'));
+ const raw=[];for(const session of night.sessionSettings){for(const [k,v] of Object.entries(session.settings))raw.push([clock(session.start)+' · session '+session.id,k,String(v)]);for(const [k,v]of Object.entries(session.rawSettings))raw.push([clock(session.start)+' · raw',k,JSON.stringify(v)]);}
+ $('rawSTR').replaceChildren(table(['Session','Field','Value'],raw));
+}
+function renderStats(){const rows=Object.entries(night.channels).map(([k,ch])=>{const s=stat(night,k);return [names[k]||k,displayUnit(ch.unit),fmt(s?.min),fmt(s?.med),fmt(s?.p95),fmt(s?.p995),fmt(s?.mean)];});const gi=giStatisticRows(),expanded=$('giMore')?.open||false,more=el('details');more.id='giMore';more.open=expanded;more.append(el('summary','Glasgow component fractions (9)'),table(['Component','Unit','Min','Med','95%','99.5%','Mean'],gi.slice(2)));$('stats').replaceChildren(table(['Signal','Unit','Min','Med','95%','99.5%','Mean'],[...rows,...gi.slice(0,2)]),more,el('p',giStatisticsNote(),'muted'));}$('excludeZeros').onchange=()=>{cache.clear();home();if(night)renderStats();};
+
+function renderChoices(){$('choices').replaceChildren();for(const [k,ch] of [...Object.entries(channels),['glasgow',{label:'Glasgow Index'}]]){const l=el('label'),c=el('input');c.type='checkbox';c.checked=selected.has(k);if(k==='glasgow'&&night.vendor==='Philips'){c.disabled=true;l.title='Glasgow Index requires validated 25 Hz flow; Philips flow is not resampled.';}c.onchange=()=>{c.checked?selected.add(k):selected.delete(k);build();};l.append(c,document.createTextNode(names[k]||ch.label));$('choices').append(l);}}
+function jump(t){pushZoom();span=Math.min(120,total);left=(t-night.origin)/1000-span/2;$('window').value='120';render();}
+function renderEvents(){$('events').replaceChildren();for(const e of night.events)$('events').append(button(`${e.text} · ${clock(e.time)} · ${e.duration?e.duration+' s':'duration unspecified'}`,()=>jump(e.time)));}
+function pushZoom(){history.push({left,span});if(history.length>50)history.shift();}
+function reset(){if(!night)return;pushZoom();left=0;span=total;$('window').value='all';render();}
+function render(){span=Math.min(Math.max(.2,span),total);left=Math.max(0,Math.min(total-span,left));$('seek').max=Math.max(0,total-span);$('seek').value=left;$('range').textContent=clock(night.origin+left*1000)+' — '+clock(night.origin+(left+span)*1000);$('undo').disabled=!history.length;drawAll();}
+function build(){cards=[];$('charts').replaceChildren();for(const k of orderedSignals()){if(k==='glasgow'){const box=giCreateCard();$('charts').append(box);continue;}const ch=channels[k];if(!ch)continue;const box=el('section',undefined,'chart'),head=el('div',undefined,'head'),value=el('span',undefined,'value');setupSignalCard(box,head,k);head.append(el('strong',names[k]||ch.label),value);const legend=el('div',undefined,'legend');legend.append(el('span','● '+ch.label+' ('+displayUnit(ch.unit)+')','teal'));const overlay=['Press.2s','Press.40ms'].includes(k)?channels['EprPress.2s']:null;if(overlay)legend.append(el('span','   ● EprPress · EPAP','purple'));const canvas=el('canvas');box.append(head,legend,canvas,button('CSV · full signal',()=>exportSignal(ch,false)),button('CSV · visible range',()=>exportSignal(ch,true)));$('charts').append(box);cards.push({key:k,ch,overlay,canvas,value});let drag=null;const at=e=>{const r=canvas.getBoundingClientRect();return left+Math.max(0,Math.min(1,(e.clientX-r.left-65)/(r.width-82)))*span;};canvas.onpointerdown=e=>{drag={x:e.clientX,t:at(e),left,span,mode:e.shiftKey?'pan':$('dragMode').value};canvas.setPointerCapture(e.pointerId);};canvas.onpointermove=e=>{cursor=at(e);if(drag?.mode==='pan'){left=drag.left-(e.clientX-drag.x)/(canvas.clientWidth-82)*drag.span;render();}else drawAll();};canvas.onpointerup=e=>{if(!drag)return;const d=drag;drag=null;if(d.mode==='marker'){editMarker(night.origin+at(e)*1000);return;}if(d.mode==='zoom'&&Math.abs(e.clientX-d.x)>5){const end=at(e);pushZoom();left=Math.min(end,d.t);span=Math.max(.2,Math.abs(end-d.t));$('window').value='custom';render();}};canvas.onpointercancel=()=>drag=null;canvas.ondblclick=reset;canvas.onpointerleave=()=>{if(!drag){cursor=null;drawAll();}};}render();giRenderNight();}
+function drawAll(){cards.filter(c=>c.key!=='glasgow').forEach(draw);if(typeof giDrawHeatmap==='function')giDrawHeatmap();}
+function draw({ch,overlay,canvas,value}){const w=canvas.clientWidth;if(w<100)return;const h=210,dpr=devicePixelRatio||1;canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);const x0=65,x1=w-17,y0=12,y1=174,pw=x1-x0,start=night.origin+left*1000,end=start+span*1000,lines=[ch,...overlay?[overlay]:[]];const parts=[];let min=Infinity,max=-Infinity;
+ for(const c of lines)for(const s of c.segments){const a=Math.max(0,(s.step?Math.floor:Math.ceil)((start-s.start)/(s.dt*1000))),b=Math.min(s.values.length,Math.floor((end-s.start)/(s.dt*1000))+1),m=factor(c.unit);if(a>=b)continue;parts.push({c,s,a,b,m});for(let i=a;i<b;i++){const v=s.values[i]*m;if(Number.isFinite(v)){min=Math.min(min,v);max=Math.max(max,v);}}}if(min===Infinity){value.textContent='No samples in this range';return;}if(min===max){min-=1;max+=1;}const pad=(max-min)*.08;min-=pad;max+=pad;const xx=t=>x0+(t-start)/(span*1000)*pw,yy=v=>y1-(v-min)/(max-min)*(y1-y0);ctx.font='11px system-ui';ctx.fillStyle='#6c818b';ctx.strokeStyle='#e6edef';for(let i=0;i<5;i++){const v=min+(max-min)*i/4,y=yy(v);ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x1,y);ctx.stroke();ctx.fillText(fmt(v),2,y+4);ctx.fillText(clock(start+span*1000*i/4),Math.max(x0,Math.min(w-60,x0+pw*i/4-20)),200);}ctx.save();ctx.beginPath();ctx.rect(x0,y0,pw,y1-y0);ctx.clip();for(const {c,s,a,b,m} of parts){ctx.strokeStyle=c===ch?'#087f7a':'#8656cb';ctx.lineWidth=c===ch?1:1.6;ctx.beginPath();if(s.step){for(let i=a;i<b;i++){const v=s.values[i]*m;if(!Number.isFinite(v))continue;const x=xx(s.start+i*s.dt*1000),endX=xx(s.start+(i+1)*s.dt*1000),y=yy(v);ctx.moveTo(x,y);ctx.lineTo(endX,y);}}else if(b-a>pw*2){for(let p=0;p<pw;p++){const lo=Math.max(a,Math.ceil((start+span*1000*p/pw-s.start)/(s.dt*1000))),hi=Math.min(b,Math.ceil((start+span*1000*(p+1)/pw-s.start)/(s.dt*1000)));let mn=Infinity,mx=-Infinity;for(let i=lo;i<hi;i++){const v=s.values[i]*m;if(Number.isFinite(v)){mn=Math.min(mn,v);mx=Math.max(mx,v);}}if(mn!==Infinity){ctx.moveTo(x0+p,yy(mn));ctx.lineTo(x0+p,yy(mx)+(mn===mx?.5:0));}}}else{let fresh=true;for(let i=a;i<b;i++){const v=s.values[i]*m;if(!Number.isFinite(v)){fresh=true;continue;}const x=xx(s.start+i*s.dt*1000),y=yy(v);fresh?ctx.moveTo(x,y):ctx.lineTo(x,y);fresh=false;}}ctx.stroke();}
+ const vertical=(t,color,dash)=>{if(t<start||t>end)return;ctx.strokeStyle=color;ctx.setLineDash(dash);ctx.beginPath();ctx.moveTo(xx(t),y0);ctx.lineTo(xx(t),y1);ctx.stroke();};for(const e of night.events)vertical(e.time,'#d79442',[4,4]);for(const m of annotations.filter(m=>m.night===night.key)){vertical(m.time,'#ce4475',[2,2]);ctx.fillStyle='#ce4475';if(m.time>=start&&m.time<=end)ctx.fillText('◆',xx(m.time)-4,22);}if(cursor!==null){const t=night.origin+cursor*1000;vertical(t,'#253d4d',[]);value.textContent=lines.map(c=>{const s=sample(c,t);return c.label+': '+(s?fmt(s.v)+' '+displayUnit(c.unit)+' · '+clock(s.t):'—');}).join(' | ');}else value.textContent='';ctx.restore();ctx.setLineDash([]);}
+$('window').onchange=e=>{pushZoom();span=e.target.value==='all'?total:Number(e.target.value);render();};$('prev').onclick=()=>{left-=span*.8;render();};$('next').onclick=()=>{left+=span*.8;render();};$('seek').oninput=e=>{left=Number(e.target.value);render();};$('reset').onclick=reset;$('undo').onclick=()=>{const z=history.pop();if(z){left=z.left;span=z.span;$('window').value='custom';render();}};$('go').onclick=()=>{if(!$('goto').value)return;const [h,m,s=0]=$('goto').value.split(':').map(Number),d=new Date(night.origin);d.setUTCHours(h,m,s,0);let t=d.getTime();if(t<night.origin)t+=DAY;if(t>night.end){status('Time outside this night.');return;}pushZoom();left=(t-night.origin)/1000-span/2;render();};window.onresize=()=>{if(night)drawAll();else trend();};document.onkeydown=e=>{if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||$('markerDialog').open||$('detail').hidden)return;if(e.key==='Escape')reset();if(e.key==='ArrowLeft')$('prev').click();if(e.key==='ArrowRight')$('next').click();};
+function exportSignal(ch,visible){
+ const intervals=ch.segments.some(s=>s.step),rows=['time_device,seconds_from_night_start,value,unit,signal'+(intervals?',duration_seconds':'')];
+ const begin=visible?night.origin+left*1000:-Infinity,end=visible?begin+span*1000:Infinity;
+ for(const s of ch.segments)for(let i=0;i<s.values.length;i++){
+  const sampleTime=s.start+i*s.dt*1000,t=s.step?Math.max(sampleTime,begin):sampleTime,finish=Math.min(sampleTime+s.dt*1000,end);
+  if(s.step?finish<=t:t<begin||t>=end)continue;
+  const row=[iso(t),(t-night.origin)/1000,s.values[i]*factor(ch.unit),displayUnit(ch.unit),ch.label];if(intervals)row.push((finish-t)/1000);
+  rows.push(row.map(v=>'"'+String(v).replaceAll('"','""')+'"').join(','));
+ }
+ download(new Blob([rows.join('\n')],{type:'text/csv'}),night.key+'_'+ch.label.replace(/[^\w.-]/g,'_')+'.csv');
+}
+$('pdf').onclick=exportReport;
+function editMarker(time,id){if(portable){try{Portable.assertWrite();}catch(e){status(e.message);return;}}const m=annotations.find(m=>m.id===id);$('markerId').value=id||'';$('markerTime').value=iso(m?.time??time);$('markerTitle').value=m?.title||'';$('markerNote').value=m?.note||'';$('markerMedia').value='';$('markerDialog').showModal();}
+$('addMarker').onclick=()=>editMarker(night.origin+(cursor??left+span/2)*1000);$('cancelMarker').onclick=()=>$('markerDialog').close();$('markerForm').onsubmit=async e=>{e.preventDefault();try{const media=[...$('markerMedia').files];if(media.some(f=>f.size>30*1024*1024))throw Error('An attachment exceeds 30 MB.');const time=Date.parse($('markerTime').value+'Z');if(time<night.origin||time>night.end)throw Error('The marker must fall within the selected night.');const old=annotations.find(m=>m.id===$('markerId').value),m={id:old?.id||crypto.randomUUID(),night:night.key,time,title:$('markerTitle').value,note:$('markerNote').value,media:[...(old?.media||[]),...media.map(f=>({name:f.name,blob:f}))]};await put('markers',m);annotations=await getAll('markers');$('markerDialog').close();renderMarkers();drawAll();}catch(err){status(err.message);alert(err.message);}};
+function renderMarkers(){urls.forEach(u=>URL.revokeObjectURL(u));urls=[];$('markers').replaceChildren();for(const m of annotations.filter(m=>m.night===night.key).sort((a,b)=>a.time-b.time)){const box=el('div',undefined,'mark');if(ImportDelta.markerOutside(m,night))box.append(el('p','Review marker: outside the updated recording intervals.','muted'));box.append(el('strong',clock(m.time)+' · '+m.title),el('p',m.note),button('Go',()=>jump(m.time)),button('Edit',()=>editMarker(m.time,m.id)),button('Delete',()=>confirmMarkerDeletion(m,box)));for(const item of m.media||[]){const u=URL.createObjectURL(item.blob);urls.push(u);if(item.blob.type.startsWith('image/')){const img=el('img');img.src=u;img.alt=item.name;box.append(img);}else if(item.blob.type.startsWith('video/')){const v=el('video');v.src=u;v.controls=true;v.preload='metadata';box.append(v);}box.append(button('Download '+item.name,()=>download(item.blob,item.name)));}$('markers').append(box);}if(!$('markers').children.length)$('markers').append(el('p','No markers. Use “+ Marker” or click mode on the charts.'));}
+
+async function encode(v){if(v instanceof Blob){const bytes=new Uint8Array(await v.arrayBuffer());let binary='';for(let i=0;i<bytes.length;i+=32768)binary+=String.fromCharCode(...bytes.subarray(i,i+32768));return {__blob:btoa(binary),type:v.type};}if(v instanceof Int8Array){const bytes=await encode(new Blob([v]));return {__int8:bytes.__blob};}if(v instanceof Float64Array)return {__float:Array.from(v,x=>Number.isNaN(x)?null:x)};if(Array.isArray(v))return Promise.all(v.map(encode));if(v&&typeof v==='object'){const o={};for(const [k,x]of Object.entries(v))o[k]=await encode(x);return o;}return v;}
+function decode(v){if(v?.__int8!==undefined){const b=atob(v.__int8);return Int8Array.from(b,c=>c.charCodeAt(0));}if(v?.__blob!==undefined){const b=atob(v.__blob);return new Blob([Uint8Array.from(b,c=>c.charCodeAt(0))],{type:v.type});}if(v?.__float)return Float64Array.from(v.__float,x=>x===null?NaN:x);if(Array.isArray(v))return v.map(decode);if(v&&typeof v==='object'){const o={};for(const [k,x]of Object.entries(v))o[k]=decode(x);return o;}return v;}
+$('backup').onclick=async()=>{if(portable)return Portable.backup().catch(e=>status(e.message));try{status('Preparing local backup…');const data=await encode({format:'pap-local-v2',files:await getAll('files'),markers:await getAll('markers'),external:await getAll('external')});download(new Blob([JSON.stringify(data)],{type:'application/json'}),'pap-backup-'+new Date().toISOString().slice(0,10)+'.json');status('Backup ready: choose a save option in the dialog.');}catch(e){status(e.message);}};
+$('restore').onchange=async e=>{if(portable){try{if(e.target.files[0])await Portable.restoreBackup(e.target.files[0]);}catch(err){status(err.message);}finally{e.target.value='';}return;}try{const f=e.target.files[0];if(!f)return;const data=decode(JSON.parse(await f.text()));if(data.format!=='pap-local-v2'||!Array.isArray(data.files)||!Array.isArray(data.markers)||!Array.isArray(data.external))throw Error('Unrecognized backup');PAPImport.validateArchive([...files,...data.files]);for(const [store,list]of [['files',data.files],['markers',data.markers],['external',data.external]])for(const item of list){if(!item.id)throw Error('Record has no ID');await put(store,item);}await refresh();status('Backup restored.');}catch(err){status('Restore incomplete: '+err.message);}};
+$('erase').onclick=()=>askDeleteNight(null);
+async function openBrowserArchive(){const req=indexedDB.open('bpg-synthetic-preview-v2',1);req.onupgradeneeded=()=>{for(const s of ['files','markers','external'])req.result.createObjectStore(s,{keyPath:'id'});};return request(req);}
+(async()=>{try{
+ if(location.protocol!=='file:'){const response=await fetch('/api/mode');if(!response.ok)throw Error('Cannot determine archive mode.');portable=(await response.json()).portable;}
+ if(portable){db={portable:true};await Portable.init();$('markerForm').querySelector('p').textContent='Maximum 30 MB per attachment. Attachments are included in automatic publications and complete backups.';}
+ else db=await openBrowserArchive();
+ await refresh();status(files.length?`${files.length} files · ${nights.length} nights. Ready.`:'No saved data. Import your SD card to get started.');
+}catch(e){status('Archive unavailable: '+e.message);}})();
+
+function confirmMarkerDeletion(m,box){
+ if(box.querySelector('.delete-confirm'))return;
+ const prompt=el('div',undefined,'delete-confirm'),message=el('span','Delete this marker and its attachments? ');
+ const accept=button('Confirm deletion',async()=>{accept.disabled=true;cancel.disabled=true;try{await del('markers',m.id);annotations=annotations.filter(x=>x.id!==m.id);renderMarkers();drawAll();home();status('Marker deleted.');}catch(e){accept.disabled=false;cancel.disabled=false;message.textContent='Deletion failed: '+e.message+' ';}});
+ const cancel=button('Cancel',()=>prompt.remove());prompt.append(message,accept,cancel);box.prepend(prompt);accept.focus();
+}
+async function exportReport(){
+ const b=$('pdf');b.disabled=true;const old=b.textContent;b.textContent='Preparing PDF…';
+ try{if(!night)throw Error('Select a night.');
+ const pages=[];let page,ctx,y;const W=1190,H=1684,M=72;
+ function newPage(){page=document.createElement('canvas');page.width=W;page.height=H;ctx=page.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);ctx.fillStyle='#087f7a';ctx.font='bold 22px sans-serif';ctx.fillText('BreathPAPGuardian',M,58);ctx.fillStyle='#667e89';ctx.font='18px sans-serif';ctx.fillText(night.key+' · '+(pages.length+1),M,H-35);pages.push(page);y=108;}
+ function ensure(h){if(y+h>H-80)newPage();}
+ function text(value,size=22,color='#1b3543'){ctx.font=size+'px sans-serif';const paragraphs=String(value).split('\n');for(const para of paragraphs){let line='';for(const word of para.split(/\s+/)){const candidate=line?line+' '+word:word;if(ctx.measureText(candidate).width>W-2*M&&line){ensure(size*1.5);ctx.font=size+'px sans-serif';ctx.fillStyle=color;ctx.fillText(line,M,y);y+=size*1.5;line=word;}else line=candidate;}ensure(size*1.5);ctx.font=size+'px sans-serif';ctx.fillStyle=color;ctx.fillText(line,M,y);y+=size*1.5;}}
+ function heading(value){ensure(65);y+=16;text(value,27);}
+ function rows(headers,data,widths){const rowH=37;function row(values,header=false){ctx.font=(header?'bold ':'')+'17px sans-serif';ctx.fillStyle=header?'#e7f2ef':'#f7f9fa';ctx.fillRect(M,y-24,W-2*M,rowH);let x=M+8;values.forEach((v,i)=>{ctx.save();ctx.beginPath();ctx.rect(x-4,y-22,widths[i]-8,rowH);ctx.clip();ctx.fillStyle='#213c49';ctx.fillText(String(v),x,y);ctx.restore();x+=widths[i];});y+=rowH;}ensure(rowH*2);row(headers,true);for(const vals of data){if(y+rowH>H-80){newPage();row(headers,true);}row(vals);}y+=10;}
+ newPage();text(night.device,30);text($('summary').textContent,21);text('Device times. No time zone conversion.',18,'#667e89');
+ heading('Night settings');const settingRows=[...$('settings').querySelectorAll('tbody tr')].map(r=>[...r.cells].slice(0,2).map(c=>c.textContent));if(settingRows.length)rows(['Parameter','Value'],settingRows,[520,526]);else text('Device settings unavailable.');if(night.vendor==='Philips')text('Latest session settings. Total leak includes mask venting; Flex pressure is an interval average, not measured EPAP.',18);
+ heading('Statistics · full night');text((night.vendor==='Philips'?'Percentiles: duration-weighted for interval statistics; sample interpolation for waveforms. Zeros ':'Percentiles: linear interpolation. Zeros ')+($('excludeZeros').checked?'excluded for rate, volume and ventilation.':'included.'),18);
+ const data=Object.entries(night.channels).map(([k,c])=>{const s=stat(night,k);return [c.label,displayUnit(c.unit),fmt(s?.min),fmt(s?.med),fmt(s?.p95),fmt(s?.p995),fmt(s?.mean)];});data.push(...giStatisticRows());rows(['Signal','Unit','Min','Med','95%','99.5%','Mean'],data,[260,116,134,134,134,134,134]);text(giStatisticsNote(),17);
+ heading('Annotated events');for(const e of night.events)text(clock(e.time)+' · '+e.text+' · '+(e.duration?e.duration+' s':'duration unspecified'),21);if(!night.events.length)text('No annotated events available.');
+ heading('Charts · '+$('range').textContent);text(night.vendor==='Philips'?'Visible range. Philips signals retain their recorded units and sampling intervals.':'Visible range. Press / high resolution in green; EprPress in purple.',18);const previous=cursor;cursor=null;drawAll();for(const card of cards){
+ const giCard=card.key==='glasgow',title=giCard?'Glasgow Index · '+(giChartMode==='classic'?'Classic Chart':'Component curves'):(names[card.key]||card.ch.label);
+ const target=Math.min(giCard?440:280,(W-2*M)*card.canvas.height/Math.max(1,card.canvas.width));
+ ensure(target+90);text(title,23);
+ if(giCard){text($('giNightStatus').textContent,17);if(giChartMode==='custom')giKeys.forEach(([k,label],i)=>{if(giSelected.has(k))text('— '+label,17,palette[i]);});}
+ ensure(target+32);ctx.drawImage(card.canvas,M,y,W-2*M,target);y+=target+32;
+}cursor=previous;drawAll();
+ heading('Markers');const marks=annotations.filter(m=>m.night===night.key);if(!marks.length)text('No markers.');for(const m of marks){text(clock(m.time)+' · '+m.title,23);if(m.note)text(m.note,20);if(m.media?.length)text('Attachments (not embedded): '+m.media.map(x=>x.name).join(', '),18,'#667e89');y+=12;}
+ text('Data exploration report, not a clinical report.',17,'#667e89');
+ const blob=await pdfFromCanvases(pages);download(blob,'PAP_'+night.key+'.pdf');
+ }catch(e){status('PDF export failed: '+e.message);}finally{b.disabled=false;b.textContent=old;}
+}
+
+let deleteTarget=null;
+function askDeleteNight(key){
+ deleteTarget=key;$('deleteNightTitle').textContent=key?'Delete night '+key:'Delete local archive';
+ $('deleteNightMessage').textContent=key?'This night’s data, markers and attachments will be deleted. Other nights and files on the SD card will be kept. In portable mode, this night stays blocked until you allow reimport. Historical copies and backups may retain it.':portable?'Delete all nights and attachments from this local working archive? Previously published versions remain in the shared folder.':'Delete all nights and attachments from this browser? The SD card will not be changed.';
+ $('deleteNightError').textContent='';$('deleteNightConfirm').disabled=false;$('deleteNightCancel').disabled=false;$('deleteNightDialog').showModal();
+}
+$('deleteNight').onclick=()=>{if(night)askDeleteNight(night.key);};
+$('deleteNightCancel').onclick=()=>$('deleteNightDialog').close();
+$('deleteNightConfirm').onclick=async()=>{
+ if(busy)return;busy=true;const key=deleteTarget;$('deleteNightConfirm').disabled=true;$('deleteNightCancel').disabled=true;
+ try{
+ const removeIds=[],additions=[];
+ if(key!==null){for(const f of files){
+  if(f.parsed){const result=removeNightFromParsed(f.parsed,key);if(!result.affected)continue;removeIds.push(f.id);for(let i=0;i<result.parts.length;i++){const parsed=result.parts[i],name=f.name.replace(/\.edf$/i,'')+'_retained_'+i+'.json';const blob=new Blob([JSON.stringify(await encode(parsed))],{type:'application/json'});additions.push({id:crypto.randomUUID(),name,path:name,logicalPath:f.logicalPath||ImportDelta.logicalPath(f.path,f.name),imported:f.imported,parsed,blob,derived:true});}}
+  else if(/\.crc$/i.test(f.name)){const m=f.name.match(/^(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})_/);if(m&&nightKey(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]))===key)removeIds.push(f.id);}
+ }}
+ if(portable){Portable.assertWrite();const deletedKeys=key===null?nights.map(n=>n.key):[key];await api('batch',{clear:key===null?['files','markers','external','analysis']:[],delete:key===null?[]:[...removeIds.map(id=>['files',id]),...annotations.filter(m=>m.night===key).map(m=>['markers',m.id]),...external.filter(e=>e.night===key).map(e=>['external',e.id]),['analysis',key]],put:[...await Promise.all(additions.map(async f=>['files',await portableEncode(f)])),...deletedKeys.map(id=>['tombstones',{id,deleted:Date.now()}])]});await portableStatus();}
+ else await new Promise((resolve,reject)=>{const tx=db.transaction(['files','markers','external'],'readwrite');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error||Error('Deletion cancelled'));if(key===null){for(const s of ['files','markers','external'])tx.objectStore(s).clear();}else{const store=tx.objectStore('files');for(const id of removeIds)store.delete(id);for(const f of additions)store.put(f);for(const m of annotations.filter(m=>m.night===key))tx.objectStore('markers').delete(m.id);for(const e of external.filter(e=>e.night===key))tx.objectStore('external').delete(e.id);}});
+ if(key===null||night?.key===key){night=null;channels={};cards=[];urls.forEach(u=>URL.revokeObjectURL(u));urls=[];$('charts').replaceChildren();$('markers').replaceChildren();if(exportURL){URL.revokeObjectURL(exportURL);exportURL=null;exportBlob=null;$('exportDialog').close();$('exportSave').removeAttribute('href');$('exportOpen').removeAttribute('href');}}
+ await refresh();showHome();$('deleteNightDialog').close();status(key?'Night '+key+' deleted from the local archive.':'Local archive deleted.');
+ }catch(e){$('deleteNightError').textContent='Deletion incomplete: '+e.message;}finally{busy=false;$('deleteNightConfirm').disabled=false;$('deleteNightCancel').disabled=false;}
+};
+
+</script><script>const previewWorkerURL=URL.createObjectURL(new Blob(["// SPDX-License-Identifier: GPL-3.0-or-later\n// Adapted 2026-10-19 for BreathPAPGuardian. Source and changes: THIRD_PARTY_NOTICES.md.\n(function(root){\n'use strict';\n/* \nCopyright 2025 DaveSkvn\nThis program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the\n Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nSee the GNU General Public License for more details.\n\nYou should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>. \n*/\n\n\nconst MILLIS_PER_SAMPLE = 40;\nconst DETAIL_SAMPLES_SHOW = 1500;\nconst FLOW_BALANCE_ERROR_PCNT = 20;\n\nconst STD_COLOURS = [\"#ffffff\", \"#bab8e0\",  \"#aca9eb\", \"#8680ed\",  \"#090387\" ];\nconst OVERALL_COLOURS = [\"#ffffff\", \"#faacb7\",  \"#f7798a\", \"#f7546a\",  \"#ed0c2a\" ];\nconst BLACK_COLOUR = \"#000000\";\n\nconst MIN_WINDOW = 25;\nconst GREY_ZONE_LOWER = -10;\n\n// Look for maximum negative (expiration) flow \nfunction findMins(dataArray){\n\tfor (let ptr = 0; ptr < (MIN_WINDOW) ; ptr++){\n// ignore first MIN_WINDOW samples (1 seconds worth)\n\t\tdataArray[ptr].min = false;\n\t}\n\t\n\t// look at each flow rate sample in turn\n\tfor(let ptr = MIN_WINDOW; ptr < (dataArray.length - MIN_WINDOW) ; ptr++){\n\t\t\n\t\t// assume each sample is a minimum\n\t\tlet minDetected = true;\n\t\tfor(let winPtr = (ptr - MIN_WINDOW); winPtr < (ptr + MIN_WINDOW -1) ; winPtr++){\n\t\t\tif (dataArray[winPtr].y < dataArray[ptr].y){\n\t\t\t\t//There is a lower valued sample within one second. Overwrite flag and move on to next sample.\n\t\t\t\tminDetected = false;\n\t\t\t\tbreak;\n\t\t\t}\n\t\t}\n\n\t\tif ( (minDetected === true) && (dataArray[ptr].y < GREY_ZONE_LOWER) ){\n\t\t\t// this is the lowest valued sample within 1 second. Flag as a minimum if it is below the \"grey zone\"\n\t\t\tdataArray[ptr].min = true;\n\t\t}else{\n\t\t\t// this is NOT the lowest valued sample within 1 second.\n\t\t\tdataArray[ptr].min = false;\n\t\t}\n\t}\n\t\n\tfor (let ptr = (dataArray.length - MIN_WINDOW -1 ); ptr < (dataArray.length - 1) ; ptr++){\n\t\t// ignore last MIN_WINDOW samples (1 seconds worth)\n\t\tdataArray[ptr].min = false;\t\n\t}\n}\n\nconst TOP_THRESHOLD_PRECENT_90 = 0.9;\nconst GREY_ZONE_UPPER = 5;\n\n// Look for the inspirations\nfunction findInspirations(dataArray, results){\n\n\tresults.inspirations = [];\n\tlet ignoreUntil = 0;\n\t\n// look at each sample in turn\t\n\tfor(let i = 0; i < dataArray.length - 1; i++){\n\t\tif (i < ignoreUntil){ \n// ignore until end of last determined inspiration\n\t\t\tcontinue;\n\t\t}\n\n\t\tif (dataArray[i].y <= GREY_ZONE_UPPER){\n\t\t\t//point is below mid line / grey zone. Ignore and move on \n\t\t\tdataArray[i].max = false;\n\t\t\tcontinue;\n\t\t}\n\t\t\n\t\tif ( i === 0 || i === dataArray.length - 1){\n\t\t\t// ignore first and last sample - to avoid explosion on next step\t\t\t\n\t\t\tdataArray[i].max = false;\n\t\t\tcontinue;\n\t\t}\n\t\t\n\t\tif ( (dataArray[i-1].y > dataArray[i].y ) || (dataArray[i].y < dataArray[i+1].y) ){\n\t\t\t// Adjacent point is higher - not a max\t\n\t\t\tdataArray[i].max = false;\n\t\t\tcontinue;\n\t\t}\n\t\t\n\n\t\tlet inspirInstance = {};\n\t\t// look backwards (from sample i) for the mid line & a higher max\n\t\tfor(let downPtr = i;  downPtr > 0 ; downPtr-- ){\n\t\t\tif (dataArray[downPtr].y > dataArray[i].y){\n// there is a higher point between \"sample i\" and the mid line (looking backwards) - prob already processed  \n\t\t\t\tbreak;\t\n\t\t\t}\n\t\t\tif (dataArray[downPtr].y <= GREY_ZONE_UPPER){\n// have travelled from sample i to mid line (backwards) without hitting a higher max\n\t\t\t\tinspirInstance.start = downPtr;\n\t\t\t\tbreak;\n\t\t\t}\n\t\t}\n\t\tif (inspirInstance.start==null){  \n\t\t\t// Did not make it from Sample I to mid line without hitting a higher max - ignore these breaths\n\t\t\tcontinue;\n\t\t}\n\n\t\t// look forwards (from sample i) for the mid line & a higher max\n\t\tfor(let upPtr = i; upPtr < dataArray.length - 1; upPtr++ ){\n\t\t\tif (dataArray[upPtr].y > dataArray[i].y){\n\t\t\t\t// there is a higher point between \"sample i\" and the mid line (looking forwards) - soon to be processed...  \n\t\t\t\tbreak;\n\t\t\t}\n\t\t\tif (dataArray[upPtr].y <= GREY_ZONE_UPPER){\n\t\t\t\t// have travelled from sample i to mid line (forward) without hitting a higher max\n\t\t\t\tinspirInstance.end = upPtr;\n\t\t\t\tbreak;\n\t\t\t}\n\t\t}\n\t\tif (inspirInstance.end==null){  \n\t\t\t// end of inspiration missing - ignore these breaths\n\t\t\tcontinue;\n\t\t}\n\t\t\n\t\tif (inspirInstance.end - inspirInstance.start < 8){  \n\t\t\t// ignore inspirations of less than 8 samples (approx 0.4 secs)\n\t\t\tcontinue;\n\t\t}\n\n\t\t// store time text of inspiration and the max value \n\t\tinspirInstance.startTime = dataArray[inspirInstance.start].x;\n\t\tinspirInstance.maxValue = dataArray[i].y;\n\t\tinspirInstance.midPoint= inspirInstance.start + Math.round( (inspirInstance.end - inspirInstance.start) / 2 );\n\t\t\t\t\n\t\t// set variables for the determination of the characteristics of this inspiration\n\t\tlet leftVol = 0.0;\n\t\tlet rightVol = 0.0;\n\t\tlet top_t90 = 0;\n\t\t\n\t\tlet threshold_90 = inspirInstance.maxValue * TOP_THRESHOLD_PRECENT_90;\n\t\t\n\t\tinspirInstance.multiPeak = false;\n\t\tlet firstPeakFound = false;\n\t\tlet lookingForNextPeak = false;\n\t\tlet lastMax = 0;\n\t\tlet lowestPostFirstPeak = 0;\n\t\tconst MIN_PEAK_BUMP = 1;\n\t\t\n\t\tfor(let ptr = inspirInstance.start; ptr < inspirInstance.end ; ptr++ ){\n\t\t\t// look at each sample between the start and end of the inspiration\n\t\t\tif (ptr < inspirInstance.midPoint){\n\t\t\t\t// Add all the flow before the mid point together to determine skew  \n\t\t\t\tleftVol = leftVol + dataArray[ptr].y;\n\t\t\t}else if(ptr > inspirInstance.midPoint){\n\t\t\t\t// Add all the flow after the mid point together to determine skew  \n\t\t\t\trightVol = rightVol + dataArray[ptr].y;\n\t\t\t}\n\t\t\t\n\t\t\tif (dataArray[ptr].y > threshold_90){\n\t\t\t\t// How many samples were the value above 90% of the maximum (to determine \"Top heavy\")\n\t\t\t\ttop_t90++;\n\t\t\t}\n\n\t\t\t// look to see if this inspiration has multiple peaks\n\t\t\tif (firstPeakFound===false){\n\t\t\t\t// keep looking for a max until one is found then flag \"firstPeakFound\" to move onto the next state\n\t\t\t\tif (dataArray[ptr].y > lastMax){\n\t\t\t\t\tlastMax = dataArray[ptr].y; \n\t\t\t\t}else if (dataArray[ptr].y < lastMax){\n\t\t\t\t\tfirstPeakFound=true\n\t\t\t\t}\n\t\t\t}else if ( lookingForNextPeak ===false &&\n\t\t\t\t\t(lastMax - dataArray[ptr].y ) > MIN_PEAK_BUMP ){\n\t\t\t\t// So first peak found. Heading downward. Haven't hit a min yet. Keep track of value looking for a min.\n\t\t\t\tlookingForNextPeak = true;\n\t\t\t\tlowestPostFirstPeak = dataArray[ptr].y;\n\t\t\t}if (lookingForNextPeak === true && inspirInstance.multiPeak === false){\n\t\t\t\t// first peak found, have hit a min and now on way back up. Look for another max above \"MIN_PEAK_BUMP\" \n\t\t\t\tif (dataArray[ptr].y < lowestPostFirstPeak){\n\t\t\t\t\tlowestPostFirstPeak = dataArray[ptr].y;\n\t\t\t\t}else if ( dataArray[ptr].y > (lowestPostFirstPeak + MIN_PEAK_BUMP) ){\n\t\t\t\t\t// Have hit one peak, a min and now more than MIN_PEAK_BUMP on the way back up. There's another max coming.\n\t\t\t\t\t// Flag and move on.\n\t\t\t\t\tinspirInstance.multiPeak = true;\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t\tinspirInstance.leftVol = leftVol;\n\t\tinspirInstance.rightVol = rightVol;\n\t\tif (inspirInstance.end - inspirInstance.start > 12){\n\t\t\t// only record skew and top heavy for inspirations over 0.5 secs\n\t\t\tinspirInstance.leftPercent = Math.round(10000 * leftVol / (leftVol + rightVol), 2) / 100;\n\t\t\tinspirInstance.top90Percent = Math.round(10000 * top_t90 / (inspirInstance.end  - inspirInstance.start)) / 100;\n\t\t}else{\n\t\t\t// set benign values for skew and top heavy for inspirations under 0.5 secs\t\t\t\n\t\t\tinspirInstance.leftPercent = 50;\n\t\t\tinspirInstance.top90Percent = 32;\n\t\t}\n\n\t\t// looking for \"Flat Top\". Calc variance over the middle 50% of inspiration.\n\t\tlet varStart = Math.round(inspirInstance.midPoint - ( 0.25 * (inspirInstance.end - inspirInstance.start) ));\n\t\tlet varEnd = Math.round(inspirInstance.midPoint + ( 0.25 * (inspirInstance.end - inspirInstance.start) ));\n\t\t\n\t\tlet midSum = 0;\n\t\tfor(let ptr = varStart; ptr < varEnd ; ptr++ ){\n\t\t\tmidSum += dataArray[ptr].y;\n\t\t}\n\t\t\n\t\t// calc mean flow value over middle 50% of inspiration \n\t\tlet midMean = midSum / ( 0.5 * (inspirInstance.end - inspirInstance.start) );\n\t\tlet midVar = 0;\n\t\t// use mean to calculate variance of flow over middle 50% of inspiration  \n\t\tfor(let ptr = varStart; ptr < varEnd ; ptr++ ){\n\t\t\tmidVar += Math.pow( (midMean - dataArray[ptr].y ), 2);\n\t\t}\n\t\t//Hold mid inspiration variance to two decimal places\n\t\tinspirInstance.midVar =  Math.round(100 * midVar / ( 0.5 * (inspirInstance.end - inspirInstance.start) ) ) / 100;;\n\t\t\n\t\tresults.inspirations.push(inspirInstance);\n\t\tignoreUntil = inspirInstance.end; // only process an inspiration instance once. Ignore multiple peaks at this stage.\n\t}\n\n}\n\nconst EXTRAPOLATION_SAMPLES = 25;\n\nfunction calcCycleBasedIndicators(dataArray, results){\n\tlet nextInspirIndex = 0;\n\t\n\t//Find the sample index IDs of minimums (peak expiration) \n\tlet minsAtIndex = [];\n\tfor(let i = 0; i < dataArray.length - 1 ; i++){\n\t\tif (dataArray[i].min === true){\n\t\t\tminsAtIndex.push(i);\n\t\t}\n\t}\n\t\n\t// try to mach up expirations with inspirations and determine their relationship (pause in between?) \n\tfor(let i = 0; i < minsAtIndex.length - 1; i++){\n\t\t//look at each min / peak expiration in turn \n\t\tlet indexOfMin = minsAtIndex[i];\t\n\t\n\t\tif (nextInspirIndex >= results.inspirations.length ){\n\t\t\tbreak;\n\t\t}\n\n\t\tlet emgyBreak = 10;\n\t\tdo{\n\t\t\tif (emgyBreak-- <= 0 ) {\n\t\t\t\tconsole.log(\"NOT SUPPOSED TO GET HERE\"); \n\t\t\t\tbreak;\n\t\t\t}\n\t\t\tif (results.inspirations[nextInspirIndex].start < indexOfMin){\n// The \"nextInspirIndex\" starts before the min/expiration we are looking at. \n// There have been two inspiration curves for one min/expiration. Flag inspiration as \"orphaned\" and move on.\n\t\t\t\tresults.inspirations[nextInspirIndex].noExhale = true;\n\t\t\t\tnextInspirIndex++;\n\t\t\t}else if ( ( i < minsAtIndex.length - 1) &&\n\t\t\t\tresults.inspirations[nextInspirIndex].start > minsAtIndex[i+1] ){\n// \"nextInspirIndex\" starts after next min - move to next min...\n\t\t\t\tbreak; // to next min\n\t\t\t}else if (results.inspirations[nextInspirIndex].start > indexOfMin){\n// The \"nextInspirIndex\" is after the min we are looking at. Link the two and determine relationship.\n\t\t\t\tresults.inspirations[nextInspirIndex].noExhale = false;\n\t\t\t\tresults.inspirations[nextInspirIndex].linkedMinAt = indexOfMin;\n\t\t\t\t\n\t\t\t\tlet minValue = dataArray[indexOfMin].y;\n\t\t\t\tlet minValuePlusOneSec = dataArray[indexOfMin+EXTRAPOLATION_SAMPLES].y;\n\t\t\t\tif (minValuePlusOneSec < 0){\n// Expiration is proceeding normally (not complete 1s after peak). Extrapolate where it would intersect with X-axis to determine\n// the generated \"pre inspiration rest\" / pause length.\n\t\t\t\t\tlet intersection = indexOfMin + Math.round( EXTRAPOLATION_SAMPLES * minValue / (minValue - minValuePlusOneSec) ); \n\t\t\t\t\tresults.inspirations[nextInspirIndex].intersection = intersection;\n\t\t\t\t\tresults.inspirations[nextInspirIndex].preRest = results.inspirations[nextInspirIndex].start - intersection;\n\t\t\t\t}else{\n// inspiration started less than 1s after min. Set default preRest indicating problem (that's too fast for normal breathing).\n\t\t\t\t\tresults.inspirations[nextInspirIndex].preRest = -10;\n\t\t\t\t}\n\t\t\t\tnextInspirIndex++;\n\t\t\t\tbreak;\n\t\t\t}else{\n\t\t\t\tconsole.log(\"inspiration neither before nor after selected min!\");\n\t\t\t}\n\t\t}while (nextInspirIndex < results.inspirations.length - 1)\n\t\t\t\n\t}\n}\n\nconst AMP_WINDOW_LEN = 5;\n\n// calculate the variance of the inspiration amplitude - Are the breaths getting stronger and weaker? \nfunction inspirationAmplitude(dataArray, results){\n\t\n\tfor(let i = AMP_WINDOW_LEN; i < results.inspirations.length - 1; i++){\n\t\t// look at each inspiration (from number \"AMP_WINDOW_LEN\" onward) \n\t\tlet ampMean = 0;\n\t\t\n\t\t// determine the mean of the max amplitude of these inspiration\n\t\tfor(let cnt = 0; cnt < AMP_WINDOW_LEN; cnt++){\t\t\t\n\t\t\tampMean += results.inspirations[i - cnt].maxValue;\n\t\t}\n\t\tampMean = ampMean / AMP_WINDOW_LEN;\n\t\t\n\t\tlet ampVar = 0;\n\t\t// Use the mean calcuated to determine the variance of the amplitude\n\t\tfor(let cnt = 0; cnt < AMP_WINDOW_LEN; cnt++){\n\t\t\tampVar += Math.pow(results.inspirations[i - cnt].maxValue - ampMean, 2);\n\t\t}\n\t\t// round to two decimal places \n\t\tampVar = Math.round( 100 * ampVar / AMP_WINDOW_LEN ) / 100;\n\t\tresults.inspirations[i].ampVar = ampVar;\n\t\t\n\t\t// used the time differnce between this inspiration and the inspiration 'AMP_WINDOW_LEN' ago to determine how many\n\t\t// inspirations per minute\n\t\tlet samplesForAveBreaths = results.inspirations[i].start - results.inspirations[i - AMP_WINDOW_LEN].start;\n\t\tresults.inspirations[i].inspirPerMin = Math.round( (AMP_WINDOW_LEN * 60 * 1000) / (samplesForAveBreaths * MILLIS_PER_SAMPLE) );\n\t}\t\n}\n\n// prepare the indices based on the calculated data \nfunction prepIndices(results){\n\t// prepare the cumulative indices\n\tlet cumIndex = {};\n\tcumIndex.skew = 0;\n\tcumIndex.topHeavy = 0;\n\tcumIndex.flatTop = 0;\n\tcumIndex.spike = 0;\n\tcumIndex.multiPeak = 0;\n\tcumIndex.noPause = 0;\n\tcumIndex.inspirRate = 0;\n\tcumIndex.multiBreath = 0;\n\tcumIndex.ampVar = 0;\n\t\n\tfor(const nextInspir of results.inspirations){\n\t\t// look at each inspiration in turn. The first few will be incomplete due to the nature of processing. \n\t\tnextInspir.indices = {};\n\t\tnextInspir.indices.overall = 0;\n\t\t\n\t\tif ( (nextInspir.leftPercent < 45) || (nextInspir.leftPercent > 55) ){\n// Inspirations with over 55% of the flow volume to the left or right of the mid line are defined as \"skewed\". \n\t\t\tnextInspir.indices.skew = true;\n\t\t\tcumIndex.skew++;\n\t\t\tnextInspir.indices.overall++;\n\t\t}else{\n\t\t\tnextInspir.indices.skew = false;\n\t\t} \n\t\tif ((nextInspir.top90Percent > 40) ){ \n// Where the inspiration spends more than 40% of its time with a value over 90% of the max, it is flagged as \"top heavy\". \n// Parabola would be 31.6%, sine wave would be 28.7% of the time.\n\t\t\tnextInspir.indices.topHeavy = true;\n\t\t\tcumIndex.topHeavy++;\n\t\t\tnextInspir.indices.overall++;\n\t\t}else{\n\t\t\tnextInspir.indices.topHeavy = false;\n\t\t} \n\t\tif ((nextInspir.midVar < 0.75) ){ \n// Where the flow rate variance over the mid 50% of the inspiration is low, it is a \"flat top\".\n\t\t\tnextInspir.indices.flatTop = true;\n\t\t\tcumIndex.flatTop++;\n\t\t\tnextInspir.indices.overall++;\n\t\t}else{\n\t\t\tnextInspir.indices.flatTop = false;\n\t\t} \n\n\t\tif ((nextInspir.top90Percent <20) ){ \n// Where the inspiration spends less than 20% of its time with a value over 90% of the max, it is flagged as a \"spike\". \n// Parabola would be 31.6%, sine wave would be 28.7% of the time.\n\t\t\tnextInspir.indices.spike = true;\n\t\t\tcumIndex.spike++;\n\t\t\tnextInspir.indices.overall++;\n\t\t}else{\n\t\t\tnextInspir.indices.spike = false;\n\t\t} \n\t\tif (nextInspir.multiPeak ===true){\n// If multiple peaks were found on the inspiration (ignoring small bumps), flagged as multipeak.  \n\t\t\tnextInspir.indices.multiPeak = true;\n\t\t\tcumIndex.multiPeak++;\n\t\t\tnextInspir.indices.overall++;\n\t\t}else{\n\t\t\tnextInspir.indices.multiPeak = false;\n\t\t}\n\t\tif (nextInspir.preRest < 10){\n//When using the expir. extrapolation above, where the expiration intersects with the x-axis less than 10 samples (0.4 seconds)\n//before an inspiration it is flagged as no Pause. Pause normally around 30 samples (1+ secs).\n\t\t\tnextInspir.indices.noPause = true;\n\t\t\tcumIndex.noPause++;\n\t\t\tnextInspir.indices.overall++;\n\t\t}else{\n\t\t\tnextInspir.indices.noPause = false;\n\t\t}\n\t\tif (nextInspir.inspirPerMin > 20){\n// Inspiration rate is the number of \"inspirations\" humps recorded in the flow rate graph per minute. Normal range is 12 to 20.\n\t\t\tnextInspir.indices.inspirRate = true;\n\t\t\tcumIndex.inspirRate++;\n\t\t\tnextInspir.indices.overall++;\n\t\t}else{\n\t\t\tnextInspir.indices.inspirRate = false;\n\t\t}\n\t\tif (nextInspir.noExhale ===true){\n// If more than one inspiration \"humps\" is detected for each expiration min, one or more will be flagged as \"multibreath\".\n// Not seen in normaly breathing.\n\t\t\tnextInspir.indices.multiBreath = true;\n\t\t\tcumIndex.multiBreath++;\n\t\t\tnextInspir.indices.overall++;\n\t\t}else{\n\t\t\tnextInspir.indices.multiBreath = false;\n\t\t}\n\t\tif (nextInspir.ampVar > 4){\n// Where the max inspiration amplitude variance is more than 4 the breathing is flagged as unsettled. \t\t\t\n\t\t\tnextInspir.indices.ampVar = true;\n\t\t\tcumIndex.ampVar++;\n\t\t\tnextInspir.indices.overall++;\n\t\t}else{\n\t\t\tnextInspir.indices.ampVar = false;\n\t\t}\n\t}\n\n// determine the cumulative indices to two decimal places\n\tcumIndex.skew = Math.round(100 * cumIndex.skew / results.inspirations.length) / 100;\n\tcumIndex.flatTop = Math.round(100 * cumIndex.flatTop / results.inspirations.length) / 100;\n\tcumIndex.topHeavy = Math.round(100 * cumIndex.topHeavy / results.inspirations.length) / 100;\n\tcumIndex.spike = Math.round(100 * cumIndex.spike / results.inspirations.length) / 100;\n\tcumIndex.multiPeak = Math.round(100 * cumIndex.multiPeak / results.inspirations.length) / 100;\n\tcumIndex.noPause = Math.round(100 * cumIndex.noPause / results.inspirations.length) / 100;\n\tcumIndex.inspirRate = Math.round(100 * cumIndex.inspirRate / results.inspirations.length) / 100;\n\tcumIndex.multiBreath = Math.round(100 * cumIndex.multiBreath / results.inspirations.length) / 100;\n\tcumIndex.ampVar = Math.round(100 * cumIndex.ampVar / results.inspirations.length) / 100;\n\tcumIndex.overall = Math.round(100 * (cumIndex.skew + cumIndex.flatTop + cumIndex.spike + cumIndex.multiPeak + cumIndex.noPause +\n\t\t\t\t\t\t\tcumIndex.inspirRate + cumIndex.multiBreath + cumIndex.ampVar ) ) / 100;\n\t\n\treturn cumIndex;\n}\n\n\nfunction analyze(dataArray){\n const results={};\n if(dataArray.length<51||dataArray.every(v=>v.y===dataArray[0].y))return {inspirations:[],cumIndex:null};\n findMins(dataArray);\n findInspirations(dataArray,results);\n if(!results.inspirations.length)return {...results,cumIndex:null};\n calcCycleBasedIndicators(dataArray,results);\n inspirationAmplitude(dataArray,results);\n results.cumIndex=prepIndices(results);\n return results;\n}\nconst api={analyze};\nif(typeof module!=='undefined'&&module.exports)module.exports=api;\nelse root.GlasgowReference=api;\n})(globalThis);\n\n// SPDX-License-Identifier: GPL-3.0-or-later\n(function(root){\n'use strict';\nconst reference=typeof module!=='undefined'&&module.exports?require('./vendor/glasgow-reference.js'):root.GlasgowReference;\nconst VERSION='glasgow-9-v1';\nconst COMPONENTS=[['skew','Skew'],['spike','Spike'],['flatTop','Flat Top'],['topHeavy','Top Heavy'],['multiPeak','Multi Peak'],['noPause','No Pause'],['inspirRate','Inspir Rate'],['multiBreath','Multi Breath'],['ampVar','Variable Amp']];\nconst round=v=>Math.round(v*100)/100;\n// Each uninterrupted finite run is independent: never synthesize breaths across gaps.\nfunction analyzeChannel(channel){\n const sessions=[],warnings=[];\n if(!channel)return {version:VERSION,status:'unavailable',reason:'High-resolution flow unavailable. Import BRP EDF data.',sessions,warnings};\n const unit=channel.unit.trim(),scale=unit==='L/s'?60:unit==='L/min'?1:null;\n if(scale===null)return {version:VERSION,status:'unavailable',reason:'Unsupported flow unit: '+unit,sessions,warnings};\n for(const segment of channel.segments){\n  if(!Number.isFinite(segment.dt)||Math.abs(segment.dt-.04)>1e-7){warnings.push('Skipped flow segment: expected 25 Hz.');continue;}\n  let a=0;\n  while(a<segment.values.length){\n   while(a<segment.values.length&&!Number.isFinite(segment.values[a]))a++;\n   let b=a;while(b<segment.values.length&&Number.isFinite(segment.values[b]))b++;\n   if(b===a)break;\n   if(b-a>=51){\n    const start=segment.start+a*40;\n    const data=Array.from(segment.values.subarray(a,b),(v,i)=>({x:start+i*40,y:v*scale}));\n    const result=reference.analyze(data);\n    if(result.cumIndex){\n     const components=Object.fromEntries(COMPONENTS.map(([key])=>[key,result.cumIndex[key]]));\n     const breaths=result.inspirations.map(v=>({time:start+v.start*40,end:start+v.end*40,indices:v.indices}));\n     sessions.push({start,end:start+(b-a)*40,seconds:(b-a)*.04,components,breaths});\n    }else warnings.push('No complete inspirations in a flow run; its duration is excluded.');\n   }else warnings.push('Flow run shorter than 51 samples excluded.');\n   a=b;\n  }\n }\n const seconds=sessions.reduce((sum,s)=>sum+s.seconds,0);\n if(!seconds)return {version:VERSION,status:'unavailable',reason:'No analyzable 25 Hz flow with complete inspirations.',sessions,warnings:[...new Set(warnings)]};\n const components=Object.fromEntries(COMPONENTS.map(([key])=>[key,round(sessions.reduce((sum,s)=>sum+s.components[key]*s.seconds,0)/seconds)]));\n // Match groupByNight in upstream multi_night_analyzer.html: sum all NINE rounded components.\n const overall=round(COMPONENTS.reduce((sum,[key])=>sum+components[key],0));\n const inspirations=sessions.reduce((sum,s)=>sum+s.breaths.length,0);\n if(seconds<300)warnings.push('Less than five minutes analyzed; interpret short runs cautiously.');\n return {version:VERSION,status:'ok',overall,components,seconds,inspirations,sessions,warnings:[...new Set(warnings)]};\n}\n// Trailing calendar-day window. Do not turn missing nights into zeros.\nfunction movingMean(rows,key,days){\n return rows.map(row=>{\n  const stop=Date.parse(row.key+'T12:00:00Z'),begin=stop-(days-1)*86400000;\n  const values=rows.filter(r=>{const t=Date.parse(r.key+'T12:00:00Z');return t>=begin&&t<=stop&&Number.isFinite(r[key]);}).map(r=>r[key]);\n  return {...row,smoothed:Number.isFinite(row[key])&&values.length?values.reduce((a,b)=>a+b,0)/values.length:null};\n });\n}\nfunction heatBins(result,start,end,width){\n const bins=Array.from({length:width},()=>({count:0,overall:0,...Object.fromEntries(COMPONENTS.map(([k])=>[k,0]))}));\n if(result?.status!=='ok'||end<=start)return bins;\n for(const s of result.sessions)for(const breath of s.breaths){\n  if(breath.time<start||breath.time>=end)continue;\n  const bin=bins[Math.min(width-1,Math.floor((breath.time-start)/(end-start)*width))];bin.count++;bin.overall+=breath.indices.overall;\n  for(const [key] of COMPONENTS)if(breath.indices[key])bin[key]++;\n }\n for(const bin of bins)if(bin.count){bin.overall/=bin.count;for(const [key] of COMPONENTS)bin[key]/=bin.count;}\n return bins;\n}\nconst api={VERSION,COMPONENTS,analyzeChannel,movingMean,heatBins};\nif(typeof module!=='undefined'&&module.exports)module.exports=api;else root.Glasgow=api;\n})(globalThis);\n\n// SPDX-License-Identifier: GPL-3.0-or-later\n'use strict';\n\nself.onmessage=event=>{\n try{self.postMessage({result:Glasgow.analyzeChannel(event.data.channel)});}\n catch(error){self.postMessage({error:error.message});}\n};\n"],{type:"text/javascript"}));
+// SPDX-License-Identifier: GPL-3.0-or-later
+'use strict';
+const giResults=new Map(),giMemoryCache=new Map();
+const GI_METHOD='glasgow-reference-nine-components-v1';
+async function giSignature(n){const ch=n.channels['Flow.40ms'];if(!ch)return GI_METHOD+'|no-flow|'+n.key;const parts=[];for(const s of ch.segments){const bytes=await crypto.subtle.digest('SHA-256',s.values);parts.push([s.start,s.dt,s.values.length,Array.from(new Uint8Array(bytes),v=>v.toString(16).padStart(2,'0')).join('')]);}return Portable.hash(JSON.stringify([GI_METHOD,ch.unit,parts]));}
+function applyPortablePreferences(rows){const p=rows.find(x=>x.id==='view');if(!p)return;if(Array.isArray(p.signalOrder))signalOrder=p.signalOrder;if(['classic','custom'].includes(p.giChartMode))giChartMode=p.giChartMode;for(const [set,values] of [[giSelected,p.giSelected],[trendSelected,p.trendSelected]])if(Array.isArray(values)){set.clear();values.forEach(x=>set.add(x));}}
+function savePortablePreferences(){if(!portable||!Portable.writable||Portable.state?.preview)return;put('preferences',{id:'view',signalOrder,giChartMode,giSelected:[...giSelected],trendSelected:[...trendSelected]}).catch(e=>Portable.error(e));}
+let giEpoch=0,giWorker=null,giReject=null,giScheduled=null;
+const giKeys=[['overall','Mean GI'],...Glasgow.COMPONENTS];
+const palette=['#087f7a','#8b4ac2','#d06024','#2274be','#bf3965','#658115','#6356cb','#a46528','#00839b','#536875'];
+let giChartMode='classic';
+const giSelected=new Set(['overall','flatTop','topHeavy']),trendSelected=new Set(['usage','gi:overall']);
+let signalOrder=[];
+try{const saved=JSON.parse(localStorage.getItem('bpg-signal-order')||'[]');if(Array.isArray(saved))signalOrder=saved.filter(k=>typeof k==='string');}catch{}
+function giGetNight(key){return giResults.get(key);}
+function giReset(){
+ giEpoch++;giResults.clear();clearTimeout(giScheduled);
+ if(giWorker){giWorker.terminate();giWorker=null;giReject?.(Error('Archive changed'));giReject=null;}
+ if(portable)Portable.analysisBusy=true;const epoch=giEpoch;giScheduled=setTimeout(()=>giAnalyze([...nights],epoch),0);
+}
+async function giAnalyze(list,epoch){
+ for(let i=0;i<list.length&&epoch===giEpoch;i++){
+  const n=list[i];$('giStatus').textContent=`Analyzing Glasgow Index · ${i+1}/${list.length} · ${n.key}`;
+  try{
+   if(n.vendor==='Philips'){giResults.set(n.key,{status:'unavailable',reason:'Glasgow Index unavailable for Philips flow: the current algorithm requires validated 25 Hz input. No resampling is applied.'});continue;}
+   const signature=portable?await giSignature(n):null,cached=portable?(giCacheRecords.find(x=>x.id===n.key&&x.signature===signature&&x.method===GI_METHOD)||giMemoryCache.get(signature)):null;
+   const result=cached?.result||await new Promise((resolve,reject)=>{
+    const worker=new Worker(previewWorkerURL);giWorker=worker;giReject=reject;
+    const finish=()=>{worker.terminate();if(giWorker===worker){giWorker=null;giReject=null;}};
+    worker.onmessage=e=>{finish();e.data.error?reject(Error(e.data.error)):resolve(e.data.result);};
+    worker.onerror=e=>{finish();reject(Error(e.message||'Glasgow analysis failed'));};
+    const ch=n.channels['Flow.40ms'];
+    const channel=ch?{unit:ch.unit,segments:ch.segments.map(s=>({start:s.start,dt:s.dt,values:new Float64Array(s.values)}))}:null;
+    worker.postMessage({channel},channel?channel.segments.map(s=>s.values.buffer):[]);
+   });
+   if(epoch!==giEpoch)return;giResults.set(n.key,result);
+   if(portable){const entry={id:n.key,signature,method:GI_METHOD,result};giMemoryCache.set(signature,entry);if(Portable.writable&&!Portable.state?.preview&&!Portable.state?.pending&&!giCacheRecords.some(x=>x.id===n.key&&x.signature===signature&&x.method===GI_METHOD)){try{await put('analysis',entry);giCacheRecords=giCacheRecords.filter(x=>x.id!==n.key);giCacheRecords.push(entry);}catch(e){Portable.error(e);}}}
+  }catch(e){if(epoch!==giEpoch)return;giResults.set(n.key,{status:'unavailable',reason:e.message});}
+  giRenderHome();renderOverview();giRenderNight();if(night?.key===n.key)renderStats();
+ }
+ if(epoch===giEpoch){giRenderHome();renderOverview();giRenderNight();if(night)renderStats();if(portable){Portable.analysisBusy=false;Portable.changed();}const done=[...giResults.values()].filter(r=>r.status==='ok').length;$('giStatus').textContent=list.length?`Glasgow analysis complete · ${done}/${list.length} nights available. Cached results are reused when flow and algorithm are unchanged.`:'';}
+}
+function giRows(){const min=$('giFrom').value,max=$('giTo').value;return nights.filter(n=>(!min||n.key>=min)&&(!max||n.key<=max)&&(!$('giHideShort').checked||n.usage>=4));}
+function giRenderHome(){renderTrend();}
+function renderOverview(){
+ const last=nights.slice(-7),mean=values=>values.length?values.reduce((a,b)=>a+b,0)/values.length:null;
+ const withEvents=last.map(n=>({usage:n.usage,apnea:count(n,'apnea'),hypopnea:count(n,'hypopnea')})).filter(x=>x.usage>0&&x.apnea!==null&&x.hypopnea!==null);
+ const hours=withEvents.reduce((sum,x)=>sum+x.usage,0),ahi=hours?withEvents.reduce((sum,x)=>sum+x.apnea+x.hypopnea,0)/hours:null;
+ const flow=last.map(n=>stat(n,'FlowLim.2s')?.mean).filter(Number.isFinite);
+ const usage=last.map(n=>n.usage).filter(Number.isFinite);
+ const gi=last.map(n=>giResults.get(n.key)).filter(r=>r?.status==='ok').map(r=>r.overall);
+ const cards=[
+  [fmt(ahi),'Annotated AHI · latest 7',`${withEvents.length}/${last.length} nights with event files and use. Annotated apneas + hypopneas divided by their total hours of device use; this is not a clinical sleep AHI.`],
+  [fmt(mean(flow)),'Mean flow limitation · latest 7',`${flow.length}/${last.length} nights with recorded FlowLim values. Arithmetic mean of available nightly signal means, not GI.`],
+  [fmt(mean(usage)),'Mean use · latest 7',`${usage.length}/${last.length} nights with available use duration; hours per night.`],
+  [fmt(mean(gi)),'Mean GI · latest 7',`${gi.length}/${last.length} nights with analyzable flow. Mean of available nightly GI totals; not RDI.`],
+  [String(nights.length),'Nights available','Total visible nights in this archive.']
+ ];
+ $('kpis').replaceChildren(...cards.map(([value,label,hint])=>{const card=el('div',undefined,'kpi');card.title=hint;card.append(el('strong',value),el('span',label));return card;}));
+}
+function trendDefinitions(){
+ const defs=[['usage','Usage','h'],['gi:overall','Mean GI','GI (0–9)'],['apnea','Annotated apneas','count'],['hypopnea','Annotated hypopneas','count'],['snore','Snore episodes','count'],['flowlim','Flow limitation episodes','count'],['snoreMin','Snore above threshold','min'],['flowMin','Flow limitation above threshold','min']];
+ const keys=[...new Set(nights.flatMap(n=>Object.keys(n.channels)))];return [...defs,...keys.map(k=>['mean:'+k,(names[k]||k)+' · mean',displayUnit(nights.find(n=>n.channels[k]).channels[k].unit)])];
+}
+function trendValue(n,key){
+ if(key==='usage')return n.usage;
+ if(key.startsWith('gi:')){const r=giResults.get(n.key);return r?.status==='ok'?(key==='gi:overall'?r.overall:r.components[key.slice(3)]):null;}
+ if(key==='apnea'||key==='hypopnea')return count(n,key);
+ if(key.startsWith('mean:'))return stat(n,key.slice(5))?.mean??null;
+ const snore=key.startsWith('snore'),ep=episodes(n.channels[snore?'Snore.2s':'FlowLim.2s'],Number($(snore?'snoreThreshold':'flowThreshold').value));return ep?(key.endsWith('Min')?ep.minutes:ep.count):null;
+}
+function seriesToggle(key,label,color,checked,onchange){
+ const l=el('label',undefined,'series-chip'),input=el('input'),swatch=el('span',undefined,'series-swatch');input.type='checkbox';input.checked=checked;input.dataset.series=key;input.onchange=()=>onchange(input.checked);swatch.style.background=color;l.append(input,swatch,document.createTextNode(label));return l;
+}
+function renderTrend(){
+ const defs=trendDefinitions(),choices=$('trendChoices');choices.replaceChildren();defs.forEach(([k,label,unit],i)=>choices.append(seriesToggle(k,label,seriesColor(i),trendSelected.has(k),v=>{v?trendSelected.add(k):trendSelected.delete(k);savePortablePreferences();renderTrend();})));
+ const list=giRows(),host=$('trend');host.replaceChildren();$('trendReadout').textContent='';if(!list.length){host.append(el('p','Import nights to see your trends.'));return;}
+ const active=defs.flatMap(([k,label,unit],i)=>trendSelected.has(k)?[{k,label,unit,color:seriesColor(i),rows:Glasgow.movingMean(list.map(n=>({key:n.key,value:trendValue(n,k)})),'value',Number($('giSmooth').value))}]:[]);
+ if(!active.length){host.append(el('p','Select one or more series above.'));return;}
+ const canvas=el('canvas');canvas.id='trendCanvas';canvas.setAttribute('aria-label','Grouped bar chart of nightly trends');host.append(canvas);
+ const w=Math.max(650,host.clientWidth||1000,list.length*Math.max(50,active.length*15+20)+90),h=300,dpr=devicePixelRatio||1;canvas.style.width=w+'px';canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);
+ const x0=58,pw=w-86,group=pw/list.length,base=245,top=40,plotHeight=base-top;
+ ctx.font='11px system-ui';ctx.fillStyle='#536875';ctx.fillText('Bars scaled per metric · exact units below',x0,17);
+ for(let j=0;j<=4;j++){const y=base-j*plotHeight/4;ctx.strokeStyle='#e5edef';ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(w-28,y);ctx.stroke();}
+ const scales=el('div',undefined,'trend-scales');
+ active.forEach((s,index)=>{
+  const values=s.rows.map(r=>r.smoothed).filter(Number.isFinite),lo=Math.min(0,...values),hi=Math.max(0,...values),range=hi-lo||1,zeroY=base-(0-lo)/range*plotHeight;
+  const note=el('span',`${s.label}: ${values.length?fmt(lo)+'–'+fmt(hi)+' '+s.unit:'unavailable'}`);note.style.color=s.color;scales.append(note);
+  for(let i=0;i<s.rows.length;i++){
+   const value=s.rows[i].smoothed;if(!Number.isFinite(value))continue;
+   const y=base-(value-lo)/range*plotHeight,barWidth=Math.min(19,(group-12)/active.length),x=x0+(i+.5)*group+(index-(active.length-1)/2)*barWidth;
+   ctx.fillStyle=s.color;ctx.fillRect(x-barWidth/2,Math.min(zeroY,y),barWidth,Math.max(2,Math.abs(zeroY-y)));
+  }
+ });
+ for(let i=0;i<list.length;i++){const x=x0+(i+.5)*group;if(group>=75||i%Math.ceil(75/group)===0)ctx.fillText(list[i].key,Math.max(x0,Math.min(w-85,x-30)),278);}
+ host.append(scales);
+ const nearest=e=>{const r=canvas.getBoundingClientRect(),index=Math.max(0,Math.min(list.length-1,Math.floor((e.clientX-r.left-x0)/group)));return list[index];};
+ canvas.onpointermove=e=>{const n=nearest(e);$('trendReadout').textContent=n.key+' · '+active.map(s=>s.label+': '+fmt(s.rows.find(r=>r.key===n.key)?.smoothed)+' '+s.unit).join(' · ');};canvas.onclick=e=>openNight(nearest(e).key);
+}
+function seriesColor(i){return i===0?'#3f6470':i===1?palette[0]:`hsl(${(Math.round(i*137.508)+100)%360} 65% 36%)`;}
+function orderedSignals(){return [...selected].sort((a,b)=>{const ia=signalOrder.indexOf(a),ib=signalOrder.indexOf(b);return (ia<0?999:ia)-(ib<0?999:ib);});}
+function moveSignal(source,target){
+ if(source===target)return;const order=[...new Set([...signalOrder,...selected])],from=order.indexOf(source),to=order.indexOf(target);if(from<0||to<0)return;order.splice(from,1);order.splice(to,0,source);signalOrder=order;try{localStorage.setItem('bpg-signal-order',JSON.stringify(order));}catch{}savePortablePreferences();build();giRenderNight();
+}
+function setupSignalCard(box,head,key){
+ box.dataset.signal=key;const handle=el('span','⠿');handle.className='drag-handle no-print';handle.draggable=true;handle.title='Drag to reorder '+(names[key]||key);handle.setAttribute('aria-label',handle.title);
+ handle.ondragstart=e=>{e.dataTransfer.setData('text/plain',key);e.dataTransfer.effectAllowed='move';box.classList.add('dragging');};handle.ondragend=()=>document.querySelectorAll('.dragging,.drop-target').forEach(x=>x.classList.remove('dragging','drop-target'));
+ box.ondragover=e=>{if([...e.dataTransfer.types].includes('text/plain')){e.preventDefault();box.classList.add('drop-target');}};box.ondragleave=()=>box.classList.remove('drop-target');box.ondrop=e=>{e.preventDefault();box.classList.remove('drop-target');moveSignal(e.dataTransfer.getData('text/plain'),key);};
+ const up=button('↑',()=>{const list=orderedSignals(),i=list.indexOf(key);if(i>0)moveSignal(key,list[i-1]);}),down=button('↓',()=>{const list=orderedSignals(),i=list.indexOf(key);if(i<list.length-1)moveSignal(key,list[i+1]);});for(const [b,label] of [[up,'Move signal up'],[down,'Move signal down']]){b.className='no-print';b.setAttribute('aria-label',label);b.title=label;}head.append(handle,up,down);
+}
+function giCreateCard(){
+ const box=el('section',undefined,'chart'),head=el('div',undefined,'head');box.id='giNightPanel';setupSignalCard(box,head,'glasgow');head.append(el('strong','Glasgow Index'));
+ const selector=el('select');selector.id='giChartMode';selector.setAttribute('aria-label','Glasgow chart type');for(const [value,label] of [['classic','GI · Classic timeline'],['custom','GI · Component curves']]){const o=el('option',label);o.value=value;selector.append(o);}selector.value=giChartMode;selector.onchange=()=>{giChartMode=selector.value;savePortablePreferences();build();giRenderNight();};
+ const controls=el('div',undefined,'no-print');controls.append(selector);
+ if(giChartMode==='custom'){const choices=el('div',undefined,'series-choices');giKeys.forEach(([k,l],i)=>choices.append(seriesToggle(k,l,palette[i],giSelected.has(k),v=>{v?giSelected.add(k):giSelected.delete(k);savePortablePreferences();giDrawHeatmap();})));controls.append(choices);}
+ const info=el('p');info.id='giNightStatus';info.setAttribute('role','status');const hint=el('p',giChartMode==='classic'?'Darker marks indicate more flagged inspirations. Gray means no analyzed inspiration starts in that column. Click to inspect the flow.':'Each point averages inspirations starting in a time bin (at least 30 seconds, unless the visible range is shorter). GI uses the left scale (0–9); components use the right scale (0–1). Gaps remain empty. Click to inspect the flow.','muted');
+ const canvas=el('canvas');canvas.id='giHeatmap';canvas.setAttribute('aria-label','Glasgow component timeline');canvas.onclick=e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,x0=giChartMode==='classic'?120:65;if(x<x0)return;jump(night.origin+(left+Math.max(0,Math.min(1,(x-x0)/(r.width-x0-50)))*span)*1000);};box.append(head,controls,info,hint,canvas);cards.push({key:'glasgow',canvas});return box;
+}
+function giRenderNight(){
+ if(!night||!$('giNightStatus'))return;const r=giResults.get(night.key);$('giNightStatus').textContent=r?.status==='ok'?`Mean GI ${fmt(r.overall)} · ${r.inspirations} inspirations · ${fmt(r.seconds/3600)} h analyzed of ${fmt(night.usage)} h use. ${r.warnings.join(' ')}`:r?.reason||'Analyzing Glasgow Index automatically…';giDrawHeatmap();
+}
+function giStatisticRows(){
+ const r=night&&giResults.get(night.key);if(r?.status!=='ok')return [['GI · flags per inspiration','0–9','—','—','—','—','—'],['GI · nightly index','0–9','—','—','—','—','—']];
+ const values=Float64Array.from(r.sessions.flatMap(s=>s.breaths.map(b=>b.indices.overall)));
+ const s=stats({unit:'',segments:[{dt:1,values}]});
+ return [['GI · flags per inspiration','0–9',fmt(s?.min),fmt(s?.med),fmt(s?.p95),fmt(s?.p995),fmt(s?.mean)],['GI · nightly index','0–9','—','—','—','—',fmt(r.overall)],...Glasgow.COMPONENTS.map(([k,label])=>['GI · '+label,'fraction','—','—','—','—',fmt(r.components[k])])];
+}
+function giStatisticsNote(){
+ const r=night&&giResults.get(night.key);return r?.status==='ok'?`${r.inspirations} inspirations · ${fmt(r.seconds/3600)} h analyzed. GI percentiles and the first mean describe per-inspiration flag counts. Nightly GI and component means use the reference duration-weighted, rounded session method; they can differ from a simple breath average.`:r?.reason||'Glasgow analysis runs automatically; statistics will appear when ready.';
+}
+function giDrawHeatmap(){
+ const canvas=$('giHeatmap');if(!canvas||!night||$('detail').hidden)return;const result=giResults.get(night.key),w=canvas.clientWidth;if(w<100)return;const h=320,dpr=devicePixelRatio||1;canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);ctx.font='11px system-ui';
+ if(result?.status!=='ok'){ctx.fillStyle='#536875';ctx.fillText(result?.reason||'Analyzing…',20,50);return;}
+ const classic=giChartMode==='classic',x0=classic?120:65,pw=Math.max(1,Math.floor(w-x0-50)),start=night.origin+left*1000,end=start+span*1000;
+ if(classic){const bins=Glasgow.heatBins(result,start,end,pw);giKeys.forEach(([key,label],row)=>{const y=10+row*27;ctx.fillStyle='#425966';ctx.fillText(key==='overall'?'Overall GI':label,0,y+14);ctx.fillStyle='#eef2f4';ctx.fillRect(x0,y,pw,22);bins.forEach((bin,i)=>{if(!bin.count)return;const v=key==='overall'?bin.overall/9:bin[key];ctx.fillStyle=`rgba(105,56,170,${.08+.92*v})`;ctx.fillRect(x0+i,y,1,22);});});}
+ else{
+  const width=Math.max(1,Math.min(Math.floor(pw/4),Math.floor(span/30))),bins=Glasgow.heatBins(result,start,end,width);
+  for(let i=0;i<=3;i++){const y=270-i*75;ctx.strokeStyle='#e5edef';ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x0+pw,y);ctx.stroke();ctx.fillStyle='#536875';ctx.fillText(String(i*3),20,y+4);ctx.fillText(fmt(i/3),x0+pw+8,y+4);}ctx.fillText('GI 0–9',12,25);ctx.fillText('0–1',x0+pw+7,25);
+  giKeys.forEach(([key,label],index)=>{if(!giSelected.has(key))return;ctx.strokeStyle=palette[index];ctx.fillStyle=palette[index];ctx.lineWidth=2;ctx.beginPath();let fresh=true;bins.forEach((b,i)=>{if(!b.count){fresh=true;return;}const x=x0+(i+.5)/width*pw,y=270-(key==='overall'?b.overall/9:b[key])*225;fresh?ctx.moveTo(x,y):ctx.lineTo(x,y);fresh=false;});ctx.stroke();bins.forEach((b,i)=>{if(b.count){ctx.beginPath();ctx.arc(x0+(i+.5)/width*pw,270-(key==='overall'?b.overall/9:b[key])*225,2.5,0,Math.PI*2);ctx.fill();}});});if(!giSelected.size){ctx.fillStyle='#536875';ctx.fillText('Select one or more series above.',x0+20,145);}
+ }
+ ctx.fillStyle='#425966';for(let i=0;i<5;i++)ctx.fillText(clock(start+(end-start)*i/4),Math.min(w-62,x0+pw*i/4),305);
+ const line=(t,color)=>{if(t<start||t>end)return;const x=x0+(t-start)/(end-start)*pw;ctx.strokeStyle=color;ctx.beginPath();ctx.moveTo(x,8);ctx.lineTo(x,280);ctx.stroke();};for(const m of annotations.filter(m=>m.night===night.key))line(m.time,'#ce4475');if(cursor!==null)line(night.origin+cursor*1000,'#253d4d');
+}
+for(const id of ['giFrom','giTo','giHideShort','giSmooth'])$(id).onchange=giRenderHome;
+</script><script>
+async function loadPreview(){
+ while(!db)await new Promise(r=>setTimeout(r,25));
+ if(files.length)return;
+ for(let day=0;day<8;day++){
+  const start=Date.UTC(2024,0,day+1,22),seconds=900+day*120;
+  const signal=(label,unit,dt,fn)=>({label,unit,dt,start,name:'SYNTHETIC',values:Float64Array.from({length:seconds/dt},(_,i)=>fn(i*dt))});
+  const signals=[signal('Flow.40ms','L/s',.04,t=>{const v=Math.sin(2*Math.PI*t/4.2),flat=(Math.floor(t/90)+day)%5<day%4;return v>=0?(flat?Math.min(.32,.65*v):.43*v*(1+.12*Math.sin(t/9))):.43*v;}),signal('Press.2s','cmH2O',2,t=>7+day*.18+.6*Math.sin(t/90)),signal('EprPress.2s','cmH2O',2,t=>4.5+.15*Math.sin(t/90)),signal('Leak.2s','L/min',2,t=>3+day*.6+2*Math.sin(t/70)),signal('FlowLim.2s','',2,t=>Math.max(0,.1+.05*day+.12*Math.sin(t/80)))];
+  const parsed={name:'SYNTHETIC_'+day,start,duration:seconds,recordDuration:1,records:seconds,summary:false,signals,events:[]};
+  await put('files',{id:'preview-'+day,name:'SYNTHETIC_'+day+'.edf',path:'SYNTHETIC_'+day+'.edf',parsed,blob:new Blob(['Synthetic preview fixture — no patient data']),derived:true});
+ }
+ await refresh();status('Synthetic preview · 8 generated nights · no patient data.');
+}
+loadPreview().catch(e=>status('Preview: '+e.message));
+</script></body></html>
+

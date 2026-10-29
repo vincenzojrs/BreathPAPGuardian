@@ -1,0 +1,52 @@
+PAP LOCALE — LOCAL PAP NIGHT JOURNAL
+
+1. Extract the entire PAP-Locale folder.
+2. With Python 3, run: bash Avvia-PAP.command
+   Or start Docker Desktop, then run: bash Avvia-con-Docker.command
+   Internet is needed for the initial Docker image download only.
+3. Open http://127.0.0.1:8765 in your browser.
+   Always use the same URL, browser and profile; do not alternate with localhost.
+4. Keep the terminal open. Press Ctrl+C to stop.
+
+You can double-click the launchers on macOS. If that fails, run the commands
+above from Terminal inside this folder. No macOS security changes are needed.
+
+IMPORT AND TRANSFER
+
+Choose files or an SD folder. To transfer nights, notes and attachments from
+another instance, download its local backup, save the JSON using Download file,
+then choose Restore backup here. Verify nights, markers, images and videos.
+Importing the SD card alone does not transfer markers.
+
+STORAGE AND PRIVACY
+
+Originals, metadata, nights, notes, images and videos live in the browser's
+IndexedDB for http://127.0.0.1:8765, not in the program folder or Docker container.
+Clearing site data or deleting the browser profile can remove the archive.
+Use normal browsing mode and download independent backups regularly.
+Backup JSON contains sensitive recordings and attachments and is not encrypted
+by this application. Keep backups private.
+
+No ChatGPT, SleepHQ or other account is needed. Program files are bundled;
+there are no external fonts, CDNs, analytics or application APIs. Processing
+happens in the browser. The server only serves static files, receives no uploads
+and is locally accessible with the normal launch commands. Application network
+connections are blocked by the page policy. No archive synchronization or
+application-level encryption is included.
+
+FEATURES
+
+Multi-night history, statistics, synchronized charts, zoom/pan, pressure overlays,
+markers with notes and media, night deletion, backup/restore, per-signal CSV
+exports and PDF reports. PDF reports contain selected charts for the visible
+range and notes; media attachments are listed, not embedded. Attachments have
+a 30 MB limit each. Charts and reports are for data exploration, not diagnosis.
+
+UPDATES
+
+Back up first. Replace program files while keeping your usual URL and browser.
+For Docker, rebuild with: docker build -t pap-locale:1 .
+Rebuilding does not change browser data.
+
+See README.md for full setup, usage, interpretation, troubleshooting, privacy,
+contribution guidance and licensing status.
