@@ -1,15 +1,15 @@
 # BreathPAPGuardian
 
-A local PAP data explorer with interactive charts, a night journal and exports. Built around **ResMed AirCurve 10 CS PaceWave** recordings.
+A local PAP data explorer with interactive charts, a night journal and exports. Supports **ResMed EDF** recordings and unencrypted **Philips DreamStation PRS1 family 0/version 6** recordings.
 
 ## Features
 
-- Import EDF files or an SD-card folder and browse multiple nights.
+- Import EDF files, a Philips P-SERIES ZIP or an SD-card folder and browse multiple nights.
 - Explore synchronized charts, pressure overlays, settings and statistics.
 - Add markers with notes, images and videos.
 - Export CSV signals and PDF reports.
 - Back up and restore your archive, including attachments.
-- Automatically calculate Glasgow Index and nine component fractions on import.
+- Automatically calculate Glasgow Index and nine component fractions for supported 25 Hz ResMed flow. Philips 5 Hz flow remains viewable without a GI estimate.
 - Compare colored, selectable metrics in a multi-night bar chart, including mean GI.
 - View five summary measures: annotated AHI, flow limitation, use and mean GI
   across the latest seven available nights, plus total nights in the archive.
@@ -18,7 +18,8 @@ A local PAP data explorer with interactive charts, a night journal and exports. 
 - Inspect the two key GI statistics alongside signal statistics; expand component
   fractions if needed. The night list starts collapsed.
 
-See [Glasgow Index: method and usage](docs/glasgow-index.md).
+See [Glasgow Index: method and usage](docs/glasgow-index.md) and
+[Philips DreamStation: supported data and limitations](docs/philips-dreamstation.md).
 An offline [interactive preview](docs/glasgow-preview.html) uses synthetic data only;
 download and open the HTML file in your browser. GI remains experimental flow-shape
 analysis, not a diagnostic index or RDI.
@@ -81,7 +82,8 @@ Always use the same browser, profile and URL: `localhost` and `127.0.0.1` have s
 ## Limitations
 
 - Intended for data exploration, **not diagnosis**.
-- One PAP device per archive; compatibility with other devices is not guaranteed.
+- One PAP device per archive. Use separate browser profiles for Philips and ResMed.
+- Philips support is validated on a 500X150 in CPAP mode; encrypted DreamStation 2 and other PRS1 families are unsupported.
 - Nights run noon to noon using the device clock, without time zone conversion.
 - Calculated episodes and statistics may differ from SleepHQ.
 - Attachments are limited to 30 MB each; PDFs list media without embedding it.
@@ -94,8 +96,8 @@ See [LEGGIMI.txt](LEGGIMI.txt) for additional startup, transfer and update notes
 
 ## License
 
-Licensed under **GNU GPL version 3 or, at your option, any later version**
-([LICENSE](LICENSE)). Distributed without warranty.
+Original project code is licensed under **GNU GPL version 3 or, at your option, any later version**
+([LICENSE](LICENSE)). The OSCAR-derived Philips reader retains its GPL-3.0-only notice. Distributed without warranty.
 
 Glasgow calculations adapt DaveSkvn's code through VibeCoder75321's multi-night
 analyzer. Copyright notices, pinned source revision and modifications are in

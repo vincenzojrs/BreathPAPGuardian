@@ -30,3 +30,28 @@ existing reader; this integration does not introduce edf2ascii or EDFlib.
 
 BreathPAPGuardian is distributed under GPL-3.0-or-later. Preserve the upstream
 copyright and license notices when redistributing this code or modifications.
+
+## Philips Respironics PRS1 reader
+
+`web/philips.js` adapts the unencrypted family 0/version 6 format decoding from
+[OSCAR](https://gitlab.com/pholy/OSCAR-code), revision
+`d16e40388d7b4dcbfc97afef85df43c520a03ccb`:
+
+- `oscar/SleepLib/loader_plugins/prs1_parser.cpp`: block headers, checksums and
+  CRC-32/MPEG-2 over zero-extended 32-bit data words.
+- `oscar/SleepLib/loader_plugins/prs1_parser_xpap.cpp`: `ParseSummaryF0V6`,
+  `ParseSettingsF0V6`, `ParseEventsF0V6`.
+- `oscar/SleepLib/loader_plugins/prs1_loader.cpp`: waveform signedness and scaling.
+
+Copyright (c) 2019–2024 The OSCAR Team. Portions copyright (c) 2011–2018
+Mark Watkins. OSCAR is distributed under GNU GPL version 3 (its `COPYING`,
+the same license text as this repository's `LICENSE`). The adapted
+`web/philips.js` is marked **GPL-3.0-only**; preserve that notice. The original
+BreathPAPGuardian and Glasgow code retain their existing license notices.
+
+Modifications dated 2026-10-28–29: JavaScript implementation; explicit F0V6 scope;
+strict bounds/checksum validation; local browser data model; interval coverage
+and mask-on use; compact signed waveform storage; unsupported records rejected
+rather than guessed. No OSCAR executable, Qt dependency, sample recordings or
+patient identifiers are bundled. `web/import-files.js` is a separate local ZIP
+reader using native `DecompressionStream` and does not bundle a ZIP library.
