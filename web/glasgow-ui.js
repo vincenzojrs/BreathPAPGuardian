@@ -59,11 +59,12 @@ function renderOverview(){
  $('kpis').replaceChildren(...cards.map(([value,label,hint])=>{const card=el('div',undefined,'kpi');card.title=hint;card.append(el('strong',value),el('span',label));return card;}));
 }
 function trendDefinitions(){
- const defs=[['usage','Usage','h'],['gi:overall','Mean GI','GI (0–9)'],['apnea','Annotated apneas','count'],['hypopnea','Annotated hypopneas','count'],['snore','Snore episodes','count'],['flowlim','Flow limitation episodes','count'],['snoreMin','Snore above threshold','min'],['flowMin','Flow limitation above threshold','min']];
+ const defs=[['usage','Usage','h'],['gi:overall','Mean GI','GI (0–9)'],['polar:hr','Polar mean heart rate (full recording)','bpm'],['polar:rmssd','Polar mean screened RMSSD (full recording)','ms'],['polar:overlap','Polar/PAP interval overlap (estimated)','min'],['apnea','Annotated apneas','count'],['hypopnea','Annotated hypopneas','count'],['snore','Snore episodes','count'],['flowlim','Flow limitation episodes','count'],['snoreMin','Snore above threshold','min'],['flowMin','Flow limitation above threshold','min']];
  const keys=[...new Set(nights.flatMap(n=>Object.keys(n.channels)))];return [...defs,...keys.map(k=>['mean:'+k,(names[k]||k)+' · mean',displayUnit(nights.find(n=>n.channels[k]).channels[k].unit)])];
 }
 function trendValue(n,key){
  if(key==='usage')return n.usage;
+ if(key.startsWith('polar:')){const rows=external.filter(e=>e.polar&&e.night===n.key);if(!rows.length)return null;if(key==='polar:overlap')return rows.reduce((sum,r)=>sum+r.summary.overlapSeconds,0)/60;const field=key==='polar:hr'?'meanHR':'meanRMSSD',weight=key==='polar:hr'?'hrCount':'hrvCount';const valid=rows.filter(r=>Number.isFinite(r.summary[field])&&r.summary[weight]>0);const count=valid.reduce((sum,r)=>sum+r.summary[weight],0);return count?valid.reduce((sum,r)=>sum+r.summary[field]*r.summary[weight],0)/count:null;}
  if(key.startsWith('gi:')){const r=giResults.get(n.key);return r?.status==='ok'?(key==='gi:overall'?r.overall:r.components[key.slice(3)]):null;}
  if(key==='apnea'||key==='hypopnea')return count(n,key);
  if(key.startsWith('mean:'))return stat(n,key.slice(5))?.mean??null;

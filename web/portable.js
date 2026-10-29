@@ -63,7 +63,7 @@ const Portable={
   byId('archiveConflict').hidden=!s.conflict;byId('pendingControls').hidden=!s.pending;
   byId('acceptRestore').hidden=!s.preview||s.pending!=='restore'||!s.complete;byId('allowReimport').disabled=!this.writable||s.preview;
   if(s.error)byId('archiveMessage').textContent=s.error;
-  for(const id of ['files','folder','restore','erase','addMarker','deleteNight','migratePortable']){const e=byId(id);if(e)e.disabled=!this.writable||s.preview||this.closed||s.conflict||!!s.pending&&!(s.pending==='import'&&['files','folder'].includes(id));}
+  for(const id of ['files','folder','polarFiles','polarFolder','restore','erase','addMarker','deleteNight','migratePortable']){const e=byId(id);if(e)e.disabled=!this.writable||s.preview||this.closed||s.conflict||!!s.pending&&!(s.pending==='import'&&['files','folder'].includes(id));}
  },
  async busyAction(fn){if(busy)throw Error('An operation is already running.');busy=true;try{await fn();}finally{busy=false;this.render();}},
  bind(){
