@@ -16,6 +16,7 @@ jobs:
       - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
       - run: node tests/browser-smoke.cjs
+      - run: node tests/polar-browser.cjs
       - run: node tests/philips-browser.cjs
       - run: node tests/philips-browser.cjs --ds2
       - run: node tests/portable-browser.cjs

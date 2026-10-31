@@ -52,18 +52,19 @@ function renderOverview(){
  const cards=[
   [fmt(ahi),'Annotated AHI · latest 7',`${withEvents.length}/${last.length} nights with event files and use. Annotated apneas + hypopneas divided by their total hours of device use; this is not a clinical sleep AHI.`],
   [fmt(mean(flow)),'Mean flow limitation · latest 7',`${flow.length}/${last.length} nights with recorded FlowLim values. Arithmetic mean of available nightly signal means, not GI.`],
-  [fmt(mean(usage)),'Mean use · latest 7',`${usage.length}/${last.length} nights with available use duration; hours per night.`],
+  [formatDuration(mean(usage)),'Mean use · latest 7',`${usage.length}/${last.length} nights with available use duration; hours per night.`],
   [fmt(mean(gi)),'Mean GI · latest 7',`${gi.length}/${last.length} nights with analyzable flow. Mean of available nightly GI totals; not RDI.`],
   [String(nights.length),'Nights available','Total visible nights in this archive.']
  ];
  $('kpis').replaceChildren(...cards.map(([value,label,hint])=>{const card=el('div',undefined,'kpi');card.title=hint;card.append(el('strong',value),el('span',label));return card;}));
 }
 function trendDefinitions(){
- const defs=[['usage','Usage','h'],['gi:overall','Mean GI','GI (0–9)'],['apnea','Annotated apneas','count'],['hypopnea','Annotated hypopneas','count'],['snore','Snore episodes','count'],['flowlim','Flow limitation episodes','count'],['snoreMin','Snore above threshold','min'],['flowMin','Flow limitation above threshold','min']];
+ const defs=[['usage','Usage','h'],['gi:overall','Mean GI','GI (0–9)'],['polar:hr','Polar mean heart rate (full recording)','bpm'],['polar:rmssd','Polar mean screened RMSSD (full recording)','ms'],['polar:overlap','Polar/PAP interval overlap (estimated)','min'],['apnea','Annotated apneas','count'],['hypopnea','Annotated hypopneas','count'],['snore','Snore episodes','count'],['flowlim','Flow limitation episodes','count'],['snoreMin','Snore above threshold','min'],['flowMin','Flow limitation above threshold','min']];
  const keys=[...new Set(nights.flatMap(n=>Object.keys(n.channels)))];return [...defs,...keys.map(k=>['mean:'+k,(names[k]||k)+' · mean',displayUnit(nights.find(n=>n.channels[k]).channels[k].unit)])];
 }
 function trendValue(n,key){
  if(key==='usage')return n.usage;
+ if(key.startsWith('polar:')){const rows=external.filter(e=>e.polar&&e.night===n.key);if(!rows.length)return null;if(key==='polar:overlap')return rows.reduce((sum,r)=>sum+r.summary.overlapSeconds,0)/60;const field=key==='polar:hr'?'meanHR':'meanRMSSD',weight=key==='polar:hr'?'hrCount':'hrvCount';const valid=rows.filter(r=>Number.isFinite(r.summary[field])&&r.summary[weight]>0);const count=valid.reduce((sum,r)=>sum+r.summary[weight],0);return count?valid.reduce((sum,r)=>sum+r.summary[field]*r.summary[weight],0)/count:null;}
  if(key.startsWith('gi:')){const r=giResults.get(n.key);return r?.status==='ok'?(key==='gi:overall'?r.overall:r.components[key.slice(3)]):null;}
  if(key==='apnea'||key==='hypopnea')return count(n,key);
  if(key.startsWith('mean:'))return stat(n,key.slice(5))?.mean??null;
@@ -85,7 +86,7 @@ function renderTrend(){
  const scales=el('div',undefined,'trend-scales');
  active.forEach((s,index)=>{
   const values=s.rows.map(r=>r.smoothed).filter(Number.isFinite),lo=Math.min(0,...values),hi=Math.max(0,...values),range=hi-lo||1,zeroY=base-(0-lo)/range*plotHeight;
-  const note=el('span',`${s.label}: ${values.length?fmt(lo)+'–'+fmt(hi)+' '+s.unit:'unavailable'}`);note.style.color=s.color;scales.append(note);
+  const note=el('span',`${s.label}: ${values.length?(s.k==='usage'?formatDuration(lo)+'–'+formatDuration(hi):fmt(lo)+'–'+fmt(hi)+' '+s.unit):'unavailable'}`);note.style.color=s.color;scales.append(note);
   for(let i=0;i<s.rows.length;i++){
    const value=s.rows[i].smoothed;if(!Number.isFinite(value))continue;
    const y=base-(value-lo)/range*plotHeight,barWidth=Math.min(19,(group-12)/active.length),x=x0+(i+.5)*group+(index-(active.length-1)/2)*barWidth;
@@ -95,7 +96,7 @@ function renderTrend(){
  for(let i=0;i<list.length;i++){const x=x0+(i+.5)*group;if(group>=75||i%Math.ceil(75/group)===0)ctx.fillText(list[i].key,Math.max(x0,Math.min(w-85,x-30)),278);}
  host.append(scales);
  const nearest=e=>{const r=canvas.getBoundingClientRect(),index=Math.max(0,Math.min(list.length-1,Math.floor((e.clientX-r.left-x0)/group)));return list[index];};
- canvas.onpointermove=e=>{const n=nearest(e);$('trendReadout').textContent=n.key+' · '+active.map(s=>s.label+': '+fmt(s.rows.find(r=>r.key===n.key)?.smoothed)+' '+s.unit).join(' · ');};canvas.onclick=e=>openNight(nearest(e).key);
+ canvas.onpointermove=e=>{const n=nearest(e);$('trendReadout').textContent=n.key+' · '+active.map(s=>s.label+': '+(s.k==='usage'?formatDuration(s.rows.find(r=>r.key===n.key)?.smoothed):fmt(s.rows.find(r=>r.key===n.key)?.smoothed)+' '+s.unit)).join(' · ');};canvas.onclick=e=>openNight(nearest(e).key);
 }
 function seriesColor(i){return i===0?'#3f6470':i===1?palette[0]:`hsl(${(Math.round(i*137.508)+100)%360} 65% 36%)`;}
 function orderedSignals(){return [...selected].sort((a,b)=>{const ia=signalOrder.indexOf(a),ib=signalOrder.indexOf(b);return (ia<0?999:ia)-(ib<0?999:ib);});}
@@ -117,7 +118,7 @@ function giCreateCard(){
  const canvas=el('canvas');canvas.id='giHeatmap';canvas.setAttribute('aria-label','Glasgow component timeline');canvas.onclick=e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left,x0=giChartMode==='classic'?120:65;if(x<x0)return;jump(night.origin+(left+Math.max(0,Math.min(1,(x-x0)/(r.width-x0-50)))*span)*1000);};box.append(head,controls,info,hint,canvas);cards.push({key:'glasgow',canvas});return box;
 }
 function giRenderNight(){
- if(!night||!$('giNightStatus'))return;const r=giResults.get(night.key);$('giNightStatus').textContent=r?.status==='ok'?`Mean GI ${fmt(r.overall)} · ${r.inspirations} inspirations · ${fmt(r.seconds/3600)} h analyzed of ${fmt(night.usage)} h use. ${r.warnings.join(' ')}`:r?.reason||'Analyzing Glasgow Index automatically…';giDrawHeatmap();
+ if(!night||!$('giNightStatus'))return;const r=giResults.get(night.key);$('giNightStatus').textContent=r?.status==='ok'?`Mean GI ${fmt(r.overall)} · ${r.inspirations} inspirations · ${formatDuration(r.seconds/3600)} analyzed of ${formatDuration(night.usage)} use. ${r.warnings.join(' ')}`:r?.reason||'Analyzing Glasgow Index automatically…';giDrawHeatmap();
 }
 function giStatisticRows(){
  const r=night&&giResults.get(night.key);if(r?.status!=='ok')return [['GI · flags per inspiration','0–9','—','—','—','—','—'],['GI · nightly index','0–9','—','—','—','—','—']];

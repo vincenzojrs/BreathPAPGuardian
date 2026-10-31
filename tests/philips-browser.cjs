@@ -17,7 +17,7 @@ const zip=path.join(tmp,'card.zip');
 const zipped=spawnSync('python3',['-c',"import pathlib,zipfile,sys\nr=pathlib.Path(sys.argv[1])\nwith zipfile.ZipFile(sys.argv[2],'w',zipfile.ZIP_DEFLATED) as z:\n for p in r.rglob('*'):\n  if p.is_file():z.write(p,p.relative_to(r).as_posix())",fixture,zip]);assert.equal(zipped.status,0,zipped.stderr.toString());
 async function ready(page){await page.waitForFunction(()=>typeof db!=='undefined'&&!!db&&!busy);}
 async function imported(page){await page.waitForFunction(()=>!busy&&document.querySelector('#status').textContent.includes('visible nights'));}
-async function erase(page){await page.locator('#homeBtn').click();await page.locator('#erase').click();await page.locator('#deleteNightConfirm').click();await page.waitForFunction(()=>!files.length&&!nights.length);}
+async function erase(page){await page.locator('#archiveBtn').click();await page.locator('#erase').click();await page.locator('#deleteNightConfirm').click();await page.waitForFunction(()=>!files.length&&!nights.length);}
 (async()=>{
  const server=spawn('python3',['server.py','--browser-storage'],{cwd:root});let browser;
  try{
@@ -51,7 +51,7 @@ async function erase(page){await page.locator('#homeBtn').click();await page.loc
   await page.locator('#files').setInputFiles(path.join(root,'examples','PAP_SYNTHETIC_DEMO.edf'));
   await page.waitForFunction(()=>!busy&&document.querySelector('#status').textContent.includes('one PAP device'));assert.equal(await page.evaluate(()=>files.length),4);
   // Back up through the actual UI, erase, restore, reload, then verify typed samples.
-  await page.locator('#backup').click();await page.locator('#exportDialog').waitFor({state:'visible'});
+  await page.locator('#archiveBtn').click();await page.locator('#backup').click();await page.locator('#exportDialog').waitFor({state:'visible'});
   const backup=await page.evaluate(()=>exportBlob.text()),saved=path.join(tmp,'backup.json');fs.writeFileSync(saved,backup);assert.match(backup,/__int8/);await page.locator('#exportClose').click();
   await erase(page);await page.locator('#restore').setInputFiles(saved);await page.waitForFunction(()=>document.querySelector('#status').textContent==='Backup restored.');await page.reload();await ready(page);
   assert.deepEqual(await page.evaluate(()=>{const s=nights[0].channels['PRS1.Flow'].segments[0];return {type:s.values.constructor.name,length:s.values.length,min:Math.min(...s.values),max:Math.max(...s.values)};}),{type:'Int8Array',length:600,min:-35,max:35});
