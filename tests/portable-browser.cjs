@@ -46,7 +46,7 @@ async function release(page){await saved(page);await page.evaluate(async()=>{awa
   await a.locator('#deleteNight').click();await a.locator('#deleteNightConfirm').click();await a.waitForFunction(()=>nights.length===0&&!busy);await saved(a);
   await a.locator('#files').setInputFiles(path.join(root,'examples/PAP_SYNTHETIC_DEMO.edf'));await a.waitForFunction(()=>!busy&&files.length===1);await saved(a);assert.equal(await a.evaluate(()=>nights.length),0);
   await a.locator('#archivePanel details').last().locator('summary').click();await a.locator('#allowReimport').click();await a.locator('#deletedNights button').click();await a.waitForFunction(()=>nights.length===1);await saved(a);
-  const download=a.waitForEvent('download');await a.locator('#backup').click();await a.locator('#exportSave').click();const backupFile=path.join(tmp,'complete-backup.json');await (await download).saveAs(backupFile);await a.locator('#exportClose').click();
+  await a.locator('#archiveBtn').click();const download=a.waitForEvent('download');await a.locator('#backup').click();await a.locator('#exportSave').click();const backupFile=path.join(tmp,'complete-backup.json');await (await download).saveAs(backupFile);await a.locator('#exportClose').click();
   const backup=JSON.parse(fs.readFileSync(backupFile));assert.equal(backup.format,'bpg-backup-v3');assert.equal(backup.data.markers.length,0);
   await a.evaluate(async()=>{await put('markers',{id:'extra',night:nights[0].key,time:nights[0].origin,title:'Must disappear',note:'extra',media:[]});await refresh();});await saved(a);
   const corrupt={...backup,data:{...backup.data,markers:[]}};corrupt.data.files=[];const corruptFile=path.join(tmp,'corrupt-backup.json');fs.writeFileSync(corruptFile,JSON.stringify(corrupt));

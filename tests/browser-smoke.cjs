@@ -22,11 +22,12 @@ const root=path.resolve(__dirname,'..');
   assert.equal(await page.locator('#trendChoices [data-series^="gi:"]').count(),1);
   assert.equal(await page.locator('#trendCanvas').getAttribute('aria-label'),'Grouped bar chart of nightly trends');
   assert.equal(await page.locator('#kpis .kpi').count(),5);
+  assert.deepEqual(await page.evaluate(()=>[formatDuration(7.72),formatDuration(1.999),formatDuration(null)]),['7 h 43 min','2 h 00 min','—']);
   assert.equal(await page.locator('#kpis .kpi').first().locator('strong').textContent(),'—');
   await page.locator('[data-series="mean:Press.2s"]').check();assert.equal(await page.locator('#trendChoices input:checked').count(),3);
   await page.locator('[data-series="usage"]').uncheck();assert.equal(await page.locator('#trendChoices input:checked').count(),2);
   await page.locator('#yourNights summary').click();assert.equal(await page.locator('#nightList').isVisible(),true);
-  await page.locator('#nightList button').first().click();await page.locator('#giHeatmap').waitFor({state:'visible'});assert((await page.locator('#giNightStatus').textContent()).includes('Mean GI'));
+  await page.locator('#nightList button').first().click();assert.match(await page.locator('#summary').textContent(),/\d+ h \d{2} min/);assert.equal(await page.evaluate(()=>document.querySelector('#detail .grid').compareDocumentPosition(document.querySelector('#charts')) & Node.DOCUMENT_POSITION_FOLLOWING),4);await page.locator('#giHeatmap').waitFor({state:'visible'});assert((await page.locator('#giNightStatus').textContent()).includes('Mean GI'));
   assert((await page.locator('#stats').textContent()).includes('GI · nightly index'));assert((await page.locator('#stats').textContent()).includes('GI · flags per inspiration'));assert.equal(await page.evaluate(()=>giStatisticRows().length),11);
   assert.equal(await page.locator('#giMore').evaluate(e=>e.open),false);await page.locator('#giMore summary').click();assert.equal(await page.locator('#giMore tbody tr').count(),9);
   // Exercise the native drag data path and keyboard-accessible alternative.
