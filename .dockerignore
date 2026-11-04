@@ -1,4 +1,10 @@
 *
 !server.py
+!portable_store.py
+!sleep_staging.py
+!storage-mode.json
+!tools/
+!tools/polar_ecg_index.py
+!tools/polar_rr_prototype.py
 !web/
 !web/**

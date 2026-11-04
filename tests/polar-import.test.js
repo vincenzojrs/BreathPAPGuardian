@@ -44,7 +44,13 @@ for(const portable of [false,true])test(`Polar import saves once to ${portable?'
  const ctx={PolarImport:Polar,PolarCSV:require('../web/polar-csv.js'),PAPImport:{zipEntries:null},Blob,BigInt,JSON,Number,Date,Error,console,
   $:id=>elements[id],night,nights:[night],external:[],busy:false,portable,confirm:()=>true,clock:t=>new Date(t).toISOString().slice(11,19),fmt:n=>Number(n.toFixed(2)).toString(),
   Portable:{assertWrite(){},hash:async v=>require('node:crypto').createHash('sha256').update(v).digest('hex'),begin:async()=>operations.push('begin'),finish:async()=>operations.push('finish'),pause:async()=>operations.push('pause'),render(){}},
-  portableEncode:async x=>x,api:async(path,changes)=>{assert.equal(path,'batch');for(const [,value] of changes.put)recorded.set(value.id,value)},put:async(store,value)=>{assert.equal(store,'external');recorded.set(value.id,value)},refresh:async()=>{ctx.external=[...recorded.values()]}};
+  portableEncode:async x=>x,api:async(path,changes)=>{if(path==='ecg-index')return {};assert.equal(path,'batch');for(const [,value] of changes.put)recorded.set(value.id,value)},put:async(store,value)=>{assert.equal(store,'external');recorded.set(value.id,value)},refresh:async()=>{ctx.external=[...recorded.values()]}};
  vm.createContext(ctx);vm.runInContext(source.slice(start,end),ctx);await ctx.ingestPolar(fixture());assert.equal(recorded.size,1,elements.polarStatus.textContent);assert.equal([...recorded.values()][0].blobs['000_ecg.csv'].size>0,true);
  await ctx.ingestPolar(fixture());assert.equal(recorded.size,1);assert.match(elements.polarStatus.textContent,/already imported/);if(portable)assert.deepEqual(operations,['begin','finish']);
+});
+
+test('selected Polar streams avoid ECG parsing and support cancellation',async()=>{
+ const a=await Polar.prepare(fixture(),null),record={...a,zone:a.info.zone};
+ const selected=await Polar.channels(record,['hr','rr','hrv']);assert.deepEqual(Object.keys(selected),['hr','rr','hrv']);
+ const controller=new AbortController();controller.abort();await assert.rejects(()=>Polar.channels(record,['ecg'],controller.signal),e=>e.name==='AbortError');
 });

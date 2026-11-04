@@ -9,10 +9,11 @@ import threading
 import time
 import uuid
 import zlib
+from tools.polar_ecg_index import build_composite_index, build_compressed_index
 from contextlib import contextmanager
 from pathlib import Path
 
-SCHEMA = 2
+SCHEMA = 3
 STORES = ('files', 'markers', 'external', 'tombstones', 'analysis', 'preferences')
 
 
@@ -69,6 +70,8 @@ class PortableStore:
         self.database, self.pending = self.local / 'working.sqlite', self.local / 'pending.sqlite'
         self.lock = threading.RLock()
         self.writer, self.operation, self.preview, self.last_error = None, None, False, ''
+        self.verified_blobs = {}
+        self.sleep_jobs = set()
         self.sessions = set()
         self.save_timer, self.stopping = None, False
         self._lock_file = open(self.local / 'archive.lock', 'a+b')
@@ -82,7 +85,7 @@ class PortableStore:
         try:
             if self.database.exists():
                 with self.connect() as db: prior_schema = db.execute('PRAGMA user_version').fetchone()[0]
-                if prior_schema < SCHEMA: self.recovery()
+                if prior_schema < 2: self.recovery()
             self._initialize(self.database)
         except BaseException:
             self._lock_file.close()
@@ -115,7 +118,8 @@ class PortableStore:
 
     def _initialize(self, path):
         with self.connect(path) as db:
-            if db.execute('PRAGMA user_version').fetchone()[0] > SCHEMA:
+            prior_schema = db.execute('PRAGMA user_version').fetchone()[0]
+            if prior_schema > SCHEMA:
                 raise ValueError('Archive format is newer than this application. Update the app.')
             db.execute('CREATE TABLE IF NOT EXISTS records (store TEXT NOT NULL, id TEXT NOT NULL, payload BLOB NOT NULL, PRIMARY KEY(store,id))')
             db.execute('CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)')
@@ -123,7 +127,7 @@ class PortableStore:
                 db.execute('INSERT OR IGNORE INTO meta VALUES (?,?)', (key, value))
             if self.meta(db, 'shared-path') != str(self.shared):
                 raise ValueError('This working folder belongs to a different shared folder. Use a separate --data-dir.')
-            db.execute('PRAGMA user_version=2')
+            if prior_schema == 0: db.execute('PRAGMA user_version=2')
 
     @staticmethod
     def meta(db, key):
@@ -155,7 +159,7 @@ class PortableStore:
                 with self.connect(self.pending) as pending:
                     pending_kind = self.meta(pending, 'operation')
                     complete = self.meta(pending, 'complete') == '1'
-            return dict(schema=SCHEMA, archive=self.meta(db, 'archive'), base=base, dirty=dirty,
+            return dict(schema=SCHEMA, format_version=db.execute('PRAGMA user_version').fetchone()[0], archive=self.meta(db, 'archive'), base=base, dirty=dirty,
                         latest=latest, created=created, counts=counts, conflict=base != latest,
                         pending=pending_kind, complete=complete, operation=bool(self.operation), preview=self.preview,
                         local=str(self.local), shared=str(self.shared), error=error)
@@ -227,6 +231,95 @@ class PortableStore:
 
     def blob(self, key): return self.blobs / valid_key(key)
 
+    def get_blob(self, key):
+        """Read through from shared storage after verifying its content hash."""
+        key = valid_key(key)
+        with self.lock:
+            target = self.blob(key)
+            if target.is_file():
+                st = target.stat()
+                stamp = (st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
+                if self.verified_blobs.get(key) != stamp:
+                    if digest(target) != key:
+                        raise ValueError('Local attachment is incomplete or damaged.')
+                    self.verified_blobs[key] = stamp
+                return target
+            # Only hydrate attachments referenced by the active working copy.
+            referenced = False
+            with self.connect(self.active()) as db:
+                for (payload,) in db.execute('SELECT payload FROM records'):
+                    if key in refs(json.loads(zlib.decompress(payload))):
+                        referenced = True
+                        break
+            if not referenced:
+                raise ValueError('Attachment is not referenced by this archive.')
+            source = self.shared / 'blobs' / key
+            data = source.read_bytes()
+            if hashlib.sha256(data).hexdigest() != key:
+                raise ValueError('Shared attachment is incomplete or damaged. Wait for Proton Drive sync.')
+            atomic_bytes(target, data)
+            st = target.stat()
+            self.verified_blobs[key] = (st.st_ino, st.st_size, st.st_mtime_ns, st.st_ctime_ns)
+            return target
+
+    def ecg_index(self, record_id, filename, token=None):
+        """Build a disposable, verified byte index for one imported ECG file."""
+        if not isinstance(record_id, str) or not isinstance(filename, str) or not filename.endswith('_ecg.csv'):
+            raise ValueError('Invalid ECG selection.')
+        records = [r for r in self.records('external') if r.get('id') == record_id and r.get('polar')]
+        if len(records) != 1:
+            raise ValueError('Polar recording not found.')
+        blobs = records[0].get('blobs')
+        if not isinstance(blobs, dict):
+            raise ValueError('Invalid Polar blobs.')
+        ref = blobs.get(filename)
+        if not isinstance(ref, dict):
+            raise ValueError('ECG file not found.')
+        signature = hashlib.sha256(packed(ref)).hexdigest()
+        index_id = 'ecgidx:' + hashlib.sha256((record_id+'\0'+filename).encode()).hexdigest()
+        with self.lock, self.connect(self.active()) as db:
+            row = db.execute('SELECT payload FROM records WHERE store=? AND id=?', ('analysis', index_id)).fetchone()
+        if row:
+            cached = json.loads(zlib.decompress(row[0]))
+            if cached.get('signature') == signature and cached.get('method') == 'bpg-ecg-index-v1':
+                return cached['index']
+        compressed = '__deflateChunks' in ref
+        chunks = ref.get('__deflateChunks') if compressed else ref.get('__blobChunks') if '__blobChunks' in ref else [ref]
+        if not isinstance(chunks, list) or not chunks or any(not isinstance(c, dict) or '__ref' not in c for c in chunks):
+            raise ValueError('Invalid ECG blob references.')
+        keys = [valid_key(c['__ref']) for c in chunks]
+        paths = [self.get_blob(key) for key in keys]
+        parts = [(path, key) for path, key in zip(paths, keys)]
+        stored_sizes = [path.stat().st_size for path in paths]
+        if compressed:
+            sizes = [c.get('size') for c in chunks]
+            if any(not isinstance(n, int) or n <= 0 or n > 1048576 for n in sizes): raise ValueError('Invalid compressed ECG size.')
+            hashes = [valid_key(c.get('sha256')) for c in chunks]
+            index = build_compressed_index([(path, key, size, h) for path, key, size, h in zip(paths, keys, sizes, hashes)])
+        else:
+            sizes = stored_sizes
+            index = build_composite_index(parts)
+        if sum(sizes) != index['source_bytes'] or stored_sizes != [path.stat().st_size for path in paths]:
+            raise ValueError('ECG source changed during indexing.')
+        offset = 0
+        descriptors = []
+        for i, (key, size) in enumerate(zip(keys, sizes)):
+            descriptor = {'key': key, 'offset': offset, 'size': size}
+            if compressed: descriptor.update(codec='deflate', sha256=hashes[i], stored_size=stored_sizes[i])
+            descriptors.append(descriptor)
+            offset += size
+        index['parts'] = descriptors
+        # JSON numbers cannot exactly represent Unix nanoseconds in JavaScript.
+        for block in index['blocks']:
+            block['start_ns'] = str(block['start_ns'])
+            block['end_ns'] = str(block['end_ns'])
+        # Persist derived indexes only under the currently confirmed writer.
+        # They contain no source bytes; the source refs are still validated on use.
+        if token is not None and token == self.writer and token in self.sessions and not self.preview:
+            self.batch({'put': [['analysis', {'id': index_id, 'night': records[0].get('night'),
+                        'method': 'bpg-ecg-index-v1', 'signature': signature, 'index': index}]]}, token)
+        return index
+
     def save_blob(self, data, token=None):
         self.require_writer(token)
         key = hashlib.sha256(data).hexdigest()
@@ -255,8 +348,10 @@ class PortableStore:
                 for store, obj in changes.get('put', []):
                     if store not in STORES or not isinstance(obj, dict) or not isinstance(obj.get('id'), str): raise ValueError('Invalid record.')
                     for key in refs(obj):
-                        path = self.blob(key)
+                        path = self.get_blob(key)
                         if not path.is_file() or digest(path) != key: raise ValueError('Missing or damaged local attachment.')
+                    if store == 'external' and isinstance(obj.get('blobs'), dict) and any(isinstance(v, dict) and '__deflateChunks' in v for v in obj['blobs'].values()):
+                        db.execute('PRAGMA user_version=3')
                     payload = packed(obj)
                     old = db.execute('SELECT payload FROM records WHERE store=? AND id=?', (store, obj['id'])).fetchone()
                     if old and old[0] == payload: continue
@@ -264,10 +359,43 @@ class PortableStore:
                 if db.total_changes != before: db.execute("UPDATE meta SET value='1' WHERE key='dirty'")
             self._schedule_save()
 
+    def compress_polar_ecg(self, record_id, token=None):
+        """Losslessly replace one session's ECG refs in a pending transaction."""
+        with self.lock:
+            self.require_writer(token)
+            if self.operation not in ('compression', 'import'): raise ValueError('Start or resume compression first.')
+            matches = [r for r in self.records('external') if r.get('id') == record_id and r.get('polar')]
+            if len(matches) != 1: raise ValueError('Polar recording not found.')
+            rec = matches[0]
+            blobs = rec.get('blobs')
+            if not isinstance(blobs, dict): raise ValueError('Invalid Polar recording.')
+            changed = 0
+            for name, ref in list(blobs.items()):
+                if not name.endswith('_ecg.csv') or '__deflateChunks' in ref: continue
+                chunks = ref.get('__blobChunks') if '__blobChunks' in ref else [ref]
+                if not isinstance(chunks, list) or not chunks: raise ValueError('Invalid ECG references.')
+                compressed, before, after = [], hashlib.sha256(), hashlib.sha256()
+                for item in chunks:
+                    path = self.get_blob(item['__ref'])
+                    with path.open('rb') as source:
+                        while raw := source.read(1048576):
+                            before.update(raw)
+                            encoded = zlib.compress(raw, 3)
+                            restored = zlib.decompress(encoded)
+                            after.update(restored)
+                            if restored != raw: raise ValueError('ECG compression verification failed.')
+                            key = self.save_blob(encoded, token)
+                            compressed.append({'__ref': key, 'size': len(raw), 'sha256': hashlib.sha256(raw).hexdigest()})
+                if before.digest() != after.digest() or not compressed: raise ValueError('ECG compression verification failed.')
+                blobs[name] = {'__deflateChunks': compressed, 'type': ref.get('type', 'text/csv'), 'source_sha256': before.hexdigest()}
+                changed += 1
+            if changed: self.batch({'put': [['external', rec]]}, token)
+            return {'files': changed}
+
     def begin(self, kind, token=None):
         with self.lock:
             self.require_writer(token)
-            if kind not in ('import', 'restore') or self.operation or self.preview: raise ValueError('Another operation is active.')
+            if kind not in ('import', 'restore', 'compression') or self.operation or self.preview: raise ValueError('Another operation is active.')
             with self.connect() as db:
                 base = self.meta(db, 'base')
                 if base != self.latest(): raise ValueError('Shared archive changed. Reload or resolve first.')
@@ -282,6 +410,7 @@ class PortableStore:
                     db.execute("UPDATE meta SET value=? WHERE key='operation'", (kind,))
                     if kind == 'restore':
                         db.execute('DELETE FROM records')
+                        db.execute('PRAGMA user_version=2')
                         db.execute("UPDATE meta SET value='1' WHERE key='dirty'")
             self.operation = kind
             return self.status()
@@ -353,13 +482,33 @@ class PortableStore:
 
     @staticmethod
     def _compatible(manifest):
-        if manifest.get('schema', 1) not in (1, SCHEMA): raise ValueError('Unsupported shared archive format. Update the application.')
+        if manifest.get('schema', 1) not in (1, 2, SCHEMA): raise ValueError('Unsupported shared archive format. Update the application.')
 
     @staticmethod
     def _validate_record(store, key, obj):
         if store not in STORES or not isinstance(obj, dict) or obj.get('id') != key: raise ValueError('Invalid publication record.')
 
-    def _load_version(self, version):
+    @staticmethod
+    def _deferred_refs(records):
+        deferred, required = set(), set()
+        for store, _, payload in records:
+            obj = json.loads(zlib.decompress(payload))
+            if store == 'external' and obj.get('polar') and isinstance(obj.get('blobs'), dict):
+                heavy = {k: v for k, v in obj['blobs'].items() if k.endswith('_ecg.csv')}
+                deferred.update(refs(heavy))
+                other = dict(obj)
+                other['blobs'] = {k: v for k, v in obj['blobs'].items() if k not in heavy}
+                required.update(refs(other))
+            elif store == 'markers':
+                deferred.update(refs(obj.get('media', [])))
+                other = dict(obj)
+                other.pop('media', None)
+                required.update(refs(other))
+            else:
+                required.update(refs(obj))
+        return deferred - required
+
+    def _load_version(self, version, defer_heavy=False):
         valid_key(version, 32)
         raw = (self.shared / 'versions' / (version + '.json')).read_bytes()
         manifest = json.loads(raw)
@@ -390,27 +539,35 @@ class PortableStore:
                     records.append((store, key, payload))
                     keys.update(refs(obj))
         if keys != set(manifest['blobs']): raise ValueError('Publication attachment list mismatch.')
+        deferred = self._deferred_refs(records) if defer_heavy else set()
         for key in keys:
-            if digest(self.shared / 'blobs' / valid_key(key)) != key: raise ValueError('Attachment is incomplete or damaged. Wait for Proton Drive sync.')
+            path = self.shared / 'blobs' / valid_key(key)
+            if not path.is_file(): raise ValueError('Attachment is missing. Wait for Proton Drive sync.')
+            if key not in deferred and digest(path) != key: raise ValueError('Attachment is incomplete or damaged. Wait for Proton Drive sync.')
         pointer = json.loads((self.shared / 'latest.json').read_text())
         if pointer['id'] == version and pointer.get('manifest') and hashlib.sha256(raw).hexdigest() != pointer['manifest']:
             raise ValueError('Manifest checksum mismatch.')
         return manifest, archive, records, keys
 
     def _install(self, version, force=False, historical=False):
-        manifest, archive, records, keys = self._load_version(version)
+        manifest, archive, records, keys = self._load_version(version, defer_heavy=True)
         with self.connect() as db:
             base = self.meta(db, 'base')
             if self.meta(db, 'dirty') == '1' and not force: raise ValueError('Unpublished local changes preserved. Resolve before opening shared data.')
-        for key in keys:
+        deferred = self._deferred_refs(records)
+        for key in keys - deferred:
             target = self.blob(key)
-            if not target.exists() or digest(target) != key: atomic_bytes(target, (self.shared / 'blobs' / key).read_bytes())
+            if not target.exists() or digest(target) != key:
+                data = (self.shared / 'blobs' / key).read_bytes()
+                if hashlib.sha256(data).hexdigest() != key: raise ValueError('Attachment changed during installation.')
+                atomic_bytes(target, data)
         if base == version and not force and not historical: return self.status()
         temp = self.local / ('install-' + uuid.uuid4().hex + '.sqlite')
         try:
             self._initialize(temp)
             with self.connect(temp) as db:
                 db.executemany('INSERT INTO records VALUES (?,?,?)', records)
+                if manifest.get('schema', 1) >= 3: db.execute('PRAGMA user_version=3')
                 for key, value in [('base', self.latest() if historical else version), ('dirty', '1' if historical else '0'), ('archive', archive)]:
                     db.execute('UPDATE meta SET value=? WHERE key=?', (value, key))
             self.recovery()
@@ -449,18 +606,19 @@ class PortableStore:
                     index[store][key] = content
                     keys.update(refs(obj))
                 for key in keys:
-                    local, target = self.blob(key), self.shared / 'blobs' / key
+                    local, target = self.get_blob(key), self.shared / 'blobs' / key
                     if digest(local) != key: raise ValueError('Local attachment is missing or damaged.')
                     if not target.exists() or digest(target) != key:
                         data = local.read_bytes()
                         atomic_bytes(target, data)
                         added += len(data)
-                manifest = dict(format='bpg-portable', schema=SCHEMA, id=version, parent=base,
+                publication_schema = db.execute('PRAGMA user_version').fetchone()[0]
+                manifest = dict(format='bpg-portable', schema=publication_schema, id=version, parent=base,
                                 archive=self.meta(db, 'archive'), created=time.time(), device=platform.node(), records=index, blobs=sorted(keys))
                 raw = json.dumps(manifest, sort_keys=True, separators=(',', ':')).encode()
                 atomic_bytes(self.shared / 'versions' / (version + '.json'), raw)
                 if self.latest() != base: raise ValueError('Shared archive changed during publication. Local changes preserved.')
-                atomic_bytes(self.shared / 'latest.json', json.dumps(dict(id=version, schema=SCHEMA, manifest=hashlib.sha256(raw).hexdigest())).encode())
+                atomic_bytes(self.shared / 'latest.json', json.dumps(dict(id=version, schema=publication_schema, manifest=hashlib.sha256(raw).hexdigest())).encode())
                 db.execute("UPDATE meta SET value=? WHERE key='base'", (version,))
                 db.execute("UPDATE meta SET value='0' WHERE key='dirty'")
                 db.commit()

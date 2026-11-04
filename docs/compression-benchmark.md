@@ -1,0 +1,9 @@
+# Polar compression experiment
+
+On 2026-11-04, an isolated read-only experiment measured the original PolarPAP export of 1 November on the local Mac. All 61 files were split into independent 1 MiB blocks, compressed using zlib level 3, decompressed, and checked against each source file's SHA-256. The original total was 598,203,229 bytes; the framed compressed total was 98,558,397 bytes (83.5% less). All reconstructed hashes matched. Aggregate measured compression and decompression times were approximately 2.24 s and 0.39 s respectively on this run, including file I/O and hashing; these are preliminary machine-specific figures.
+
+Reproduce the codec/round-trip measurement without changing the source with `python3 tools/benchmark_polar_compression.py /path/to/export`. Timings from that script exclude file I/O and hash overhead and so are not directly comparable to the figures above.
+
+A separate complete migration test on a generated two-hour, 23,783,848-byte ECG fixture produced 4,657,667 bytes of active compressed blobs. Migration and local publication took 0.17 seconds, and rebuilding indexes over the compressed data took 1.51 seconds. Every reconstructed source hash matched. This measures a small synthetic dataset on one machine, not a Proton upload, peak memory, or real-data UI latency; historical original blobs remain and are excluded from active compressed bytes. Reproduce with `python3 tools/generate_ecg_benchmark.py /path/to/new/fixture` and `python3 tools/benchmark_migration.py /path/to/new/fixture`.
+
+The app now supports schema-3 compression as an explicit, resumable operation. It keeps historical versions, verifies uncompressed blocks, and uses those blocks for range access. Previous application versions reject schema 3 and must be updated before use. A complete independent backup reconstructs the original files. Validate on a separate copy before using a real archive; see `portable-archive.md`.

@@ -2,6 +2,7 @@
 """Serve the bundled app; optionally enable a loopback portable archive."""
 import argparse
 import json
+import re
 import sqlite3
 import zlib
 import signal
@@ -11,9 +12,10 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 from portable_store import PortableStore
+import sleep_staging
 
 ROOT = Path(__file__).resolve().parent / 'web'
-FILES = {'/', '/index.html', '/app.js', '/portable.js', '/import-delta.js', '/philips.js', '/dreamstation2.js', '/import-files.js', '/core.js', '/polar.js', '/polar-time.js', '/polar-csv.js', '/style.css', '/pdf-export.js', '/glasgow.js', '/glasgow-ui.js', '/glasgow-worker.js', '/vendor/glasgow-reference.js'}
+FILES = {'/', '/index.html', '/app.js', '/portable.js', '/import-delta.js', '/philips.js', '/dreamstation2.js', '/import-files.js', '/core.js', '/polar.js', '/polar-time.js', '/polar-csv.js', '/polar-window.js', '/style.css', '/pdf-export.js', '/glasgow.js', '/glasgow-ui.js', '/glasgow-worker.js', '/vendor/glasgow-reference.js'}
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
        "img-src 'self' blob: data:; media-src 'self' blob: data:; "
        "worker-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; "
@@ -50,14 +52,50 @@ class Handler(SimpleHTTPRequestHandler):
                 if path == '/api/recoveries': return self.json_response(self.portable.recoveries())
                 if path.startswith('/api/records/'): return self.json_response(self.portable.records(path.removeprefix('/api/records/')))
                 if path.startswith('/api/blob/'):
-                    blob = self.portable.blob(path.removeprefix('/api/blob/'))
+                    blob = self.portable.get_blob(path.removeprefix('/api/blob/'))
                     if not blob.is_file(): raise ValueError('Attachment missing.')
-                    data = blob.read_bytes()
-                    self.send_response(200)
+                    size = blob.stat().st_size
+                    header = self.headers.get('Range')
+                    start, end, partial = 0, size - 1, False
+                    if header:
+                        match = re.fullmatch(r'bytes=(\d*)-(\d*)', header.strip())
+                        if not match or not any(match.groups()) or size == 0:
+                            self.send_response(416)
+                            self.send_header('Content-Range', f'bytes */{size}')
+                            self.send_header('Content-Length', '0')
+                            self.end_headers()
+                            return
+                        first, last = match.groups()
+                        if first:
+                            start = int(first)
+                            end = min(int(last), size - 1) if last else size - 1
+                        else:
+                            suffix = int(last)
+                            start = max(0, size - suffix) if suffix else size
+                        if start >= size or end < start:
+                            self.send_response(416)
+                            self.send_header('Content-Range', f'bytes */{size}')
+                            self.send_header('Content-Length', '0')
+                            self.end_headers()
+                            return
+                        partial = True
+                    self.send_response(206 if partial else 200)
                     self.send_header('Content-Type', 'application/octet-stream')
-                    self.send_header('Content-Length', str(len(data)))
+                    self.send_header('Accept-Ranges', 'bytes')
+                    self.send_header('Content-Length', str(max(0, end - start + 1)))
+                    if partial:
+                        self.send_header('Content-Range', f'bytes {start}-{end}/{size}')
                     self.end_headers()
-                    return self.wfile.write(data)
+                    with blob.open('rb') as stream:
+                        stream.seek(start)
+                        remaining = max(0, end - start + 1)
+                        while remaining:
+                            block = stream.read(min(1024 * 1024, remaining))
+                            if not block:
+                                break
+                            self.wfile.write(block)
+                            remaining -= len(block)
+                    return
             else:
                 length = int(self.headers.get('Content-Length', '-1'))
                 if length < 0 or length > 512 * 1024 * 1024: raise ValueError('Invalid request size.')
@@ -80,6 +118,10 @@ class Handler(SimpleHTTPRequestHandler):
                 if path == '/api/restore-recovery': return self.json_response(self.portable.restore_recovery(request_data['id'], token))
                 if path == '/api/protect': return self.json_response(self.portable.protect(request_data['id'], request_data['enabled'], token))
                 if path == '/api/cleanup': return self.json_response(self.portable.cleanup(request_data['versions'], request_data.get('execute', False), request_data.get('token', ''), token))
+                if path == '/api/ecg-index': return self.json_response(self.portable.ecg_index(request_data['id'], request_data['filename'], token))
+                if path == '/api/compress-ecg': return self.json_response(self.portable.compress_polar_ecg(request_data['id'], token))
+                if path == '/api/sleep-status': return self.json_response(sleep_staging.status_for(self.portable.records('external'), self.portable.records('analysis')))
+                if path == '/api/sleep-compute': return self.json_response(sleep_staging.compute(self.portable, request_data['night'], token))
                 if path == '/api/batch':
                     self.portable.batch(request_data, token)
                     return self.json_response(self.portable.status())

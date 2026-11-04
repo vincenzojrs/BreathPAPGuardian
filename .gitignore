@@ -27,3 +27,6 @@ PROP.TXT
 PROP.BIN
 
 *.[bB]0[1-6]
+
+# Optional local SleepECG runtime; never commit it.
+.venv-sleep

@@ -11,13 +11,14 @@ function wallClock(zone){
   return ms+offsets.get(key);
  };
 }
-async function makeChannel(type,blob,zone){
+async function makeChannel(type,blob,zone,signal){
  const [value,label,unit]=SPECS[type],wall=wallClock(zone),channel={label,unit,segments:[],polarType:type},required=type==='hrv'?['window_start_unix_ns','window_end_unix_ns',value,'usable_heuristic']:['timestamp_unix_ns',value];
  let t=[],v=[],quality=[],last=-Infinity,seg=null,prevSegment=null;
  function finish(){if(!t.length)return;const values=Float64Array.from(v),part={start:t[0],dt:type==='hrv'?300:type==='ecg'?1/130:1,times:Float64Array.from(t),values,quality:Uint8Array.from(quality),...(type==='hrv'?{ends:Float64Array.from(seg),step:true}:{})};
   if(type==='ecg'){const width=128,extrema=new Float64Array(Math.ceil(values.length/width)*2);for(let group=0;group<extrema.length/2;group++){let lo=Infinity,hi=-Infinity;for(let i=group*width;i<Math.min(values.length,(group+1)*width);i++){const x=values[i];if(Number.isFinite(x)){lo=Math.min(lo,x);hi=Math.max(hi,x);}}extrema[group*2]=lo;extrema[group*2+1]=hi;}part.envelope=extrema;part.envelopeWidth=width;}
   channel.segments.push(part);t=[];v=[];quality=[];seg=null;}
  for await(const r of CSV.objects(blob,required)){
+  if(signal?.aborted)throw new DOMException('Polar loading cancelled','AbortError');
   const time=wall(r[type==='hrv'?'window_start_unix_ns':'timestamp_unix_ns']);const gap=time-last;if(time<last)throw Error('Polar timeline is not monotonic on the PAP clock; split the recording at the clock change.');last=time;
   const valid=r[value]!==''&&Number.isFinite(Number(r[value]));if(!valid&&type!=='hrv')throw Error('Invalid '+label+' value');
   const current=r.connection_segment||'1';if(prevSegment!==null&&(current!==prevSegment||(type==='ecg'&&gap>50)||(type==='hr'&&gap>5000)||(type==='rr'&&gap>5000)))finish();prevSegment=current;
@@ -36,10 +37,11 @@ async function prepare(files,zipReader,deviceZone){
  for(const kind of ['ecg','hr','rr','hrv'])if(!Object.keys(blobs).some(x=>x.endsWith('_'+kind+'.csv')))throw Error('Missing '+kind+' CSV in PolarPAP session.');
  return {session,info,blobs};
 }
-async function channels(record){
- const out={};for(const kind of Object.keys(SPECS)){
+async function channels(record,kinds=Object.keys(SPECS),signal){
+ const out={};for(const kind of kinds){
+  if(!Object.hasOwn(SPECS,kind))throw Error('Unknown Polar stream: '+kind);
   const names=Object.keys(record.blobs).filter(n=>n.endsWith('_'+kind+'.csv')).sort();let merged=null;
-  for(const name of names){const c=await makeChannel(kind,record.blobs[name],record.zone);if(!merged)merged=c;else merged.segments.push(...c.segments);}
+  for(const name of names){const c=await makeChannel(kind,record.blobs[name],record.zone,signal);if(!merged)merged=c;else merged.segments.push(...c.segments);}
   if(merged){merged.segments.sort((a,b)=>a.start-b.start);out[kind]=merged;}
  }return out;
 }

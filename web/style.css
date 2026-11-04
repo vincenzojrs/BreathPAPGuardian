@@ -18,3 +18,5 @@ body{background:#f7f8fa;color:#13243c;font:14px/1.45 system-ui,-apple-system,san
 @media(max-width:800px){.night-observations{display:block}}
 
 #polarList p{margin:4px 0}.polar-summary{margin-top:18px;border-top:1px solid #e5ecf3}.polar-summary h4{margin:12px 0}.polar-summary table{margin:8px 0}
+
+.marker-row{display:flex;align-items:flex-start;gap:4px;flex-wrap:wrap}.marker-row details{flex:1 1 180px;min-width:0;margin:4px 0}.marker-row summary{overflow-wrap:anywhere}.marker-row button{padding:4px 8px}.mark{padding:6px 8px;margin:6px 0}.marker-content p{margin:5px 0}
