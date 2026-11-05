@@ -6,11 +6,11 @@ const fs=require('fs'),assert=require('assert/strict'),path=require('path'),{spa
 const scratch=fs.mkdtempSync(path.join(require('os').tmpdir(),'bpg-ui-'));
 const root=path.resolve(__dirname,'..');
 (async()=>{
- const server=spawn('python3',['server.py','--browser-storage'],{cwd:root,stdio:'ignore'});let browser;
+ const server=spawn('python3',['server.py','--browser-storage','--port','18794'],{cwd:root,stdio:'ignore'});let browser;
  try{
   browser=await chromium.launch({headless:true,executablePath:process.env.BPG_BROWSER_PATH||undefined,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage']});
   const page=await browser.newPage({viewport:{width:1400,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('http://127.0.0.1:8765');await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('No saved data'));
+  await page.goto('http://127.0.0.1:18794');await page.waitForFunction(()=>document.querySelector('#status').textContent.includes('No saved data'));
   assert.equal(await page.title(),'BreathPAPGuardian');assert.equal(await page.locator('h1').textContent(),'BreathPAPGuardian');assert.equal(await page.locator('#giPanel').count(),0);
   assert.equal(await page.locator('#yourNights').evaluate(e=>e.open),false);
   assert.equal(await page.locator('#trendChoices input:checked').count(),2);
@@ -27,7 +27,7 @@ const root=path.resolve(__dirname,'..');
   await page.locator('[data-series="mean:Press.2s"]').check();assert.equal(await page.locator('#trendChoices input:checked').count(),3);
   await page.locator('[data-series="usage"]').uncheck();assert.equal(await page.locator('#trendChoices input:checked').count(),2);
   await page.locator('#yourNights summary').click();assert.equal(await page.locator('#nightList').isVisible(),true);
-  await page.locator('#nightList button').first().click();assert.match(await page.locator('#summary').textContent(),/\d+ h \d{2} min/);assert.equal(await page.evaluate(()=>document.querySelector('#detail .grid').compareDocumentPosition(document.querySelector('#charts')) & Node.DOCUMENT_POSITION_FOLLOWING),4);await page.locator('#giHeatmap').waitFor({state:'visible'});assert((await page.locator('#giNightStatus').textContent()).includes('Mean GI'));
+  await page.locator('#nightList button').first().click();assert.match(await page.locator('#summary').textContent(),/\d+ h \d{2} min/);assert.equal(await page.evaluate(()=>document.querySelector('#detail .grid').compareDocumentPosition(document.querySelector('#charts')) & Node.DOCUMENT_POSITION_FOLLOWING),4);assert.equal(await page.locator('#nightSettings').evaluate(e=>e.open),false);assert.equal(await page.locator('#nightOverview').evaluate(e=>e.open),false);assert.equal(await page.locator('#sleepPanel').isVisible(),false);await page.locator('#nightOverview > summary').click();assert.equal(await page.locator('#nightOverview').evaluate(e=>e.open),true);await page.locator('#giHeatmap').waitFor({state:'visible'});assert((await page.locator('#giNightStatus').textContent()).includes('Mean GI'));
   assert((await page.locator('#stats').textContent()).includes('GI · nightly index'));assert((await page.locator('#stats').textContent()).includes('GI · flags per inspiration'));assert.equal(await page.evaluate(()=>giStatisticRows().length),11);
   assert.equal(await page.locator('#giMore').evaluate(e=>e.open),false);await page.locator('#giMore summary').click();assert.equal(await page.locator('#giMore tbody tr').count(),9);
   // Exercise the native drag data path and keyboard-accessible alternative.
@@ -37,7 +37,7 @@ const root=path.resolve(__dirname,'..');
   assert.equal(await page.locator('#charts>.chart').first().getAttribute('data-signal'),'glasgow');
   await page.locator('[data-signal="glasgow"] button[aria-label="Move signal down"]').click();assert.equal(await page.locator('#charts>.chart').nth(1).getAttribute('data-signal'),'glasgow');
   await page.getByLabel('Glasgow Index',{exact:true}).uncheck();assert.equal(await page.locator('#giNightPanel').count(),0);await page.getByLabel('Glasgow Index',{exact:true}).check();
-  await page.locator('#window').selectOption('120');const before=await page.locator('#range').textContent();await page.locator('#giHeatmap').click({position:{x:950,y:30}});assert.notEqual(before,await page.locator('#range').textContent());
+  await page.locator('#window').selectOption('120');const before=await page.locator('#range').textContent();await page.locator('#giHeatmap').click({position:{x:950,y:30}});await page.waitForFunction(value=>document.querySelector('#range').textContent!==value,before);
   await page.locator('#addMarker').click();await page.locator('#markerTitle').fill('Synthetic marker');await page.locator('#markerForm button[type=submit]').click();await page.locator('#markerDialog').waitFor({state:'hidden'});
   // Inspect the canvases passed to the actual PDF encoder, not just its header.
   await page.evaluate(()=>{window.pdfCapture=[];const original=CanvasRenderingContext2D.prototype.drawImage;CanvasRenderingContext2D.prototype.drawImage=function(source,...args){if(source.id==='giHeatmap')window.pdfCapture.push(source.toDataURL());return original.call(this,source,...args);};});

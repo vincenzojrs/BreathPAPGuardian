@@ -1,5 +1,7 @@
 """Synthetic, temporary two-computer exercise for the portable archive."""
 import json
+import io
+import zipfile
 import os
 import hashlib
 import socket
@@ -13,7 +15,7 @@ from urllib.request import Request, urlopen
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from portable_store import PortableStore, packed, digest
+from portable_store import PortableStore, packed, digest, refs
 
 
 class PortableTests(unittest.TestCase):
@@ -54,11 +56,68 @@ class PortableTests(unittest.TestCase):
                     tokens[port] = call(port, 'session/start', {})['token']
                     with self.assertRaises(HTTPError): call(port, 'batch', {'put': [['files', {'id': 'blocked'}]]})
                     call(port, 'session/confirm', {})
+                    self.assertEqual(call(port, 'sleep-status', {}), {})
+                    with self.assertRaises(HTTPError) as disabled:
+                        call(port, 'sleep-compute', {'night': '2026-11-01'})
+                    self.assertEqual(disabled.exception.code, 409)
+                    self.assertIn('unavailable in this release', disabled.exception.read().decode())
                 key = call(ports[0], 'blob', b'EDF synthetic', 'application/octet-stream')['key']
+                url = f'http://127.0.0.1:{ports[0]}/api/blob/{key}'
+                for header, expected, bounds in [('bytes=0-2', b'EDF', 'bytes 0-2/13'),
+                                                  ('bytes=4-', b'synthetic', 'bytes 4-12/13'),
+                                                  ('bytes=-3', b'tic', 'bytes 10-12/13')]:
+                    req = Request(url, headers={'X-BPG-Local': '1', 'Range': header})
+                    with urlopen(req) as response:
+                        self.assertEqual(response.status, 206)
+                        self.assertEqual(response.headers['Content-Range'], bounds)
+                        self.assertEqual(response.read(), expected)
+                for header in ['bytes=13-', 'bytes=4-2', 'bytes=1-2,4-5', 'bytes=-0']:
+                    req = Request(url, headers={'X-BPG-Local': '1', 'Range': header})
+                    with self.assertRaises(HTTPError) as error:
+                        urlopen(req)
+                    self.assertEqual(error.exception.code, 416)
+                with urlopen(Request(url, headers={'X-BPG-Local': '1'})) as response:
+                    self.assertEqual(response.read(), b'EDF synthetic')
                 call(ports[0], 'batch', {'put': [['files', {'id': 'demo', 'blob': {'__ref': key}}]]})
+                ecg = b'timestamp_unix_ns,ecg_uv\n100,1\n200,2\n900,3\n'
+                first = call(ports[0], 'blob', ecg[:29], 'application/octet-stream')['key']
+                second = call(ports[0], 'blob', ecg[29:], 'application/octet-stream')['key']
+                call(ports[0], 'batch', {'put': [['external', {'id': 'polar:test', 'polar': True,
+                     'blobs': {'000_ecg.csv': {'__blobChunks': [{'__ref': first}, {'__ref': second}]}}}]]})
+                index = call(ports[0], 'ecg-index', {'id': 'polar:test', 'filename': '000_ecg.csv'})
+                self.assertEqual(index['source_sha256'], hashlib.sha256(ecg).hexdigest())
+                self.assertEqual(index['source_bytes'], len(ecg))
+                self.assertEqual(index['blocks'][0]['start_ns'], '100')
+                self.assertEqual([p['size'] for p in index['parts']], [29, len(ecg)-29])
+                with self.assertRaises(HTTPError):
+                    call(ports[0], 'ecg-index', {'id': 'polar:test', 'filename': '../other.csv'})
                 call(ports[0], 'publish', {})
                 call(ports[1], 'open-shared', {})
                 self.assertEqual(call(ports[1], 'records/files')[0]['id'], 'demo')
+                # Native backup download requires a random download capability.
+                job = call(ports[0], 'backup/prepare', {})
+                with urlopen(f'http://127.0.0.1:{ports[0]}' + job['url']) as response:
+                    backup_bytes = response.read()
+                    self.assertEqual(len(backup_bytes), int(response.headers['Content-Length']))
+                    self.assertIn('attachment', response.headers['Content-Disposition'])
+                with zipfile.ZipFile(io.BytesIO(backup_bytes)) as archive:
+                    self.assertIn('manifest.json', archive.namelist())
+                call(ports[1], 'session/confirm', {})
+                upload = call(ports[1], 'backup/upload-start', {'size': len(backup_bytes)})
+                def upload_block(offset, block):
+                    req = Request(f"http://127.0.0.1:{ports[1]}/api/backup/upload-block/{upload['id']}",
+                                  data=block, headers={'X-BPG-Local':'1', 'X-BPG-Session':tokens[ports[1]],
+                                                       'X-BPG-Offset':str(offset)})
+                    with urlopen(req) as response:
+                        return json.loads(response.read())
+                self.assertEqual(upload_block(0, backup_bytes[:64])['offset'], 64)
+                self.assertEqual(upload_block(0, backup_bytes[:64])['offset'], 64)
+                upload_block(64, backup_bytes[64:])
+                restored = call(ports[1], 'backup/upload-finish', {'id': upload['id']})
+                self.assertTrue(restored['preview'])
+                self.assertTrue(restored['complete'])
+                self.assertTrue(call(ports[1], 'backup/upload-finish', {'id':upload['id']})['preview'])
+                call(ports[1], 'operation/discard', {})
                 req = Request(f'http://127.0.0.1:{ports[0]}/api/publish', data=b'{}')
                 with self.assertRaises(HTTPError) as denied:
                     urlopen(req)
@@ -67,6 +126,26 @@ class PortableTests(unittest.TestCase):
                 for p in processes:
                     p.terminate()
                     p.wait(timeout=5)
+
+    def test_attachment_refs_include_nested_objects_among_signal_values(self):
+        first, second = 'a'*64, 'b'*64
+        value = {'samples': [1, None, [2, {'__ref': first}], 3],
+                 'nested': {'samples': [0, {'deep': {'__ref': second}}]}}
+        self.assertEqual(set(refs(value)), {first, second})
+
+    def test_ecg_blob_also_used_by_other_signal_is_verified(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            a = self.store(root/'a', root/'shared')
+            key = a.save_blob(b'original')
+            rec = {'id':'polar:shared', 'polar':True,
+                   'blobs':{'000_ecg.csv':{'__ref':key}, '000_rr.csv':{'__ref':key}}}
+            a.batch({'put':[['external',rec]]})
+            version = a.publish()['base']
+            (a.shared/'blobs'/key).write_bytes(b'corrupted')
+            b = self.store(root/'b', root/'shared')
+            with self.assertRaisesRegex(ValueError, 'incomplete or damaged'):
+                b._load_version(version, defer_heavy=True)
 
     def test_round_trip_and_conflict(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -112,6 +191,90 @@ class PortableTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'incomplete or damaged'):
                 b.open_shared()
             self.assertEqual(b.status()['base'], '')
+
+    def test_cold_open_defers_ecg_and_media_but_validates_on_use_and_publish(self):
+        from unittest.mock import patch
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            a = self.store(root / 'a', root / 'shared')
+            ecg = a.save_blob(b'ecg synthetic')
+            media = a.save_blob(b'photo synthetic')
+            hr = a.save_blob(b'hr synthetic')
+            a.batch({'put': [
+                ['external', {'id': 'polar:one', 'polar': True, 'blobs': {
+                    '000_ecg.csv': {'__ref': ecg}, '000_hr.csv': {'__ref': hr}}}],
+                ['markers', {'id': 'note', 'media': [{'blob': {'__ref': media}}]}]]})
+            initial = a.publish()['base']
+            b = self.store(root / 'b', root / 'shared')
+            with patch('portable_store.digest', wraps=digest) as calls:
+                b.open_shared()
+                reads = {Path(c.args[0]).name for c in calls.call_args_list}
+            self.assertNotIn(ecg, reads)
+            self.assertNotIn(media, reads)
+            self.assertIn(hr, reads)
+            self.assertFalse(b.blob(ecg).exists())
+            self.assertFalse(b.blob(media).exists())
+            self.assertTrue(b.blob(hr).exists())
+            shared_ecg = b.shared / 'blobs' / ecg
+            shared_ecg.write_bytes(b'incomplete')
+            with self.assertRaisesRegex(ValueError, 'incomplete or damaged'):
+                b.get_blob(ecg)
+            self.assertFalse(b.blob(ecg).exists())
+            b.batch({'put': [['markers', {'id': 'another', 'media': []}]]})
+            with self.assertRaisesRegex(ValueError, 'incomplete or damaged'):
+                b.publish()
+            self.assertEqual(b.latest(), initial)
+            shared_ecg.write_bytes(b'ecg synthetic')
+            self.assertEqual(b.get_blob(ecg).read_bytes(), b'ecg synthetic')
+            b.publish()
+            self.assertTrue(b.blob(media).exists())
+
+    def test_lossless_ecg_compression_is_resumable_and_versions_remain_readable(self):
+        import zlib
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            a = self.store(root/'a', root/'shared')
+            header = b'timestamp_unix_ns,ecg_uv,connection_segment\n'
+            ecg = header + b''.join(f'{i*10000000},{i%100},1\n'.encode() for i in range(140000))
+            first, second = a.save_blob(ecg[:1000017]), a.save_blob(ecg[1000017:])
+            original = {'id':'polar:one','polar':True,'blobs':{'000_ecg.csv':{'type':'text/csv','__blobChunks':[{'__ref':first},{'__ref':second}]}}}
+            a.batch({'put':[['external',original]]})
+            old_version = a.publish()['base']
+            self.assertEqual(json.loads((a.shared/'versions'/(old_version+'.json')).read_text())['schema'], 2)
+            a.begin('compression')
+            self.assertEqual(a.compress_polar_ecg('polar:one')['files'], 1)
+            pending_record = a.records('external')[0]
+            blocks = pending_record['blobs']['000_ecg.csv']['__deflateChunks']
+            reconstructed = b''.join(zlib.decompress(a.get_blob(x['__ref']).read_bytes()) for x in blocks)
+            self.assertEqual(reconstructed, ecg)
+            a.pause()
+            self.assertEqual(a.records('external'), [original])
+            self.assertEqual(a.latest(), old_version)
+            a.begin('compression')
+            self.assertEqual(a.compress_polar_ecg('polar:one')['files'], 0)
+            a.end()
+            new_version = a.publish()['base']
+            self.assertEqual(json.loads((a.shared/'versions'/(new_version+'.json')).read_text())['schema'], 3)
+            from unittest.mock import patch
+            with patch('portable_store.SCHEMA', 2):
+                with self.assertRaisesRegex(ValueError, 'Unsupported'):
+                    a._compatible(json.loads((a.shared/'versions'/(new_version+'.json')).read_text()))
+            self.assertEqual(a._load_version(old_version)[2][0][1], 'polar:one')
+            index = a.ecg_index('polar:one', '000_ecg.csv')
+            self.assertEqual(index['source_sha256'], hashlib.sha256(ecg).hexdigest())
+            self.assertTrue(all(part['codec'] == 'deflate' for part in index['parts']))
+            b = self.store(root/'b', root/'shared')
+            b.open_shared()
+            self.assertTrue(all(not b.blob(x['__ref']).exists() for x in blocks))
+            self.assertEqual(b.ecg_index('polar:one', '000_ecg.csv')['source_sha256'], hashlib.sha256(ecg).hexdigest())
+            with b.connect() as db:
+                self.assertEqual(db.execute('PRAGMA user_version').fetchone()[0], 3)
+            a.begin('import')
+            next_ref = a.save_blob(ecg)
+            a.batch({'put':[['external',{'id':'polar:next','polar':True,'blobs':{'001_ecg.csv':{'__ref':next_ref}}}]]})
+            self.assertEqual(a.compress_polar_ecg('polar:next')['files'], 1)
+            self.assertIn('__deflateChunks', next(x for x in a.records('external') if x['id']=='polar:next')['blobs']['001_ecg.csv'])
+            a.end(); a.publish()
 
     def test_delta_reuses_historical_content_and_cleanup_protects_references(self):
         with tempfile.TemporaryDirectory() as tmp:

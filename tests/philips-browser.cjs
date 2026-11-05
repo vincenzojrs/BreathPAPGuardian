@@ -19,12 +19,12 @@ async function ready(page){await page.waitForFunction(()=>typeof db!=='undefined
 async function imported(page){await page.waitForFunction(()=>!busy&&document.querySelector('#status').textContent.includes('visible nights'));}
 async function erase(page){await page.locator('#archiveBtn').click();await page.locator('#erase').click();await page.locator('#deleteNightConfirm').click();await page.waitForFunction(()=>!files.length&&!nights.length);}
 (async()=>{
- const server=spawn('python3',['server.py','--browser-storage'],{cwd:root});let browser;
+ const server=spawn('python3',['server.py','--browser-storage','--port','18795'],{cwd:root});let browser;
  try{
   await new Promise((resolve,reject)=>{server.stdout.once('data',resolve);server.once('exit',code=>reject(Error('Server failed: '+code)));});
   browser=await chromium.launch({headless:true,executablePath:process.env.BPG_BROWSER_PATH||undefined,args:['--no-sandbox','--disable-gpu','--disable-dev-shm-usage']});
   const page=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('http://127.0.0.1:8765');await ready(page);
+  await page.goto('http://127.0.0.1:18795');await ready(page);
   await page.locator('#files').setInputFiles(zip);await imported(page);
   assert.match(await page.locator('#status').textContent(),/4 new/);
   assert.deepEqual(await page.evaluate(()=>({nights:nights.length,use:nights[0].usage,apnea:count(nights[0],'apnea'),hypopnea:count(nights[0],'hypopnea')})),{nights:1,use:120/3600,apnea:2,hypopnea:1});

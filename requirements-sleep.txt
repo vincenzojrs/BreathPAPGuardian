@@ -1,0 +1,5 @@
+# Optional, isolated experimental RR-based sleep estimation (Python 3.12).
+sleepecg==0.6.0
+keras==3.3.3
+torch==2.15.0
+packaging==26.3

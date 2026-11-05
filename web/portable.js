@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 'use strict';
 const Portable={
- token:'',state:null,writable:false,closed:false,timer:null,poll:null,saving:null,analysisBusy:false,writing:0,
+ token:'',state:null,writable:false,closed:false,timer:null,poll:null,saving:null,analysisBusy:false,summaryBusy:false,writing:0,
  async api(path,body){
   const response=await fetch('/api/'+path,{method:body===undefined?'GET':'POST',headers:{'X-BPG-Local':'1','X-BPG-Session':this.token,...(body!==undefined&&!(body instanceof Blob)?{'Content-Type':'application/json'}:{})},body:body===undefined?undefined:body instanceof Blob?body:JSON.stringify(body)});
   let result;try{result=await response.json();}catch{throw Error('Local archive server unavailable. Local work is preserved.');}
@@ -9,7 +9,7 @@ const Portable={
   if(path==='batch'){this.state=result;this.changed();}
   return result;
  },
- assertWrite(allowPending=false){if(!this.writable||this.closed||this.state?.preview||this.state?.conflict||this.state?.pending&&!(allowPending&&this.state.pending==='import'))throw Error('Read-only archive. Confirm synchronization, resolve conflicts, or finish the interrupted operation.');},
+ assertWrite(allowPending=false){if(!this.writable||this.closed||this.state?.preview||this.state?.conflict||this.state?.pending&&!(allowPending&&['import','compression'].includes(this.state.pending)))throw Error('Read-only archive. Confirm synchronization, resolve conflicts, or finish the interrupted operation.');},
  async init(){
   const result=await this.api('session/start',{});this.token=result.token;this.state=result.status;
   const box=document.getElementById('archivePanel');box.hidden=false;
@@ -24,7 +24,7 @@ const Portable={
  },
  formDirty(){const d=document.getElementById('markerDialog');return d?.open&&this.markerDirty;},
  error(e){document.getElementById('archiveMessage').textContent=e.message||String(e);},
- changed(){this.render();clearTimeout(this.timer);if(!this.state.operation&&!this.state.preview&&!this.state.pending&&!this.analysisBusy)this.timer=setTimeout(()=>this.flush().catch(e=>this.error(e)),800);},
+ changed(){this.render();clearTimeout(this.timer);if(!this.state.operation&&!this.state.preview&&!this.state.pending&&!this.analysisBusy&&!this.summaryBusy)this.timer=setTimeout(()=>this.flush().catch(e=>this.error(e)),800);},
  async check(){
   if(this.closed||this.saving||this.writing||busy)return;
   const s=await this.api('status');this.state=s;this.render();
@@ -36,17 +36,17 @@ const Portable={
  async flush(){
   clearTimeout(this.timer);
   if(this.saving)return this.saving;
-  if(!this.writable||this.closed||this.analysisBusy||this.writing||this.state?.operation||this.state?.pending||this.state?.preview)return;
+  if(!this.writable||this.closed||this.analysisBusy||this.summaryBusy||this.writing||this.state?.operation||this.state?.pending||this.state?.preview)return;
   this.saving=(async()=>{try{this.state=await this.api('publish',{});document.getElementById('archiveMessage').textContent='Saved in the Proton Drive folder. Check Proton Drive upload completion before switching computers.';return this.state;}catch(e){this.state=await this.api('status').catch(()=>this.state);this.error(e);throw e;}finally{this.saving=null;this.render();}})();
   return this.saving;
  },
- async begin(kind){this.assertWrite(kind==='import');if(this.saving)await this.saving;clearTimeout(this.timer);this.state=await this.api('operation/begin',{kind});this.render();},
+ async begin(kind){this.assertWrite(kind==='import'||kind==='compression');if(this.saving)await this.saving;clearTimeout(this.timer);this.state=await this.api('operation/begin',{kind});this.render();},
  async finish(){this.state=await this.api('operation/end',{});this.render();if(!this.state.preview)await this.flush();},
  async pause(){this.state=await this.api('operation/pause',{});this.render();},
  async saveClose(){
   this.assertWrite();if(busy)throw Error('Wait for the current operation to finish.');
   if(this.formDirty())throw Error('Save or cancel the open marker form first.');
-  while(this.analysisBusy||this.writing)await new Promise(r=>setTimeout(r,100));
+  while(this.analysisBusy||this.summaryBusy||this.writing)await new Promise(r=>setTimeout(r,100));
   if(this.saving)await this.saving;
   this.state=await this.api('session/close',{});this.closed=true;this.writable=false;clearInterval(this.poll);clearTimeout(this.timer);this.render();
   document.getElementById('archiveMessage').textContent='Saved. Wait for Proton Drive upload completion. You can now close this tab.';
@@ -58,12 +58,15 @@ const Portable={
   const date=s.created?new Date(Number(s.created)*1000).toLocaleString():'not published';
   byId('archiveVersion').textContent=`Archive ${s.archive} · local ${s.base||'new'} · shared ${s.latest||'none'} · published ${date}`;
   byId('archivePaths').textContent=`Working folder: ${s.local}\nProton Drive folder: ${s.shared}`;
-  byId('archiveSaveState').textContent=this.saving?'Publishing…':s.operation?'Import/restore in progress · not published':s.pending?'Interrupted operation preserved':s.dirty?'Local changes awaiting publication':'Saved locally · cloud sync must be checked in Proton Drive';
-  byId('confirmSync').hidden=this.writable||this.closed;byId('saveClose').disabled=!this.writable||this.closed;
+  byId('archiveSaveState').textContent=this.saving?'Publishing…':s.operation?(s.pending==='compression'?'ECG compression in progress · not published':'Import/restore in progress · not published'):s.pending?'Interrupted operation preserved':s.dirty?'Local changes awaiting publication':'Archive changes saved · cloud sync must be checked in Proton Drive';
+  byId('archiveSaveState').textContent+=' · ECG and media are verified when opened';
+  byId('confirmSync').hidden=this.writable||this.closed;byId('saveClose').disabled=busy||!this.writable||this.closed;
   byId('archiveConflict').hidden=!s.conflict;byId('pendingControls').hidden=!s.pending;
   byId('acceptRestore').hidden=!s.preview||s.pending!=='restore'||!s.complete;byId('allowReimport').disabled=!this.writable||s.preview;
   if(s.error)byId('archiveMessage').textContent=s.error;
-  for(const id of ['files','folder','polarFiles','polarFolder','restore','erase','addMarker','deleteNight','migratePortable']){const e=byId(id);if(e)e.disabled=!this.writable||s.preview||this.closed||s.conflict||!!s.pending&&!(s.pending==='import'&&['files','folder'].includes(id));}
+  byId('compressPolar').disabled=busy||!this.writable||this.closed||s.conflict||s.preview||!!s.pending&&s.pending!=='compression';
+  byId('pendingDescription').textContent=s.pending==='compression'?'Interrupted ECG compression: resume it below or return to the previous archive. No partial compression is published.':'Interrupted import: choose the same SD folder to resume. Interrupted restore: preview it, or return to the previous archive. No incomplete import is published.';
+  for(const id of ['files','folder','polarFiles','polarFolder','restore','erase','addMarker','deleteNight','migratePortable','sleepCompute']){const e=byId(id);if(e)e.disabled=busy||!this.writable||s.preview||this.closed||s.conflict||!!s.pending&&!(s.pending==='import'&&['files','folder'].includes(id));}
  },
  async busyAction(fn){if(busy)throw Error('An operation is already running.');busy=true;try{await fn();}finally{busy=false;this.render();}},
  bind(){
@@ -73,6 +76,23 @@ const Portable={
   on('recoverSession',async()=>{if(!confirm('Close any other BreathPAPGuardian tab first. Recover this browser session? Pending work is preserved.'))return;this.state=await this.api('session/recover',{});this.writable=true;this.render();});
   on('retryArchive',async()=>{await this.check();document.getElementById('archiveMessage').textContent='Archive status refreshed.';});
   for(const choice of ['local','shared'])on('resolve'+choice,()=>this.busyAction(async()=>{if(!confirm(`Use the ${choice} copy? The current local copy is preserved in Local recovery copies; shared history is retained.`))return;this.state=await this.api('resolve',{choice});await refresh();if(choice==='local')await this.flush();this.render();}));
+  on('compressPolar',async()=>{
+   if(busy)throw Error('Wait for the current operation.');this.assertWrite(true);
+   if(!this.state.pending&&!confirm('Compress original Polar ECG without loss? All clients must use this updated app. Existing published versions and recovery copies are retained.'))return;
+   let started=false;busy=true;try{
+    await this.begin('compression');started=true;
+    const records=(await this.api('records/external')).filter(r=>r.polar);let count=0;
+    const message=document.getElementById('archiveMessage');
+    for(const [index,rec] of records.entries()){
+     message.textContent=`Compressing Polar ECG · recording ${index+1}/${records.length}…`;
+     const result=await this.api('compress-ecg',{id:rec.id});count+=result.files;
+     message.textContent=`Preparing ECG indexes · recording ${index+1}/${records.length}…`;
+     for(const name of Object.keys(rec.blobs||{}).filter(n=>n.endsWith('_ecg.csv')))await this.api('ecg-index',{id:rec.id,filename:name});
+    }
+    message.textContent='Saving compressed ECG and verifying archive attachments…';
+    await this.finish();started=false;message.textContent='Reloading the saved archive…';await refresh();this.render();document.getElementById('archiveMessage').textContent=`Compressed and verified ${count} ECG file(s). Wait for Proton Drive upload completion.`;
+   }catch(e){if(started)await this.pause().catch(()=>{});throw e;}finally{busy=false;this.render();}
+  });
   on('previewPending',async()=>{this.state=await this.api('operation/preview',{});await refresh();this.render();});
   on('discardPending',async()=>{if(!confirm('Return to the previous archive? The interrupted operation will be kept as a local recovery copy.'))return;this.state=await this.api('operation/discard',{});await refresh();this.render();});
   on('acceptRestore',async()=>{if(!confirm('Replace the active archive with this complete restored copy and publish it? The previous copy is retained.'))return;this.state=await this.api('operation/accept',{});await refresh();this.render();await this.flush();status('Restored archive activated. Automatic publication is enabled.');});
@@ -87,15 +107,49 @@ const Portable={
  },
  async hash(text){const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,'0')).join('');},
  async backup(){
-  if(busy||this.writing)throw Error('Wait for the current operation to finish.');
-  status('Preparing a complete, independent backup…');
-  const data={};for(const store of ['files','markers','external','tombstones','analysis','preferences'])data[store]=await encode(await getAll(store));
-  const backup={format:'bpg-backup-v3',schema:3,archiveSchema:2,created:new Date().toISOString(),data,sha256:await this.hash(JSON.stringify(data))};
-  download(new Blob([JSON.stringify(backup)],{type:'application/json'}),'bpg-backup-'+Date.now()+'.json');
-  status('Complete backup ready. It contains recordings and media without application encryption; store it on an encrypted independent device.');
+  if(busy||this.writing||this.saving)throw Error('Wait for the current operation to finish.');
+  busy=true;this.writing++;this.render();
+  status('Preparing a complete backup on disk. Large archives can take several minutes…');
+  try{
+   const result=await this.api('backup/prepare',{});
+   $('exportMessage').textContent=`Backup ready · ${(result.size/1048576).toFixed(1)} MiB. Choose Download file to save it.`;
+   $('exportSave').href=result.url;$('exportSave').download=result.filename;
+   $('exportOpen').href=result.url;
+   $('exportPicker').hidden=true;$('exportShare').hidden=true;
+   if(!$('exportDialog').open)$('exportDialog').showModal();
+   status('Complete backup ready. Save the ZIP file to your backup device.');
+  }finally{this.writing--;busy=false;this.render();}
+ },
+ async restoreZip(file){
+  if(!confirm('Restore into a new local preview archive? The active archive is kept. Nothing is published until you choose Use restored archive.'))return;
+  busy=true;this.writing++;this.render();
+  try{
+   const upload=await this.api('backup/upload-start',{size:file.size});
+   let offset=upload.offset;
+   while(offset<file.size){
+    status(`Uploading backup · ${Math.floor(offset/file.size*100)}%…`);
+    const block=file.slice(offset,Math.min(offset+upload.chunkSize,file.size));
+    const response=await fetch('/api/backup/upload-block/'+upload.id,{method:'POST',headers:{'X-BPG-Local':'1','X-BPG-Session':this.token,'X-BPG-Offset':String(offset)},body:block});
+    const result=await response.json();
+    if(!response.ok)throw Error(result.error||'Backup upload failed.');
+    if(result.offset!==offset+block.size)throw Error('Backup upload offset mismatch.');
+    offset=result.offset;
+   }
+   status('Verifying backup and original ECG checksums. Large archives can take several minutes…');
+   this.state=await this.api('backup/upload-finish',{id:upload.id});
+   await refresh();
+   status('Restored archive preview. Inspect it, then choose Use restored archive to replace and publish.');
+  }catch(error){
+   this.state=await this.api('status').catch(()=>this.state);
+   if(this.state?.preview)await refresh();
+   throw error;
+  }finally{this.writing--;busy=false;this.render();}
  },
  async restoreBackup(file){
   this.assertWrite();if(busy)throw Error('Wait for the current operation.');
+  const signature=new Uint8Array(await file.slice(0,4).arrayBuffer());
+  if(signature[0]===0x50&&signature[1]===0x4b)return this.restoreZip(file);
+  if(file.size>512*1048576)throw Error('This legacy JSON backup is too large for browser import. Use a ZIP backup from the updated app.');
   const input=JSON.parse(await file.text());let data;
   if(input.format==='bpg-backup-v3'){
    if(input.schema!==3||input.archiveSchema!==2)throw Error('Unsupported backup format. Update the app.');

@@ -42,7 +42,7 @@ Use separate working directories when selecting different shared archives.
 ## Daily use
 
 1. Wait for Proton Drive synchronization. The app automatically loads the newest
-   **locally visible** complete publication. Until you confirm synchronization,
+   **locally visible** publication. Until you confirm synchronization,
    consultation and backup export work, but editing is blocked by the server.
 2. Click **Proton Drive is synchronized · enable editing**. If a newer complete
    version became visible in the meantime, it is loaded before editing begins.
@@ -75,8 +75,10 @@ publication and local durability never depend on that browser event.
 
 ## What synchronization can guarantee
 
-Checksums verify the manifest, record objects and every media/EDF blob before a
-version is opened. These checks detect incomplete/corrupt delivery. They cannot
+Checksums verify the manifest, record objects and non-deferred attachments before a
+version is opened. ECG and marker media are verified on first access, so a damaged
+or incomplete deferred file is reported when opened and cannot be published.
+All referenced attachments are verified before publication. These checks cannot
 prove Proton has delivered the newest remote version or expose unpublished work
 on the other Mac. The UI therefore says **saved in the Proton Drive folder**,
 not **uploaded to the cloud**. Use one editing computer at a time.
@@ -129,19 +131,30 @@ backups may contain deleted information.
 
 ## Full backups and exact recovery
 
-**Download local backup** produces a self-contained v3 JSON with a checksum,
-recordings, parsed signals, notes/media, external channels, deletion records,
-Glasgow cache and saved chart preferences. It includes unpublished committed
-work in the archive being viewed; a pending copy can be previewed/exported for
-recovery. Published history and local recovery history are not embedded.
+**Download local backup** prepares a self-contained `.bpg.zip` file on the
+local server, then offers **Download file**. ZIP64 supports large archives.
+Attachments are copied and hashed in 1 MiB blocks. ECG compression is preserved,
+and the original ECG checksums are verified. The browser downloads the prepared
+file directly. The backup includes recordings, parsed signals, notes/media,
+external channels, deletion records, saved analyses and chart preferences,
+including unpublished committed work in the archive being viewed. Published
+history and local recovery history are separate. Incomplete recovery previews
+must be resolved before creating a complete backup.
 
-**Restore backup** verifies its checksum and format, then builds a new empty
-local preview database. Extra records in the active archive cannot leak into
-the restored copy. Inspect or export the preview; only **Use restored archive**
-replaces the active archive and publishes it. The previous copy is retained.
-Legacy `pap-local-v2` backups remain supported, but have no checksum. An
-interrupted restore may be previewed/exported but cannot be activated as a
-complete restore; restore the full backup again after preserving/discarding it.
+**Restore backup** uploads ZIP files in 8 MiB blocks and validates them in a
+separate local staging folder. Checks cover the manifest, record hashes,
+attachment sizes and hashes, original compressed ECG bytes and PAP device
+consistency. A complete local preview becomes available after verification.
+Inspect the preview, then choose **Use restored archive** to activate and publish
+it. The prior working copy is retained in local recovery. Failed uploads or
+verification preserve the active archive.
+
+Existing v3 JSON and `pap-local-v2` backups can still be imported through the same
+control. Legacy JSON import uses browser memory and has a 512 MiB file-size limit.
+New exports use ZIP. Temporary server-side downloads expire after one hour when
+another transfer starts and are removed on normal server shutdown. Save the
+backup before stopping the server. Uploads require space for both the ZIP and a
+verified restore, plus working space. The upload limit is 100 GiB.
 
 Published history can be restored as a new publication using **Restore version**.
 **Local recovery copies** can be previewed and accepted through the same flow.
@@ -178,3 +191,21 @@ docker run --rm --init -it --read-only --cap-drop ALL \
 For the separate synthetic standalone HTML preview and compatibility tests only,
 `python3 server.py --browser-storage` explicitly enables IndexedDB. Normal
 portable startup never falls back to it.
+
+## Polar loading and sleep estimates
+
+Trend reads saved Polar summaries without requesting Polar CSV blobs from the browser. A night first loads HR, R–R and HRV. **Prepare ECG overview** builds a full-night min/max overview on demand, preserving timing and connection gaps. **Load ECG in visible range** uses the same index to retrieve and verify only blocks covering the displayed range. Windows of up to 10 minutes refresh when the view changes; wider views require zooming in for detail. **Load original ECG** loads the entire recording. Marker media are fetched on expansion.
+
+The first ECG index reads and verifies the original file's chunks. When editing is enabled, the derived index is published with the archive and reused by other clients; a bounded browser cache also avoids repeat requests. Read-only sessions can reuse published indexes without loading ECG blobs. Each subsequent block is verified against its indexed hash. Unsupported CSV records and clock changes fail closed. On a cold client, ECG and marker media remain in the shared folder until requested. They require Proton's local copy to be available and are verified before use. Complete backup export reads and verifies every attachment.
+
+### Sleep estimates
+
+Sleep-stage estimation is disabled in this release. Existing `sleep:<night>`
+records are retained in archives and backups. The optional offline prototype and
+its experimental limitations are documented in `sleepecg-experiment.md`.
+
+### Lossless ECG compression
+
+After an independent backup, open **Recovery, versions and reimport** and select **Compress Polar ECG without loss**. The app stages each conversion in a pending database, verifies every decompressed block and its original-file digest, and publishes only after completion. An interrupted compression can be resumed with the same control or discarded; prior published versions and local recovery copies are retained. Later Polar imports in a compressed-format archive use the same encoding. A compressed publication uses archive schema 3: update every client before opening or writing it. Older schema-2 clients reject the new version. An independent complete backup preserves the compressed data and verifies the original file hashes during export and restore.
+
+This operation reduces the active ECG representation; total local and Proton usage may initially increase because old blobs and historical versions are preserved. History cleanup is a separate operation and preserves protected/current versions and a seven-day grace period. The app does not automatically remove old local blobs. See `compression-benchmark.md` for measured sizes and limitations.
