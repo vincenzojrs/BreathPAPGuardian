@@ -10,7 +10,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-METHOD = 'sleepecg-wrn-gru-mesa-0.6.0-bpg-rr-segments-v1'
+METHOD = 'sleepecg-wrn-gru-mesa-0.6.0-bpg-rr-segments-v2'
 MODEL_HASH = '5622a858c855b0090e1fbcbdc35334ea459707c830eae1a26a4375e33091e869'
 
 
@@ -144,7 +144,7 @@ def compute(store, night, token):
                 raise ValueError('Sleep analysis failed. Install the optional SleepECG runtime or check the Polar RR data.')
             raw = json.loads(output.read_text(encoding='utf-8'))
             if (raw.get('model_sha256') != MODEL_HASH or raw.get('sleepecg_version') != '0.6.0'
-                    or raw.get('preprocessing') != 'bpg-rr-segments-v1' or raw.get('timezone') != rec['zone']
+                    or raw.get('preprocessing') != 'bpg-rr-segments-v2' or raw.get('timezone') != rec['zone']
                     or raw.get('shift_already_applied') != (rec['session'].get('time_shift_applied') is True)):
                 raise ValueError('Unexpected sleep model version or weights.')
             result = normalize(rec, raw, sig)

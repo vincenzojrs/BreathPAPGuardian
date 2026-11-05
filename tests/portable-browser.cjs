@@ -44,25 +44,29 @@ async function release(page){await saved(page);await page.evaluate(async()=>{awa
   let beat=polarStart,rrText='timestamp_unix_ns,rr_ms,sensor_contact,screen_accepted,connection_segment\n';for(let i=0;i<1500;i++){const ms=800+(i*37%200);beat+=BigInt(ms)*1000000n;rrText+=`${beat},${ms},true,true,1\n`;}
   const polar=[f('session.json',JSON.stringify({schema_version:1,time_zone:'UTC',start_unix_ns:ns(0),end_unix_ns:ns(1800),device_id:'synthetic'})),f('000_ecg.csv',`timestamp_unix_ns,ecg_uv,connection_segment\n${ns(0)},100,1\n${ns(1)},-50,1\n`),f('000_hr.csv',`timestamp_unix_ns,hr_bpm\n${ns(0)},70\n${ns(1)},71\n`),f('000_rr.csv',rrText),f('000_hrv.csv',`window_start_unix_ns,window_end_unix_ns,rmssd_candidate_ms,usable_heuristic\n${ns(0)},${ns(300)},32,true\n`)];
   await a.locator('#polarFiles').setInputFiles(polar);await a.waitForFunction(()=>document.querySelector('#polarStatus').textContent.includes('Heart rate, R–R and HRV loaded'));await saved(a);
-  let sleepBackup;
-  if(process.env.BPG_SLEEP_PYTHON||process.env.BPG_TEST_SLEEP){
+  let polarBackup;
+  const sleepEnabled=await a.evaluate(()=>SLEEP_STAGING_ENABLED);
+  assert.equal(sleepEnabled,false);
+  assert.equal(await a.locator('#sleepPanel').isVisible(),false);
+  assert.equal(await a.locator('#trendChoices [data-series^="sleep:"]').count(),0);
+  if(sleepEnabled){
    await a.locator('#sleepCompute').click();await a.waitForFunction(()=>document.querySelector('#sleepStatus').textContent.includes('coverage'),null,{timeout:60000});await saved(a);assert.equal(await a.evaluate(()=>sleepStates[night.key].status),'available');
+  }
    await a.locator('#archivePanel details').last().locator('summary').click();await a.locator('#compressPolar').click();await a.waitForFunction(()=>document.querySelector('#archiveMessage').textContent.includes('Compressed and verified'),null,{timeout:60000});await saved(a);
    const restoredECG=await a.evaluate(async()=>{const r=external.find(e=>e.polar).blobs['000_ecg.csv'];if(!r.__deflateChunks)throw Error('ECG not compressed');return (await portableDecode(r)).text();});assert.equal(restoredECG,polar[1].buffer.toString());
    await a.locator('#polarFiles').setInputFiles(polar);await a.waitForFunction(()=>document.querySelector('#polarStatus').textContent.includes('already imported'));assert.equal(await a.evaluate(()=>external.filter(e=>e.polar).length),1);
-   await a.locator('#archiveBtn').click();const request=a.waitForEvent('download');await a.locator('#backup').click();await a.locator('#exportSave').click();sleepBackup=path.join(tmp,'sleep-backup.json');await (await request).saveAs(sleepBackup);await a.locator('#exportClose').click();
-   const backup=JSON.parse(fs.readFileSync(sleepBackup));assert.ok(backup.data.analysis.some(r=>r.id.startsWith('sleep:')));assert.ok(backup.data.analysis.some(r=>!r.id.startsWith('sleep:')));
-  }
+   await a.locator('#archiveBtn').click();const request=a.waitForEvent('download');await a.locator('#backup').click();await a.locator('#exportSave').click();polarBackup=path.join(tmp,'polar-backup.bpg.zip');await (await request).saveAs(polarBackup);await a.locator('#exportClose').click();
+   assert.equal(fs.readFileSync(polarBackup).subarray(0,2).toString(),'PK');
   const expectedSavedMean=await a.evaluate(()=>stat(nights[0],'Flow.40ms')?.mean);
   await release(a);
   const b=await context.newPage(),blobRequests=[],rangeRequests=[],indexRequests=[],sleepRequests=[];b.on('request',request=>{if(request.url().endsWith('/api/ecg-index'))indexRequests.push(request.url());if(request.url().endsWith('/api/sleep-compute'))sleepRequests.push(request.url());if(request.url().includes('/api/blob/')){blobRequests.push(request.url());if(request.headers().range)rangeRequests.push(request.headers().range);}});
   await ready(b,ports[1]);await b.waitForFunction(()=>nights.length===1);assert.equal(await b.evaluate(()=>annotations[0].note),'First Mac');assert.equal(await b.evaluate(()=>trendSummaries.has(nights[0].key)),true);assert.equal(await b.evaluate(()=>stat(nights[0],'Flow.40ms')?.mean),expectedSavedMean);
   const markerRef=await b.evaluate(()=>annotations[0].media[0].blob.__ref);assert.equal(blobRequests.some(url=>url.endsWith('/'+markerRef)),false,'Trend must not read marker media');
-  if(process.env.BPG_SLEEP_PYTHON||process.env.BPG_TEST_SLEEP){const state=await b.evaluate(()=>sleepStates[nights[0].key]);assert.equal(state.status,'available');assert.ok(state.result.epochs.length>0);}
+  if(sleepEnabled){const state=await b.evaluate(()=>sleepStates[nights[0].key]);assert.equal(state.status,'available');assert.ok(state.result.epochs.length>0);}
   const ecgRef=await b.evaluate(()=>(external.find(e=>e.polar).blobs['000_ecg.csv'].__deflateChunks?.[0]||external.find(e=>e.polar).blobs['000_ecg.csv']).__ref);assert.equal(blobRequests.some(url=>url.endsWith('/'+ecgRef)),false,'Trend must not read ECG');
   await b.locator('#nightBtn').click();await b.waitForFunction(()=>document.querySelector('#polarStatus').textContent.includes('Heart rate, R–R and HRV loaded'));assert.equal(blobRequests.some(url=>url.endsWith('/'+ecgRef)),false,'Night summary must not read ECG');
-  if(process.env.BPG_SLEEP_PYTHON||process.env.BPG_TEST_SLEEP){assert.equal(await b.locator('#sleepChart').isVisible(),true);assert.equal(sleepRequests.length,0,'Opening saved sleep stages must not run inference');assert.equal(blobRequests.some(url=>url.endsWith('/'+ecgRef)),false,'Sleep display must not read ECG');}
-  await b.locator('#prepareECGOverview').click();await b.waitForFunction(()=>document.querySelector('#polarStatus').textContent.includes('ECG overview ready'));assert.equal(await b.locator('#polarOverview').isVisible(),true);if(process.env.BPG_SLEEP_PYTHON||process.env.BPG_TEST_SLEEP)assert.equal(fs.existsSync(path.join(tmp,'mac-1','blobs',ecgRef)),false,'Published overview index must not hydrate ECG');
+  if(sleepEnabled){assert.equal(await b.locator('#sleepChart').isVisible(),true);assert.equal(sleepRequests.length,0,'Opening saved sleep stages must not run inference');assert.equal(blobRequests.some(url=>url.endsWith('/'+ecgRef)),false,'Sleep display must not read ECG');}
+  await b.locator('#prepareECGOverview').click();await b.waitForFunction(()=>document.querySelector('#polarStatus').textContent.includes('ECG overview ready'));assert.equal(await b.locator('#polarOverview').isVisible(),true);if(sleepEnabled)assert.equal(fs.existsSync(path.join(tmp,'mac-1','blobs',ecgRef)),false,'Published overview index must not hydrate ECG');
   await b.evaluate(()=>{left=0;span=Math.min(120,total);render();});await b.locator('#loadPolarECGWindow').click();await b.waitForFunction(()=>document.querySelector('#polarStatus').textContent.includes('ECG window loaded'));
   assert.ok(blobRequests.some(url=>url.endsWith('/'+ecgRef)),'ECG window requests relevant data');assert.equal(await b.evaluate(()=>{const c=Object.values(channels).find(c=>c.polarType==='ecg');return c?.partial&&sample(c,night.origin)?.v;}),100);
   const initialIndexRequests=indexRequests.length;assert.ok(initialIndexRequests>0);
@@ -70,7 +74,7 @@ async function release(page){await saved(page);await page.evaluate(async()=>{awa
   await b.locator('#loadPolarECG').click();await b.waitForFunction(()=>document.querySelector('#polarStatus').textContent.includes('Polar signals loaded'));assert.equal(blobRequests.some(url=>url.endsWith('/'+ecgRef)),true,'Explicit ECG request reads the original');
   assert.equal(await b.evaluate(async()=>(await portableDecode(annotations[0].media[0].blob)).size>0),true);
   await confirmSync(b);
-  if(sleepBackup){await b.locator('#archiveBtn').click();await b.locator('#restore').setInputFiles(sleepBackup);await b.waitForFunction(()=>Portable.state.preview&&!busy);await b.locator('#acceptRestore').click();await saved(b);assert.equal(await b.evaluate(()=>sleepStates[nights[0].key].status),'available');assert.equal(sleepRequests.length,0);}
+  if(polarBackup){await b.locator('#archiveBtn').click();await b.locator('#restore').setInputFiles(polarBackup);await b.waitForFunction(()=>Portable.state.preview&&!busy);await b.locator('#acceptRestore').click();await saved(b);assert.equal(await b.evaluate(async()=>(await portableDecode(external.find(e=>e.polar).blobs['000_ecg.csv'])).text()),polar[1].buffer.toString());assert.equal(sleepRequests.length,0);}
   await b.evaluate(async()=>{const m=annotations[0];m.note='Second Mac';await put('markers',m);});await saved(b);await release(b);
   await a.reload();await a.waitForFunction(()=>Portable.token&&annotations[0]?.note==='Second Mac');await confirmSync(a);await saved(a);
   // Confirm that cached GI opens without constructing another worker.
@@ -80,13 +84,17 @@ async function release(page){await saved(page);await page.evaluate(async()=>{awa
   await a.locator('#deleteNight').click();await a.locator('#deleteNightConfirm').click();await a.waitForFunction(()=>nights.length===0&&!busy);await saved(a);
   await a.locator('#files').setInputFiles(path.join(root,'examples/PAP_SYNTHETIC_DEMO.edf'));await a.waitForFunction(()=>!busy&&files.length===1);await saved(a);assert.equal(await a.evaluate(()=>nights.length),0);
   await a.locator('#archivePanel details').last().locator('summary').click();await a.locator('#allowReimport').click();await a.locator('#deletedNights button').click();await a.waitForFunction(()=>nights.length===1);await saved(a);
-  await a.locator('#archiveBtn').click();const download=a.waitForEvent('download');await a.locator('#backup').click();await a.locator('#exportSave').click();const backupFile=path.join(tmp,'complete-backup.json');await (await download).saveAs(backupFile);await a.locator('#exportClose').click();
-  const backup=JSON.parse(fs.readFileSync(backupFile));assert.equal(backup.format,'bpg-backup-v3');assert.equal(backup.data.markers.length,0);
+  await a.locator('#archiveBtn').click();const download=a.waitForEvent('download');await a.locator('#backup').click();await a.locator('#exportSave').click();const backupFile=path.join(tmp,'complete-backup.bpg.zip');await (await download).saveAs(backupFile);await a.locator('#exportClose').click();
+  assert.equal(fs.readFileSync(backupFile).subarray(0,2).toString(),'PK');
+  // Preserve compatibility with the old independent JSON backup format.
+  const backup=await a.evaluate(async()=>{const data={};for(const kind of ['files','markers','external','tombstones','analysis','preferences'])data[kind]=await encode(await getAll(kind));return {format:'bpg-backup-v3',schema:3,archiveSchema:2,data,sha256:await Portable.hash(JSON.stringify(data))};});
+  const legacyFile=path.join(tmp,'legacy-backup.json');fs.writeFileSync(legacyFile,JSON.stringify(backup));
   await a.evaluate(async()=>{await put('markers',{id:'extra',night:nights[0].key,time:nights[0].origin,title:'Must disappear',note:'extra',media:[]});await refresh();});await saved(a);
   const corrupt={...backup,data:{...backup.data,markers:[]}};corrupt.data.files=[];const corruptFile=path.join(tmp,'corrupt-backup.json');fs.writeFileSync(corruptFile,JSON.stringify(corrupt));
   await a.locator('#restore').setInputFiles(corruptFile);await a.waitForFunction(()=>document.getElementById('status').textContent.includes('checksum failed'));assert.equal(await a.evaluate(()=>annotations.length),1);assert.equal(await a.evaluate(()=>!!Portable.state.pending),false);
   await a.locator('#restore').setInputFiles(backupFile);await a.waitForFunction(()=>Portable.state.preview&&!busy);assert.equal(await a.evaluate(()=>annotations.length),0);assert.equal(await a.locator('#files').isDisabled(),true);
   await a.locator('#acceptRestore').click();await saved(a);assert.equal(await a.evaluate(()=>annotations.length),0);
+  await a.locator('#restore').setInputFiles(legacyFile);await a.waitForFunction(()=>Portable.state.preview&&!busy);await a.locator('#acceptRestore').click();await saved(a);
   await a.locator('#loadVersions').click();await a.waitForFunction(()=>document.querySelectorAll('#versionSelect option').length>2);
   await a.locator('#versionSelect').selectOption(version1);await a.locator('#restoreVersion').click();await a.waitForFunction(()=>!busy);await saved(a);assert.equal(await a.evaluate(()=>annotations.length),0);
   // Closing an ordinary read/write tab releases its edit session on pagehide.

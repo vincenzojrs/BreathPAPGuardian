@@ -1,6 +1,7 @@
 *
 !server.py
 !portable_store.py
+!portable_backup.py
 !sleep_staging.py
 !storage-mode.json
 !tools/

@@ -2,11 +2,18 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),vm=requir
 const source=fs.readFileSync(require.resolve('../web/app.js'),'utf8');
 test('refresh retains Polar blob references without fetching CSV contents',async()=>{
  const calls=[],record={id:'polar:a',night:'2024-01-01',polar:true,blobs:{'ecg.csv':{__ref:'ecg'}}};
- const ctx={portable:true,night:null,files:[],annotations:[],external:[],tombstones:[],giCacheRecords:[],cache:new Map(),
+ const ctx={SLEEP_STAGING_ENABLED:false,portable:true,night:null,files:[],annotations:[],external:[],tombstones:[],giCacheRecords:[],cache:new Map(),
  api:async path=>{calls.push(path);return path==='records/external'?[record]:[]},
- getMarkers:async()=>[],portableDecode:async v=>{assert.equal(v.blobs,undefined);return v},getAll:async()=>[],buildNights:()=>({nights:[]}),ImportDelta:{visible:n=>n},home:()=>{},seedTrendSummaries:()=>{},prepareTrendSummaries:()=>{}};
+ getFilesForViewing:async()=>[],getMarkers:async()=>[],portableDecode:async v=>{assert.equal(v.blobs,undefined);return v},getAll:async()=>[],buildNights:()=>({nights:[]}),ImportDelta:{visible:n=>n},home:()=>{},seedTrendSummaries:()=>{},prepareTrendSummaries:()=>{}};
  vm.createContext(ctx);const start=source.indexOf('async function refresh()'),end=source.indexOf('\n',start);vm.runInContext(source.slice(start,end),ctx);
- await ctx.refresh();assert.equal(ctx.external[0].blobs['ecg.csv'].__ref,'ecg');assert.deepEqual(calls,['records/external','sleep-status']);
+ await ctx.refresh();assert.equal(ctx.external[0].blobs['ecg.csv'].__ref,'ecg');assert.deepEqual(calls,['records/external']);
+});
+test('viewing files defers original blobs and still decodes parsed signals',async()=>{
+ const blob={__ref:'a'.repeat(64)},row={id:'a',blob,parsed:{signals:[1,2]}};
+ const ctx={portable:true,api:async()=>[row],portableDecode:async value=>{assert.equal('blob' in value,false);return value},getAll:async()=>{throw Error('Unexpected fallback')}};
+ vm.createContext(ctx);const start=source.indexOf('async function getFilesForViewing()'),end=source.indexOf('\n',start);
+ vm.runInContext(source.slice(start,end),ctx);
+ const files=await ctx.getFilesForViewing();assert.equal(files[0].blob,blob);assert.deepEqual(files[0].parsed.signals,[1,2]);
 });
 test('Polar derived cache is byte bounded and evicts least recently used sessions',()=>{
  const ctx={ArrayBuffer,Map,JSON};vm.createContext(ctx);

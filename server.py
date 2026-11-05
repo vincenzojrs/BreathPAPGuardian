@@ -5,14 +5,16 @@ import json
 import re
 import sqlite3
 import zlib
+import zipfile
 import signal
 import threading
+import tempfile
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 from portable_store import PortableStore
-import sleep_staging
+from portable_backup import BackupTransfers, UPLOAD_BLOCK_SIZE
 
 ROOT = Path(__file__).resolve().parent / 'web'
 FILES = {'/', '/index.html', '/app.js', '/portable.js', '/import-delta.js', '/philips.js', '/dreamstation2.js', '/import-files.js', '/core.js', '/polar.js', '/polar-time.js', '/polar-csv.js', '/polar-window.js', '/style.css', '/pdf-export.js', '/glasgow.js', '/glasgow-ui.js', '/glasgow-worker.js', '/vendor/glasgow-reference.js'}
@@ -23,6 +25,7 @@ CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
 
 class Handler(SimpleHTTPRequestHandler):
     portable = None
+    backups = None
     port = 8765
 
     def allowed(self):
@@ -37,6 +40,23 @@ class Handler(SimpleHTTPRequestHandler):
         self.wfile.write(data)
 
     def api(self, action):
+        path = urlsplit(self.path).path
+        if action == 'GET' and path.startswith('/api/backup/download/') and self.allowed() and self.backups:
+            try:
+                with self.backups.download(path.removeprefix('/api/backup/download/')) as source:
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/zip')
+                    self.send_header('Content-Disposition', 'attachment; filename="bpg-backup-' + Path(source.name).stem[:12] + '.bpg.zip"')
+                    self.send_header('Content-Length', str(source.seek(0, 2)))
+                    source.seek(0)
+                    self.end_headers()
+                    while block := source.read(1024 * 1024):
+                        self.wfile.write(block)
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+            except (ValueError, OSError) as exc:
+                return self.json_response({'error': str(exc)}, 409)
+            return
         if not self.allowed() or self.headers.get('X-BPG-Local') != '1':
             return self.json_response({'error': 'Local request required.'}, 403)
         if self.command == 'POST' and self.headers.get('Origin') not in (None, f'http://127.0.0.1:{self.port}', f'http://localhost:{self.port}'):
@@ -50,7 +70,18 @@ class Handler(SimpleHTTPRequestHandler):
                 if path == '/api/status': return self.json_response(self.portable.status())
                 if path == '/api/versions': return self.json_response(self.portable.versions())
                 if path == '/api/recoveries': return self.json_response(self.portable.recoveries())
-                if path.startswith('/api/records/'): return self.json_response(self.portable.records(path.removeprefix('/api/records/')))
+                if path.startswith('/api/records/'):
+                    with tempfile.TemporaryFile(dir=self.portable.local) as output:
+                        self.portable.write_records_json(path.removeprefix('/api/records/'), output)
+                        length = output.tell()
+                        output.seek(0)
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'application/json')
+                        self.send_header('Content-Length', str(length))
+                        self.end_headers()
+                        while block := output.read(1024 * 1024):
+                            self.wfile.write(block)
+                    return
                 if path.startswith('/api/blob/'):
                     blob = self.portable.get_blob(path.removeprefix('/api/blob/'))
                     if not blob.is_file(): raise ValueError('Attachment missing.')
@@ -98,10 +129,23 @@ class Handler(SimpleHTTPRequestHandler):
                     return
             else:
                 length = int(self.headers.get('Content-Length', '-1'))
+                if path.startswith('/api/backup/upload-block/'):
+                    if not 0 < length <= UPLOAD_BLOCK_SIZE:
+                        raise ValueError('Invalid backup block size.')
+                    self.portable.require_writer(token)
+                    data = self.rfile.read(length)
+                    if len(data) != length:
+                        raise ValueError('Incomplete backup block.')
+                    result = self.backups.upload_chunk(token, path.removeprefix('/api/backup/upload-block/'),
+                                                       int(self.headers.get('X-BPG-Offset', '-1')), data)
+                    return self.json_response(result)
                 if length < 0 or length > 512 * 1024 * 1024: raise ValueError('Invalid request size.')
                 data = self.rfile.read(length)
                 if path == '/api/blob': return self.json_response({'key': self.portable.save_blob(data, token)})
                 request_data = json.loads(data)
+                if path == '/api/backup/prepare': return self.json_response(self.backups.prepare(token))
+                if path == '/api/backup/upload-start': return self.json_response(self.backups.upload_start(token, request_data['size']))
+                if path == '/api/backup/upload-finish': return self.json_response(self.backups.upload_finish(token, request_data['id']))
                 if path == '/api/session/start': return self.json_response(self.portable.start())
                 if path == '/api/session/confirm': return self.json_response(self.portable.confirm(token))
                 if path == '/api/session/recover': return self.json_response(self.portable.takeover(token))
@@ -120,15 +164,15 @@ class Handler(SimpleHTTPRequestHandler):
                 if path == '/api/cleanup': return self.json_response(self.portable.cleanup(request_data['versions'], request_data.get('execute', False), request_data.get('token', ''), token))
                 if path == '/api/ecg-index': return self.json_response(self.portable.ecg_index(request_data['id'], request_data['filename'], token))
                 if path == '/api/compress-ecg': return self.json_response(self.portable.compress_polar_ecg(request_data['id'], token))
-                if path == '/api/sleep-status': return self.json_response(sleep_staging.status_for(self.portable.records('external'), self.portable.records('analysis')))
-                if path == '/api/sleep-compute': return self.json_response(sleep_staging.compute(self.portable, request_data['night'], token))
+                if path == '/api/sleep-status': return self.json_response({})
+                if path == '/api/sleep-compute': raise ValueError('Sleep-stage estimation is unavailable in this release.')
                 if path == '/api/batch':
                     self.portable.batch(request_data, token)
                     return self.json_response(self.portable.status())
                 if path == '/api/publish': return self.json_response(self.portable.publish(token))
                 if path == '/api/open-shared': return self.json_response(self.portable.open_shared())
             raise ValueError('Unknown API route.')
-        except (ValueError, KeyError, TypeError, OSError, sqlite3.Error, zlib.error) as exc:
+        except (ValueError, KeyError, TypeError, OSError, sqlite3.Error, zlib.error, zipfile.BadZipFile, RuntimeError) as exc:
             return self.json_response({'error': str(exc)}, 409)
 
     def do_GET(self):
@@ -182,6 +226,7 @@ if __name__ == '__main__':
         parser.error('Choose portable or explicit browser storage, not both')
     if args.data_dir:
         Handler.portable = PortableStore(args.data_dir, args.shared_dir)
+        Handler.backups = BackupTransfers(Handler.portable)
     Handler.port = args.port
     try:
         server = ThreadingHTTPServer((args.bind, args.port), partial(Handler, directory=str(ROOT)))
@@ -201,5 +246,6 @@ if __name__ == '__main__':
                     Handler.portable.publish()
             except (ValueError, OSError, sqlite3.Error) as exc:
                 print('Local data preserved; publication pending: ' + str(exc), flush=True)
+            Handler.backups.close()
             Handler.portable.close()
 

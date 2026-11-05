@@ -16,10 +16,18 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 EPOCH_NS = 30_000_000_000
+PREPROCESSING = 'bpg-rr-segments-v2'
 
 
-def read_segments(folder):
+def read_segments(folder, bounds=None, diagnostics=None):
     """Split at rejected beats, gaps, changed connections, or bad RR timing."""
+    if bounds is not None and bounds[1] <= bounds[0]:
+        raise ValueError('Invalid RR session interval')
+    stats = diagnostics if diagnostics is not None else {}
+    stats.update(rows=0, outside_session=0, accepted=0, rejected=0,
+                 invalid_rr=0, screen_rejected=0, contact_lost=0,
+                 nonmonotonic=0, connection_breaks=0, timing_breaks=0)
+    stats['screen_reasons'] = {}
     segments, current = [], []
     previous_ns = previous_connection = last_seen_ns = None
     hashes = {}
@@ -33,26 +41,47 @@ def read_segments(folder):
             for row in reader:
                 try:
                     timestamp = int(row['timestamp_unix_ns'])
-                    rr = float(row['rr_ms']) / 1000
                 except (ValueError, TypeError):
                     timestamp = None
+                try:
+                    rr = float(row['rr_ms']) / 1000
+                except (ValueError, TypeError):
                     rr = math.nan
+                stats['rows'] += 1
+                # An export can contain a final notification after recording stop.
+                # Exclude it before it can affect ordering or segmentation.
+                if bounds is not None and timestamp is not None and not bounds[0] <= timestamp <= bounds[1]:
+                    stats['outside_session'] += 1
+                    continue
+                invalid = timestamp is None or not math.isfinite(rr) or not .3 <= rr <= 2
+                stats['invalid_rr'] += int(invalid)
+                stats['screen_rejected'] += int((row['screen_accepted'] or '').lower() != 'true')
+                if (row['screen_accepted'] or '').lower() != 'true':
+                    reason = row.get('screen_reason') or 'unspecified'
+                    stats['screen_reasons'][reason] = stats['screen_reasons'].get(reason, 0) + 1
+                stats['contact_lost'] += int((row['sensor_contact'] or '').lower() == 'false')
                 accepted = (timestamp is not None and math.isfinite(rr) and .3 <= rr <= 2 and
-                            row['screen_accepted'].lower() == 'true' and
-                            row['sensor_contact'].lower() != 'false')
+                            (row['screen_accepted'] or '').lower() == 'true' and
+                            (row['sensor_contact'] or '').lower() != 'false')
                 connection = row['connection_segment']
                 if timestamp is not None:
                     if last_seen_ns is not None and timestamp <= last_seen_ns:
                         accepted = False
+                        stats['nonmonotonic'] += 1
                     last_seen_ns = max(last_seen_ns, timestamp) if last_seen_ns is not None else timestamp
                 if current:
                     delta = (timestamp - previous_ns) / 1e9 if timestamp is not None else -1
                     continuous = (accepted and connection == previous_connection and .3 <= delta <= 2 and
                                   abs(delta-rr) <= max(.25, rr*.25))
+                    if accepted and connection != previous_connection:
+                        stats['connection_breaks'] += 1
+                    elif accepted and not continuous:
+                        stats['timing_breaks'] += 1
                     if not continuous:
                         if len(current) >= 2:
                             segments.append(current)
                         current = []
+                stats['accepted' if accepted else 'rejected'] += 1
                 if accepted:
                     current.append(timestamp)
                     previous_ns, previous_connection = timestamp, connection
@@ -63,6 +92,34 @@ def read_segments(folder):
     if not hashes:
         raise ValueError('No Polar RR files found')
     return segments, hashes
+
+
+def coverage_diagnostics(folder):
+    """Signal/context availability only; no model or sleep-stage inference."""
+    start, end, session_hash, _ = session_info(folder)
+    stats = {}
+    segments, hashes = read_segments(folder, (start, end), stats)
+    hashes['session.json'] = session_hash
+    # Match the inference's segment-length and full-context gates exactly.
+    candidates = 0
+    short = 0
+    for segment in segments:
+        origin = segment[0] // EPOCH_NS * EPOCH_NS
+        if segment[-1] - origin < 300_000_000_000:
+            short += 1
+            continue
+        first = -(-(segment[0] + 120_000_000_000) // EPOCH_NS)
+        last = (segment[-1] - 150_000_000_000) // EPOCH_NS
+        candidates += max(0, last - first + 1)
+    total = max(0, end // EPOCH_NS - (-(-start // EPOCH_NS)))
+    return {'preprocessing': PREPROCESSING, 'samples': stats,
+            'segments': len(segments), 'segments_skipped_by_length': short,
+            'segments_at_least_300s': sum(s[-1] - s[0] >= 300_000_000_000 for s in segments),
+            'complete_session_epochs': total,
+            'epochs_with_rr_context': candidates,
+            'rr_context_minutes': candidates / 2,
+            'sources_sha256': hashes,
+            'limitation': 'Context availability before timezone and finite-feature checks; no stage inference or accuracy assessment. Rejection counters may overlap.'}
 
 
 def session_info(folder):
@@ -90,7 +147,7 @@ def predict(folder, zone_name):
     import sleepecg
     zone = ZoneInfo(zone_name)
     start, end, session_hash, shifted = session_info(folder)
-    segments, hashes = read_segments(folder)
+    segments, hashes = read_segments(folder, (start, end))
     if any(segment[0] < start or segment[-1] > end for segment in segments):
         raise ValueError('RR times fall outside the declared session interval')
     hashes['session.json'] = session_hash
@@ -134,7 +191,7 @@ def predict(folder, zone_name):
             results.append({'start_utc_ns': str(start), 'start_pap_wall': wall.replace(tzinfo=None).isoformat(),
                             'duration_seconds': 30, 'class': labels[choice],
                             'probabilities': {name: float(value) for name, value in zip(labels, row)}})
-    return {'experimental': True, 'method': 'sleepecg-wrn-gru-mesa', 'sleepecg_version': sleepecg.__version__, 'model_sha256': model_hash, 'preprocessing': 'bpg-rr-segments-v1',
+    return {'experimental': True, 'method': 'sleepecg-wrn-gru-mesa', 'sleepecg_version': sleepecg.__version__, 'model_sha256': model_hash, 'preprocessing': PREPROCESSING,
             'timezone': zone_name, 'shift_already_applied': shifted, 'sources_sha256': hashes, 'epochs': results,
             'limitation': 'Only epochs with full clean feature windows are included; omitted times are not estimable. No individual reference validation.'}
 
@@ -142,12 +199,15 @@ def predict(folder, zone_name):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('folder', type=Path)
-    parser.add_argument('--zone', required=True)
+    parser.add_argument('--zone', help='PAP timezone; required for inference')
+    parser.add_argument('--diagnostics-only', action='store_true', help='Measure RR/context availability without loading SleepECG')
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     if args.output.exists():
         raise SystemExit('Refusing to overwrite existing output')
-    data = predict(args.folder, args.zone)
+    if not args.diagnostics_only and not args.zone:
+        parser.error('--zone is required for inference')
+    data = coverage_diagnostics(args.folder) if args.diagnostics_only else predict(args.folder, args.zone)
     with args.output.open('x', encoding='utf-8') as out:
         json.dump(data, out, indent=2, allow_nan=False)
 

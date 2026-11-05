@@ -25,7 +25,7 @@ class SleepTests(unittest.TestCase):
             def fake_run(args, **kwargs):
                 wall = dt.datetime.fromtimestamp((start+600000)/1000, dt.timezone.utc).replace(tzinfo=None).isoformat()
                 data = {'model_sha256': sleep_staging.MODEL_HASH, 'sleepecg_version':'0.6.0',
-                        'preprocessing':'bpg-rr-segments-v1','timezone':'UTC','shift_already_applied':False,
+                        'preprocessing':'bpg-rr-segments-v2','timezone':'UTC','shift_already_applied':False,
                         'epochs':[{'start_pap_wall':wall,'class':'REM','probabilities':{'UNDEFINED':0.0,'NREM':0.2,'REM':0.7,'WAKE':0.1}}]}
                 Path(args[args.index('--output')+1]).write_text(json.dumps(data))
                 return type('Result', (), {'returncode': 0})()
@@ -62,7 +62,7 @@ class SleepTests(unittest.TestCase):
                 changed = dict(rec, zone='Europe/Rome')
                 a.batch({'put':[['external',changed]]})
                 output = {'model_sha256': sleep_staging.MODEL_HASH, 'sleepecg_version':'0.6.0',
-                          'preprocessing':'bpg-rr-segments-v1','timezone':'UTC','shift_already_applied':False,'epochs':[]}
+                          'preprocessing':'bpg-rr-segments-v2','timezone':'UTC','shift_already_applied':False,'epochs':[]}
                 Path(args[args.index('--output')+1]).write_text(json.dumps(output))
                 return type('Result', (), {'returncode': 0})()
             with patch('sleep_staging.subprocess.run', side_effect=alter):
@@ -70,6 +70,12 @@ class SleepTests(unittest.TestCase):
                     sleep_staging.compute(a, '2026-01-01', None)
             self.assertFalse(a.records('analysis'))
             self.assertFalse(a.sleep_jobs)
+
+    def test_previous_preprocessing_result_is_stale(self):
+        rec = {'id':'polar:test','night':'2026-01-01','polar':True,'blobs':{}}
+        old = {'id':'sleep:2026-01-01', 'method':'sleepecg-wrn-gru-mesa-0.6.0-bpg-rr-segments-v1',
+               'input_signature': sleep_staging.signature(rec), 'summary':{'classified': 1}}
+        self.assertEqual(sleep_staging.status_for([rec], [old])['2026-01-01']['status'], 'stale')
 
     def test_rejects_invalid_model_output(self):
         rec = {'night':'2026-01-01','start':1767268800000,'end':1767269400000}

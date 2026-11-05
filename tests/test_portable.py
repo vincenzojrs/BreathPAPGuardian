@@ -1,5 +1,7 @@
 """Synthetic, temporary two-computer exercise for the portable archive."""
 import json
+import io
+import zipfile
 import os
 import hashlib
 import socket
@@ -13,7 +15,7 @@ from urllib.request import Request, urlopen
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from portable_store import PortableStore, packed, digest
+from portable_store import PortableStore, packed, digest, refs
 
 
 class PortableTests(unittest.TestCase):
@@ -54,6 +56,11 @@ class PortableTests(unittest.TestCase):
                     tokens[port] = call(port, 'session/start', {})['token']
                     with self.assertRaises(HTTPError): call(port, 'batch', {'put': [['files', {'id': 'blocked'}]]})
                     call(port, 'session/confirm', {})
+                    self.assertEqual(call(port, 'sleep-status', {}), {})
+                    with self.assertRaises(HTTPError) as disabled:
+                        call(port, 'sleep-compute', {'night': '2026-11-01'})
+                    self.assertEqual(disabled.exception.code, 409)
+                    self.assertIn('unavailable in this release', disabled.exception.read().decode())
                 key = call(ports[0], 'blob', b'EDF synthetic', 'application/octet-stream')['key']
                 url = f'http://127.0.0.1:{ports[0]}/api/blob/{key}'
                 for header, expected, bounds in [('bytes=0-2', b'EDF', 'bytes 0-2/13'),
@@ -87,6 +94,30 @@ class PortableTests(unittest.TestCase):
                 call(ports[0], 'publish', {})
                 call(ports[1], 'open-shared', {})
                 self.assertEqual(call(ports[1], 'records/files')[0]['id'], 'demo')
+                # Native backup download requires a random download capability.
+                job = call(ports[0], 'backup/prepare', {})
+                with urlopen(f'http://127.0.0.1:{ports[0]}' + job['url']) as response:
+                    backup_bytes = response.read()
+                    self.assertEqual(len(backup_bytes), int(response.headers['Content-Length']))
+                    self.assertIn('attachment', response.headers['Content-Disposition'])
+                with zipfile.ZipFile(io.BytesIO(backup_bytes)) as archive:
+                    self.assertIn('manifest.json', archive.namelist())
+                call(ports[1], 'session/confirm', {})
+                upload = call(ports[1], 'backup/upload-start', {'size': len(backup_bytes)})
+                def upload_block(offset, block):
+                    req = Request(f"http://127.0.0.1:{ports[1]}/api/backup/upload-block/{upload['id']}",
+                                  data=block, headers={'X-BPG-Local':'1', 'X-BPG-Session':tokens[ports[1]],
+                                                       'X-BPG-Offset':str(offset)})
+                    with urlopen(req) as response:
+                        return json.loads(response.read())
+                self.assertEqual(upload_block(0, backup_bytes[:64])['offset'], 64)
+                self.assertEqual(upload_block(0, backup_bytes[:64])['offset'], 64)
+                upload_block(64, backup_bytes[64:])
+                restored = call(ports[1], 'backup/upload-finish', {'id': upload['id']})
+                self.assertTrue(restored['preview'])
+                self.assertTrue(restored['complete'])
+                self.assertTrue(call(ports[1], 'backup/upload-finish', {'id':upload['id']})['preview'])
+                call(ports[1], 'operation/discard', {})
                 req = Request(f'http://127.0.0.1:{ports[0]}/api/publish', data=b'{}')
                 with self.assertRaises(HTTPError) as denied:
                     urlopen(req)
@@ -95,6 +126,26 @@ class PortableTests(unittest.TestCase):
                 for p in processes:
                     p.terminate()
                     p.wait(timeout=5)
+
+    def test_attachment_refs_include_nested_objects_among_signal_values(self):
+        first, second = 'a'*64, 'b'*64
+        value = {'samples': [1, None, [2, {'__ref': first}], 3],
+                 'nested': {'samples': [0, {'deep': {'__ref': second}}]}}
+        self.assertEqual(set(refs(value)), {first, second})
+
+    def test_ecg_blob_also_used_by_other_signal_is_verified(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            a = self.store(root/'a', root/'shared')
+            key = a.save_blob(b'original')
+            rec = {'id':'polar:shared', 'polar':True,
+                   'blobs':{'000_ecg.csv':{'__ref':key}, '000_rr.csv':{'__ref':key}}}
+            a.batch({'put':[['external',rec]]})
+            version = a.publish()['base']
+            (a.shared/'blobs'/key).write_bytes(b'corrupted')
+            b = self.store(root/'b', root/'shared')
+            with self.assertRaisesRegex(ValueError, 'incomplete or damaged'):
+                b._load_version(version, defer_heavy=True)
 
     def test_round_trip_and_conflict(self):
         with tempfile.TemporaryDirectory() as tmp:

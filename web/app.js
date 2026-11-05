@@ -1,4 +1,6 @@
 'use strict';
+// Sleep staging is deferred from this release.
+const SLEEP_STAGING_ENABLED = false;
 const $=id=>document.getElementById(id),el=(tag,text,cls)=>{const e=document.createElement(tag);if(text!==undefined)e.textContent=text;if(cls)e.className=cls;return e;},fmt=n=>Number.isFinite(n)?Number(n.toFixed(2)).toLocaleString('en-US'):'—',clock=t=>new Date(t).toISOString().slice(11,19),iso=t=>new Date(t).toISOString().slice(0,-1),names={'Flow.40ms':'Respiratory flow','Press.40ms':'High-resolution pressure','MaskPress.2s':'Mask pressure','Press.2s':'Pressure · Press (IPAP)','EprPress.2s':'Pressure · EprPress (EPAP)','Leak.2s':'Leak','RespRate.2s':'Respiratory rate','TidVol.2s':'Tidal volume','MinVent.2s':'Minute ventilation','TgtVent.2s':'Target ventilation','Snore.2s':'Snore','FlowLim.2s':'Flow limitation'};
 function formatDuration(hours){if(!Number.isFinite(hours)||hours<0)return '—';const minutes=Math.round(hours*60);return Math.floor(minutes/60)+' h '+String(minutes%60).padStart(2,'0')+' min';}
 Object.assign(names,{'PRS1.Flow':'Respiratory flow · Philips','PRS1.Pressure':'CPAP pressure setting · Philips','PRS1.EPAP':'EPAP setting · Philips','PRS1.IPAP':'IPAP setting · Philips','PRS1.MaskPressure':'Mask pressure · Philips','PRS1.TotalLeak':'Total leak · Philips (includes venting)','PRS1.SnoreCount':'Snore count per interval · Philips','PRS1.FlexPressure':'Average Flex pressure · Philips','PRS1.AveragePressure':'Average pressure · Philips'});
@@ -13,6 +15,7 @@ const put=(store,value)=>portable?portablePut(store,value):transaction(store,'re
 async function portablePut(store,value){Portable.assertWrite();Portable.writing++;try{await api('batch',{put:[[store,await portableEncode(value)]]});}finally{Portable.writing--;Portable.changed();}}
 const del=(store,id)=>portable?api('batch',{delete:[[store,id]]}).then(portableStatus):transaction(store,'readwrite',s=>s.delete(id));
 const getAll=async store=>portable?Promise.all((await api('records/'+store)).map(x=>portableDecode(x))):request(db.transaction(store).objectStore(store).getAll());
+async function getFilesForViewing(){if(!portable)return getAll('files');return Promise.all((await api('records/files')).map(async record=>{const {blob,...fields}=record;return {...await portableDecode(fields),blob};}));}
 async function getMarkers(){if(!portable)return getAll('markers');return Promise.all((await api('records/markers')).map(async m=>({...await portableDecode({...m,media:undefined}),media:m.media||[]})));}
 
 async function portableStatus(){if(!portable)return;Portable.state=await api('status');Portable.render();return Portable.state;}
@@ -31,7 +34,7 @@ $('exportSave').onclick=()=>{$('exportMessage').textContent='Download requested.
 $('exportPicker').onclick=async()=>{try{const handle=await window.showSaveFilePicker({suggestedName:exportFilename}),writer=await handle.createWritable();await writer.write(exportBlob);await writer.close();$('exportMessage').textContent='File saved.';}catch(e){$('exportMessage').textContent=e.name==='AbortError'?'Save cancelled.':'Save failed: '+e.message;}};
 $('exportShare').onclick=async()=>{try{await navigator.share({files:[new File([exportBlob],exportFilename,{type:exportBlob.type})]});$('exportMessage').textContent='Sharing complete.';}catch(e){$('exportMessage').textContent=e.name==='AbortError'?'Sharing cancelled.':e.message;}};
 
-async function refresh(){files=await getAll('files');annotations=await getMarkers();external=portable?await Promise.all((await api('records/external')).map(async r=>r.polar?{...await portableDecode({...r,blobs:undefined}),blobs:r.blobs}:portableDecode(r))):await getAll('external');metadata=buildNights(files);if(portable){tombstones=await getAll('tombstones');giCacheRecords=await getAll('analysis');sleepStates=await api('sleep-status',{});if(typeof applyPortablePreferences==='function')applyPortablePreferences(await getAll('preferences'));}nights=portable?ImportDelta.visible(metadata.nights,tombstones):metadata.nights;cache.clear();seedTrendSummaries();if(typeof giReset==='function')giReset();home();prepareTrendSummaries();if(night){const found=nights.find(n=>n.key===night.key);if(found)openNight(found.key);else{night=null;showHome();}}}
+async function refresh(){files=await getFilesForViewing();annotations=await getMarkers();external=portable?await Promise.all((await api('records/external')).map(async r=>r.polar?{...await portableDecode({...r,blobs:undefined}),blobs:r.blobs}:portableDecode(r))):await getAll('external');metadata=buildNights(files);if(portable){tombstones=await getAll('tombstones');giCacheRecords=await getAll('analysis');sleepStates=SLEEP_STAGING_ENABLED?await api('sleep-status',{}):{};if(typeof applyPortablePreferences==='function')applyPortablePreferences(await getAll('preferences'));}nights=portable?ImportDelta.visible(metadata.nights,tombstones):metadata.nights;cache.clear();seedTrendSummaries();if(typeof giReset==='function')giReset();home();prepareTrendSummaries();if(night){const found=nights.find(n=>n.key===night.key);if(found)openNight(found.key);else{night=null;showHome();}}}
 async function ingest(input){
  if(busy||!db)return;busy=true;let started=false;
  try{
@@ -319,6 +322,8 @@ async function ingestPolar(input){
 }
 $('polarFiles').onchange=e=>ingestPolar([...e.target.files]);$('polarFolder').onchange=e=>ingestPolar([...e.target.files]);
 function renderSleep(){
+ $('sleepPanel').hidden=!SLEEP_STAGING_ENABLED;
+ if(!SLEEP_STAGING_ENABLED)return;
  const state=portable?(sleepStates[night?.key]||{status:'polar_absent'}):{status:'unsupported'};
  const labels={polar_absent:'Polar absent',needs_compute:'Not yet calculated',stale:'Source or method changed · recalculation needed',not_estimable:'Not estimable with the available RR signal',multiple_recordings:'Multiple Polar recordings require separate review',unsupported:'Sleep estimation is available in portable mode'};
  const summary=state.summary,canvas=$('sleepChart');
@@ -326,7 +331,7 @@ function renderSleep(){
  $('sleepCompute').hidden=!portable||!['needs_compute','stale'].includes(state.status);canvas.hidden=!['available','not_estimable'].includes(state.status);drawSleep();
 }
 function drawSleep(){
- const canvas=$('sleepChart');if(!canvas||canvas.hidden||!night||$('detail').hidden)return;
+ const canvas=$('sleepChart');if(!SLEEP_STAGING_ENABLED||!canvas||canvas.hidden||!night||$('detail').hidden)return;
  const result=sleepStates[night.key]?.result;if(!result)return;
  const w=canvas.clientWidth;if(w<100)return;const h=210,dpr=devicePixelRatio||1;canvas.width=w*dpr;canvas.height=h*dpr;const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);ctx.font='11px system-ui';
  const x0=65,x1=w-17,start=night.origin+left*1000,end=start+span*1000,width=x1-x0,xx=t=>x0+(t-start)/(end-start)*width;
@@ -336,7 +341,7 @@ function drawSleep(){
  canvas.ondblclick=e=>{const r=canvas.getBoundingClientRect(),x=e.clientX-r.left;if(x<x0||x>x1)return;editMarker(start+(x-x0)/width*(end-start));};
 }
 $('sleepCompute').onclick=async()=>{
- if(!night||busy||!portable)return;const key=night.key;try{Portable.assertWrite();busy=true;Portable.writing++;$('sleepCompute').disabled=true;$('sleepStatus').textContent='Estimating sleep locally…';await api('sleep-compute',{night:key});Portable.state=await api('status');await refresh();Portable.changed();}
+ if(!SLEEP_STAGING_ENABLED||!night||busy||!portable)return;const key=night.key;try{Portable.assertWrite();busy=true;Portable.writing++;$('sleepCompute').disabled=true;$('sleepStatus').textContent='Estimating sleep locally…';await api('sleep-compute',{night:key});Portable.state=await api('status');await refresh();Portable.changed();}
  catch(e){$('sleepStatus').textContent='Sleep estimation failed: '+e.message;}finally{busy=false;Portable.writing=Math.max(0,Portable.writing-1);Portable.render();}
 };
 

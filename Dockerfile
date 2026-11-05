@@ -2,7 +2,7 @@ FROM python:3.12-alpine
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 COPY server.py storage-mode.json ./
-COPY portable_store.py sleep_staging.py ./
+COPY portable_store.py portable_backup.py sleep_staging.py ./
 COPY tools/polar_ecg_index.py tools/polar_rr_prototype.py ./tools/
 COPY web ./web
 USER 10001:10001

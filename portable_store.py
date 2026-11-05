@@ -55,7 +55,10 @@ def refs(value):
         else:
             for child in value.values(): yield from refs(child)
     elif isinstance(value, list):
-        for child in value: yield from refs(child)
+        # Scalar signal samples cannot contain attachment references.
+        for child in value:
+            if isinstance(child, (dict, list)):
+                yield from refs(child)
 
 
 class PortableStore:
@@ -228,6 +231,20 @@ class PortableStore:
         if store not in STORES: raise ValueError('Invalid store.')
         with self.lock, self.connect(self.active()) as db:
             return [json.loads(zlib.decompress(row[0])) for row in db.execute('SELECT payload FROM records WHERE store=? ORDER BY id', (store,))]
+
+    def write_records_json(self, store, destination):
+        """Write validated stored JSON without rebuilding large signal arrays."""
+        if store not in STORES: raise ValueError('Invalid store.')
+        with self.lock, self.connect(self.active()) as db:
+            destination.write(b'[')
+            separator = b''
+            for (payload,) in db.execute('SELECT payload FROM records WHERE store=? ORDER BY id', (store,)):
+                raw = zlib.decompress(payload)
+                json.loads(raw)  # Fail before sending a response if a record is damaged.
+                destination.write(separator)
+                destination.write(raw)
+                separator = b','
+            destination.write(b']')
 
     def blob(self, key): return self.blobs / valid_key(key)
 
@@ -489,32 +506,30 @@ class PortableStore:
         if store not in STORES or not isinstance(obj, dict) or obj.get('id') != key: raise ValueError('Invalid publication record.')
 
     @staticmethod
-    def _deferred_refs(records):
-        deferred, required = set(), set()
-        for store, _, payload in records:
-            obj = json.loads(zlib.decompress(payload))
-            if store == 'external' and obj.get('polar') and isinstance(obj.get('blobs'), dict):
-                heavy = {k: v for k, v in obj['blobs'].items() if k.endswith('_ecg.csv')}
-                deferred.update(refs(heavy))
-                other = dict(obj)
-                other['blobs'] = {k: v for k, v in obj['blobs'].items() if k not in heavy}
-                required.update(refs(other))
-            elif store == 'markers':
-                deferred.update(refs(obj.get('media', [])))
-                other = dict(obj)
-                other.pop('media', None)
-                required.update(refs(other))
-            else:
-                required.update(refs(obj))
-        return deferred - required
+    def _track_record_refs(store, obj, keys, deferred, required):
+        record_keys = set(refs(obj))
+        keys.update(record_keys)
+        if store == 'external' and obj.get('polar') and isinstance(obj.get('blobs'), dict):
+            heavy = {k: v for k, v in obj['blobs'].items() if k.endswith('_ecg.csv')}
+            deferred.update(refs(heavy))
+            other = dict(obj)
+            other['blobs'] = {k: v for k, v in obj['blobs'].items() if k not in heavy}
+            required.update(refs(other))
+        elif store == 'markers':
+            deferred.update(refs(obj.get('media', [])))
+            other = dict(obj)
+            other.pop('media', None)
+            required.update(refs(other))
+        else:
+            required.update(record_keys)
 
-    def _load_version(self, version, defer_heavy=False):
+    def _load_version(self, version, defer_heavy=False, deferred_output=None):
         valid_key(version, 32)
         raw = (self.shared / 'versions' / (version + '.json')).read_bytes()
         manifest = json.loads(raw)
         self._compatible(manifest)
         if manifest['id'] != version: raise ValueError('Snapshot ID mismatch.')
-        records, keys = [], set()
+        records, keys, deferred, required = [], set(), set(), set()
         if manifest.get('schema', 1) == 1:
             snapshot = self.shared / 'versions' / (version + '.sqlite')
             if digest(snapshot) != manifest['database']: raise ValueError('Snapshot is incomplete or damaged. Wait for Proton Drive sync.')
@@ -524,7 +539,7 @@ class PortableStore:
                     obj = json.loads(zlib.decompress(payload))
                     self._validate_record(store, key, obj)
                     records.append((store, key, packed(obj)))
-                    keys.update(refs(obj))
+                    self._track_record_refs(store, obj, keys, deferred, required)
             archive = manifest.get('archive', 'legacy-' + version)
         else:
             if manifest.get('format') != 'bpg-portable': raise ValueError('Unknown publication format.')
@@ -537,9 +552,11 @@ class PortableStore:
                     obj = json.loads(zlib.decompress(payload))
                     self._validate_record(store, key, obj)
                     records.append((store, key, payload))
-                    keys.update(refs(obj))
+                    self._track_record_refs(store, obj, keys, deferred, required)
         if keys != set(manifest['blobs']): raise ValueError('Publication attachment list mismatch.')
-        deferred = self._deferred_refs(records) if defer_heavy else set()
+        deferred = deferred - required if defer_heavy else set()
+        if deferred_output is not None:
+            deferred_output.update(deferred)
         for key in keys:
             path = self.shared / 'blobs' / valid_key(key)
             if not path.is_file(): raise ValueError('Attachment is missing. Wait for Proton Drive sync.')
@@ -550,11 +567,11 @@ class PortableStore:
         return manifest, archive, records, keys
 
     def _install(self, version, force=False, historical=False):
-        manifest, archive, records, keys = self._load_version(version, defer_heavy=True)
+        deferred = set()
+        manifest, archive, records, keys = self._load_version(version, defer_heavy=True, deferred_output=deferred)
         with self.connect() as db:
             base = self.meta(db, 'base')
             if self.meta(db, 'dirty') == '1' and not force: raise ValueError('Unpublished local changes preserved. Resolve before opening shared data.')
-        deferred = self._deferred_refs(records)
         for key in keys - deferred:
             target = self.blob(key)
             if not target.exists() or digest(target) != key:
